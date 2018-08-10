@@ -1,5 +1,5 @@
 ---
-title: 'Self Regulation Ontology DDM Report'
+title: 'Self Regulation Ontology DDM Analyses'
 output:
 github_document:
 toc: yes
@@ -7,368 +7,37 @@ toc_float: yes
 ---
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
-source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM/code/SRO_DDM_Analyses_Helper_Functions.R')
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/SRO_DDM_Analyses_Helper_Functions.R')
 
-test_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Complete_02-03-2018/'
+test_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Complete_03-29-2018/'
 
-retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_02-03-2018/'
+retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
 ```
 
+Prof. Domingue recommended reading:
+file:///Users/zeynepenkavi/Downloads/10.1007%252Fs11336-006-1478-z.pdf
+A HIERARCHICAL FRAMEWORK FOR MODELING SPEED AND ACCURACY
+ON TEST ITEMS
 
-#### DDM Variance breakdown
+file:///Users/zeynepenkavi/Downloads/v66i04.pdf
+Fitting Diffusion Item Response Theory Models for
+Responses and Response Times Using the R
+Package diffIRT
 
-What does the variance breakdown look like for DDM variables separately?
+- Retest reliability for each task: What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
 
-```{r warning=FALSE, message=FALSE}
-tmp = rel_df %>%
-  mutate(var_subs_pct = var_subs/(var_subs+var_ind+var_resid)*100,
-         var_ind_pct = var_ind/(var_subs+var_ind+var_resid)*100, 
-         var_resid_pct = var_resid/(var_subs+var_ind+var_resid)*100) %>%
-  select(dv, task, var_subs_pct, var_ind_pct, var_resid_pct) %>%
-  mutate(dv = factor(dv, levels = dv[order(task)])) %>%
-  separate(dv, c("task_group", "var"), sep="\\.",remove=FALSE,extra="merge") %>%
-  mutate(task_group = factor(task_group, levels = task_group[order(task)])) %>%
-  arrange(task_group, var_subs_pct) %>%
-  mutate(rank = row_number()) %>%
-  arrange(task, task_group, rank) %>%
-  gather(key, value, -dv, -task_group, -var, -task, -rank) %>%
-  ungroup()%>%
-  mutate(task_group = gsub("_", " ", task_group),
-         var = gsub("_", " ", var)) %>%
-  mutate(task_group = ifelse(task_group == "psychological refractory period two choices", "psychological refractory period", ifelse(task_group == "angling risk task always sunny", "angling risk task",task_group))) %>%
-  mutate(task_group = gsub("survey", "", task_group)) %>%
-  filter(task=="task",
-         grepl("EZ|hddm", dv))%>%
-  arrange(task_group, rank)
-labels = tmp %>%
-  distinct(dv, .keep_all=T)
+- Variance breakdown for each measure
 
-p1 <- tmp %>%
-  ggplot(aes(x=factor(rank), y=value, fill=factor(key, levels = c("var_resid_pct", "var_ind_pct", "var_subs_pct"))))+
-  geom_bar(stat='identity', alpha = 0.75, color='#00BFC4')+
-  scale_x_discrete(breaks = labels$rank,
-                       labels = labels$var)+
-  coord_flip()+
-  facet_grid(task_group~., switch = "y", scales = "free_y", space = "free_y") +
-  theme(panel.spacing = unit(0.5, "lines"), 
-        strip.placement = "outside",
-        strip.text.y = element_text(angle=180),
-        panel.background = element_rect(fill = NA),
-        panel.grid.major = element_line(colour = "grey85"),
-        legend.position = 'bottom')+
-  theme(legend.title = element_blank())+
-  scale_fill_manual(breaks = c("var_subs_pct", "var_ind_pct", "var_resid_pct"),
-                      labels = c("Variance between individuals",
-                                 "Variance between sessions",
-                                 "Error variance"),
-                  values=c("grey65", "grey45", "grey25"))+
-  ylab("")+
-  xlab("")
+- Change in parameter values depending on full vs. retest only sample: How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. 
 
-ggsave('Variance_Breakdown_Plot_DDM.jpg', plot = p1, device = "jpeg", path = "/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/output/figures", width = 12, height = 20, units = "in")
-```
+NOTE: The lack of clear systematicity in the changes of the parameter estimates can be difficult to interpret. A systematic change would have meant that the ranking remained the same regardless of the sample size. When the change is non-systematic in this way then a given subject that has high higher drift rates than most of the people in the full sample can appear to have lower drift rates than the same people when fit on the retest sample only. 
 
-```{r echo=FALSE, out.width='100%'}
-knitr::include_graphics('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/output/figures/Variance_Breakdown_Plot_DDM.jpg')
-```
+Of course these parameter estimates themselves are not very interpretable in their 'goodness' as they don't reflect anything about model fits. To determine the model fits for both cases I have written functions to sample from the posterior predictive and calculate $R^2$'s for each subject.
 
-Summarizing it by raw vs fit and for each parameter
-
-```{r warning=FALSE, message=FALSE}
-tmp = measure_labels %>%
-  mutate(dv = as.character(dv)) %>%
-  filter(ddm_task == 1, 
-         overall_difference != "condition") %>%
-  drop_na() %>%
-  left_join(boot_df[,c("dv", "icc", "var_subs", "var_ind", "var_resid")], by = 'dv') %>%
-  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
-         var_ind_pct= (var_ind/(var_subs+var_ind+var_resid))*100,
-         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100) %>%
-  select(-task, -ddm_task, -num_all_trials, -var_subs, -var_ind, -var_resid) %>%
-  gather(key, value, -dv, -overall_difference, -raw_fit, -rt_acc, -icc)
-
-tmp %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), value, fill=factor(rt_acc, levels = c("rt","accuracy","other", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy", "Other","Drift Rate", "Threshold", "Non-decision"))))+
-  geom_boxplot()+
-  facet_grid(factor(key, levels = c("var_subs_pct", "var_ind_pct", "var_resid_pct"), labels=c("Variance between subjects", "Variance between individuals", "Error variance"))~factor(overall_difference, levels=c("overall", "difference"), labels=c("Overall", "Difference")))+
-  theme_bw()+
-  ylab("% of total variance")+
-  xlab("")+
-  theme(legend.title = element_blank())
-
-ggsave('Variance_Breakdown_Plot_DDM_summary.jpg', device = "jpeg", path = "/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/output/figures", width = 10, height = 8, units = "in")
-```
-
-Not checking if these differ significantly because this seems to in the weeds for this paper.
-
-#### Change in parameter values depending on sample
-
-How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. Each point in these graphs is a subject's parameter estimates. There is no change for any of the EZ parameters. For the HDDM parameters most of the changes are happening for drift rates but they don't appear to be systematically higher or lower.
-
-```{r warning=FALSE, message=FALSE}
-hddm_fullfits <- test_data_full_sample_hddm[,names(test_data_full_sample_hddm) %in% names(hddm_refits)]
-
-hddm_fullfits = hddm_fullfits %>%
-  gather(dv, value, -sub_id)
-
-tmp = hddm_refits %>%
-  gather(dv, value, -sub_id) %>%
-  left_join(hddm_fullfits, by = c("sub_id", "dv")) %>%
-  rename(fullfit = value.y, refit = value.x) %>%
-  left_join(measure_labels[,c("dv", "raw_fit", "rt_acc")], by="dv") %>%
-  filter(rt_acc %in% c("drift rate","non-decision", "threshold")) 
-
-tmp %>%
-  ggplot(aes(fullfit, refit, label=dv))+
-  geom_point(aes(color=rt_acc))+
-  facet_wrap(~raw_fit)+
-  theme_bw()+
-  geom_abline(slope=1, intercept=0)+
-  xlab("Fit on full sample")+
-  ylab("Fit on retest sample")+
-  theme(legend.title = element_blank())
-```
-
-```{r}
-tmp %>%
-  mutate(refit_diff = fullfit - refit) %>%
-  group_by(raw_fit, rt_acc) %>%
-  summarise(mean = mean(refit_diff, na.rm=T),
-            sd = sd(refit_diff, na.rm=T))
-```
-
-A simple way to compare the two distributions of the parameters using the full or the retest sample would be to run a t-test. Since this would have a normality assumption we first check the distributions of the parameters. Though the threshold and non-decision times look closer to normal the drift rates have a clear bimodal distribution. Since these are the estimates on which we find the greatest changes we should make sure to transform them somehow before running the test.
-
-```{r warning=FALSE, message=FALSE}
-tmp %>%
-  filter(raw_fit == 'hddm') %>%
-  gather(key, value, -sub_id, -dv, -raw_fit, -rt_acc) %>%
-  ggplot(aes(value))+
-  geom_histogram(position='identity', alpha=0.5)+
-  theme_bw()+
-  facet_grid(rt_acc~key, scales='free')
-```
-
-What if you log transform the drift rates? The bimodal distribution becomes one with a long left tail. Still not great to do a t-test on.
-
-```{r warning=FALSE, message=FALSE}
-tmp %>%
-  filter(raw_fit == 'hddm', rt_acc == 'drift rate') %>%
-  gather(key, value, -sub_id, -dv, -raw_fit, -rt_acc) %>%
-  mutate(value = log(value)) %>%
-  ggplot(aes(value))+
-  geom_histogram(alpha = 0.5)+
-  theme_bw()+
-  facet_wrap(~key)
-```
-
-How about the distribution of the difference scores? This looks better to do a t-test on.
-
-```{r message=FALSE}
-tmp %>%
-  filter(raw_fit == 'hddm', rt_acc == 'drift rate') %>%
-  mutate(diff = fullfit - refit) %>%
-  na.omit() %>%
-  ggplot(aes(diff))+
-  geom_histogram(alpha=0.5)+
-  theme_bw()
-```
-
-The distribution of the difference scores between the drift rates using the full and the retest sample differ from 0. The difference score distribution has a mean of 0.0016. This means that drift rate estimates using the full sample are significantly higher than those using the retest sample alone.
-
-```{r}
-diff = tmp %>%
-  filter(raw_fit == 'hddm', rt_acc == 'drift rate') %>%
-  mutate(diff = fullfit - refit) %>%
-  select(diff) %>%
-  na.omit()
-
-t.test(diff$diff, rep(0, nrow(tmp)))
-```
-
-Still the distribution of the difference scores does show negative values as well. The lack of clear systematicity in the changes of the parameter estimates can be difficult to interpret. A systematic change would have meant that the ranking remained the same regardless of the sample size. When the change is non-systematic in this way then a given subject that has high higher drift rates than most of the people in the full sample can appear to have lower drift rates than the same people when fit on the retest sample only. 
-
-Of course these parameter estimates themselves are not very interpretable in their 'goodness' as they don't reflect anything about model fits. To determine the model fits for both cases I have written functions to sample from the posterior predictive and calculate $R^2$'s for each subject. These currently run too slow, however, and have been deferred for now.
-
-Let's quickly look if the changes are different than 0 for non-decision times and thresholds as well. They are not.
-
-```{r}
-diff = tmp %>%
-  filter(raw_fit == 'hddm', rt_acc == 'non-decision') %>%
-  mutate(diff = fullfit - refit) %>%
-  select(diff) %>%
-  na.omit()
-
-t.test(diff$diff, rep(0, nrow(tmp)))
-```
-
-```{r}
-diff = tmp %>%
-  filter(raw_fit == 'hddm', rt_acc == 'threshold') %>%
-  mutate(diff = fullfit - refit) %>%
-  select(diff) %>%
-  na.omit()
-
-t.test(diff$diff, rep(0, nrow(tmp)))
-```
-
-```{r}
-rm(diff)
-```
-
-Does this change reliability? 18/33 of the bootstrapped reliability distributions for the refit hddm drift rates have different means than the reliability distributions using the fullfit drift rates. Only in 7/18 is the refit reliabilities higher. 
-
-```{r}
-#Compare bootstrapped reliabilities for refits (replaced in boot_df) to bootstrapped reliabilities of full fits
-refit_ddm_drift_boot_df = boot_df[boot_df$dv %in% grep('hddm_drift',names(hddm_refits), value=T),]
-fullfit_ddm_drift_boot_df = fullfit_boot_df[fullfit_boot_df$dv %in% unique(refit_ddm_drift_boot_df$dv),]
-
-get_t_test_out <- function(df, x = icc.x, y = icc.y){
-  out = data.frame(p.value=NA, mean_x = NA, mean_y=NA)
-  attach(df)
-  mod = t.test(x, y)
-  detach(df)
-  out$p.value = mod$p.value
-  out$mean_x = as.numeric(mod$estimate[1])
-  out$mean_y = as.numeric(mod$estimate[2])  
-  return(out)
-}
-
-refit_ddm_drift_boot_df %>%
-  select(X, dv, icc) %>%
-  left_join(fullfit_ddm_drift_boot_df[,c('X', 'dv', 'icc')], by = c('X', 'dv')) %>%
-  group_by(dv) %>%
-  do(get_t_test_out(.)) %>%
-  mutate(sig_diff = ifelse(p.value<0.05, 1, 0),
-         refit_better = ifelse(mean_x>mean_y,1,0)) %>%
-  filter(sig_diff == 1, refit_better == 1)
-```
-
-#### Parameter reliability depending on sample size
-
-[NOT INCLUDED IN DRAFT FOR NOW]
-
-There doesn't seem to be an effect looking at the graph but the multilevel model seems to show a very significant but tiny effect.
-
-```{r message=FALSE, warning=FALSE}
-tmp <- read.csv('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/input/all_ddm_sample_size_summary.csv')
-
-tmp
-
-ggplotly(tmp %>%
-  select(dv, N, icc_median) %>%
-  left_join(measure_labels[,c("dv", "raw_fit", "rt_acc")], by="dv") %>%
-  ggplot(aes(N, icc_median, color=dv))+
-  geom_line()+
-  theme_bw()+
-  theme(legend.position = 'none')+
-  xlab("Sample Size")+
-  ylab("Median ICC"))
-```
-
-The above graph suggests that the median reliability estimate does not change depending on the sample size. There is a degree of counterintuitiveness to that statement. One might expect less reliable parameter estimates for smaller sample sizes. 
+- Parameter reliability depending on sample size: in addition to comparing just 150 vs 500
 
 The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate much as we see in the above graph. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size. Below we plot this for one task (for visualization ease). The lower end of the error bars in the first quantile, the point is the median and the upper bound is the last quantile of the reliability estimates for varying sample sizes. Indeed, we find the predicted pattern of decreasing variance in reliability estimates depending on sample size.
 
-```{r}
-tmp %>%
-  select(dv, N, icc_median, icc_2.5, icc_97.5) %>%
-  filter(grepl("stroop", dv)) %>%
-  ggplot(aes(N, icc_median, color = dv))+
-  geom_point()+
-  geom_errorbar(aes(ymin = icc_2.5, ymax = icc_97.5))+
-  theme_bw()+
-  theme(legend.position = "none")+
-  ylab("ICC")
-```
-
-```{r}
-summary(lmer(icc_median ~ N + (1|dv), tmp))
-```
-
-#### Is the H in HDDM important?
-
-For retest data plotting hierarchical estimates over flat estimates.
-
-```{r message = FALSE, warning=FALSE}
-retest_hddm_flat <- read.csv(paste0(retest_data_path, 'retest_hddm_flat.csv'))
-retest_hddm_flat = retest_hddm_flat %>% select(-X) %>% rename(sub_id = subj_id)
-retest_hddm_hier = retest_data[,c(names(retest_data) %in% names(retest_hddm_flat))]
-retest_hddm_flat = retest_hddm_flat[,c(names(retest_hddm_flat) %in% names(retest_hddm_hier))]
-
-retest_hddm_hier = retest_hddm_hier %>% gather(key, value, -sub_id)
-retest_hddm_flat = retest_hddm_flat %>% gather(key, value, -sub_id)
-
-retest_hddm_flat %>%
-  left_join(retest_hddm_hier, by=c('sub_id', 'key')) %>%
-  ggplot(aes(value.x, value.y, color=key))+
-  geom_point()+
-  geom_abline(slope=1, intercept=0)+
-  theme_bw()+
-  theme(legend.position = 'none')+
-  xlab('Parameter estimate without hierarchy')+
-  ylab('Parameter estimate with hierarchy')
-```
-
-For the retest data 6/43 variables have significantly different distributions when they are fit with hierarchy versus without. For all of them the hiearchical estimate distributions have significantly higher means.
-
-```{r message=FALSE, warning=FALSE}
-retest_hddm_flat %>%
-  left_join(retest_hddm_hier, by=c('sub_id', 'key')) %>%
-  group_by(key) %>%
-  do(get_t_test_out(.,x=value.x, y=value.y)) %>%
-  mutate(flat_diff = ifelse(p.value<0.05, 1, 0)) %>%
-  filter(flat_diff == 1) %>%
-  mutate(flat_high = ifelse(mean_x>mean_y,1,0))
-```
-
-For t1 data plotting hierarchical estimates over flat estimates.
-
-```{r warning=FALSE, message=FALSE}
-test_hddm_flat <- read.csv(paste0(retest_data_path, 't1_data/t1_hddm_flat.csv'))
-test_hddm_flat = test_hddm_flat %>% select(-X) %>% rename(sub_id = subj_id)
-test_hddm_hier = test_data[,c(names(test_data) %in% names(test_hddm_flat))]
-test_hddm_flat = test_hddm_flat[,c(names(test_hddm_flat) %in% names(test_hddm_hier))]
-
-test_hddm_hier = test_hddm_hier %>% gather(key, value, -sub_id)
-test_hddm_flat = test_hddm_flat %>% gather(key, value, -sub_id)
-
-test_hddm_flat %>%
-  left_join(test_hddm_hier, by=c('sub_id', 'key')) %>%
-  ggplot(aes(value.x, value.y, color=key))+
-  geom_point()+
-  geom_abline(slope=1, intercept=0)+
-  theme_bw()+
-  theme(legend.position = 'none')+
-  xlab('Parameter estimate without hierarchy')+
-  ylab('Parameter estimate with hierarchy')
-```
-
-For the t1 data 3/43 variables have significantly different distributions when they are fit with hierarchy versus without. For all of them the hiearchical estimate distributions have significantly higher means.
-
-```{r message=FALSE, warning=FALSE}
-test_hddm_flat %>%
-  left_join(test_hddm_hier, by=c('sub_id', 'key')) %>%
-  group_by(key) %>%
-  do(get_t_test_out(.,x=value.x, y=value.y)) %>%
-  mutate(flat_diff = ifelse(p.value<0.05, 1, 0)) %>%
-  filter(flat_diff == 1) %>%
-  mutate(flat_high = ifelse(mean_x>mean_y,1,0))
-```
-
-How does this affect reliability?
-
-```{r warning=FALSE, message=FALSE}
-flat_boot_df <- read.csv(gzfile(paste0(retest_data_path, 'flat_bootstrap_merged.csv.gz')))
-
-hier_boot_df = boot_df[c(boot_df$dv %in% unique(flat_boot_df$dv)),]
-
-flat_boot_df %>%
-  select(X, dv, icc) %>%
-  left_join(hier_boot_df[,c('X', 'dv', 'icc')], by = c('X', 'dv')) %>%
-  group_by(dv) %>%
-  do(get_t_test_out(.)) %>%
-  mutate(sig_diff = ifelse(p.value<0.05, 1, 0),
-         flat_better = ifelse(mean_x>mean_y,1,0)) %>%
-  filter(sig_diff == 1)
-```
+- Is the H in HDDM important? (h vs flat)
+-- Change in parameter value?
+-- Change in parameter reliability?
