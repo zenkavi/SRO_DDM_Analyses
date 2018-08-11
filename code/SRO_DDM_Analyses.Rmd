@@ -9,26 +9,80 @@ toc_float: yes
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/SRO_DDM_Analyses_Helper_Functions.R')
 
+theme_set(theme_bw())
+
 test_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Complete_03-29-2018/'
 
 retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
 ```
 
-Prof. Domingue recommended reading:
-file:///Users/zeynepenkavi/Downloads/10.1007%252Fs11336-006-1478-z.pdf
-A HIERARCHICAL FRAMEWORK FOR MODELING SPEED AND ACCURACY
-ON TEST ITEMS
+## Loading datasets
 
-file:///Users/zeynepenkavi/Downloads/v66i04.pdf
-Fitting Diffusion Item Response Theory Models for
-Responses and Response Times Using the R
-Package diffIRT
+The tasks included in this report are:  
 
-Load data
+```{r echo=FALSE}
+measure_labels <- read.csv('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/input/measure_labels.csv')
+measure_labels = measure_labels %>% select(-measure_description)
+measure_labels = measure_labels %>% 
+  filter(ddm_task == 1)
+measure_labels = measure_labels %>%
+  mutate(dv = as.character(dv)) %>%
+  separate(dv, c("task_group", "var"), sep = "\\.", remove=FALSE, extra = "merge")
+
+unique(measure_labels$task_group)
+```
+
+### Load time 1 data
+```{r}
+test_data <- read.csv(paste0(retest_data_path,'t1_data/variables_exhaustive.csv'))
+
+names(test_data)
+
+test_data <- test_data[,c(1,names(test_data) %in% measure_labels$dv)]
+
+test_data$X <- as.character(test_data$X)
+names(test_data)[which(names(test_data) == 'X')] <-'sub_id' 
+```
+
+### Load time 2 data 
+```{r}
+retest_data <- read.csv(paste0(retest_data_path,'variables_exhaustive.csv'))
+
+retest_data <- retest_data[,c(1,names(retest_data) %in% measure_labels$dv)]
+
+retest_data$X <- as.character(retest_data$X)
+names(retest_data)[which(names(retest_data) == 'X')] <-'sub_id' 
+retest_data = retest_data[retest_data$sub_id %in% test_data$sub_id,]
+```
+
+### Replace HDDM parameters in t1 data
+
+Since HDDM parameters depend on the sample on which they are fit we refit the model on t1 data for the subjects that have t2 data. Here we replace the HDDM parameters in the current t1 dataset with these refitted values. 
 
 ```{r}
+hddm_refits <- read.csv(paste0(retest_data_path,'t1_data/hddm_refits_exhaustive.csv'))
 
+hddm_refits = hddm_refits[,c(1,names(hddm_refits) %in% measure_labels$dv)]
+
+hddm_refits$X <- as.character(hddm_refits$X)
+names(hddm_refits)[which(names(hddm_refits) == 'X')] <-'sub_id' 
+
+#For later comparison of whether fitting the DDM parameters on full or retest sample makes a big difference
+test_data_full_sample_hddm <- test_data
+
+#drop hddm columns from test_data
+test_data_retest_sample_hddm = cbind(test_data$sub_id, test_data[,names(test_data) %in% names(hddm_refits) == FALSE])
+
+#fix naming before merging
+names(test_data_retest_sample_hddm)[which(names(test_data_retest_sample_hddm) == 'test_data$sub_id')] <-'sub_id'
+
+#merge hddm refits to test data
+test_data_retest_sample_hddm = merge(test_data_retest_sample_hddm, hddm_refits, by="sub_id")
+
+rm(test_data)
 ```
+
+## Best measure for each task
 
 - Retest reliability for each task: 
 -- What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
@@ -38,7 +92,7 @@ Load data
 retest_reliability ~ raw_1_fit_0 + (1|task_group)
 ```
 
-- Variance breakdown for each measure
+## Variance breakdown measure types
 
 - Change in parameter values depending on full vs. retest only sample
 -- How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. 
@@ -47,17 +101,37 @@ NOTE: The lack of clear systematicity in the changes of the parameter estimates 
 
 Of course these parameter estimates themselves are not very interpretable in their 'goodness' as they don't reflect anything about model fits. To determine the model fits for both cases I have written functions to sample from the posterior predictive and calculate $R^2$'s for each subject.
 
+## Sample size effects
+
+### Parameter stability
+
+### Prameter reliability
+
 - Parameter reliability depending on sample size: in addition to comparing just 150 vs 500
 
 The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size.
+
+## Hierarchical estimation consequences
 
 - Is the H in HDDM important? (h vs flat)
 -- Change in parameter value?
 -- Change in parameter reliability?
 
-- Clustering
+## Clustering
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
 -- Are these clusters more reliable than using either the raw or the DDM measures alone?
 
-- Prediction
+## Prediction
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
+
+## To Do
+
+Prof. Domingue recommended readings:
+file:///Users/zeynepenkavi/Downloads/10.1007%252Fs11336-006-1478-z.pdf
+A HIERARCHICAL FRAMEWORK FOR MODELING SPEED AND ACCURACY
+ON TEST ITEMS
+
+file:///Users/zeynepenkavi/Downloads/v66i04.pdf
+Fitting Diffusion Item Response Theory Models for
+Responses and Response Times Using the R
+Package diffIRT
