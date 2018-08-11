@@ -24,11 +24,24 @@ Fitting Diffusion Item Response Theory Models for
 Responses and Response Times Using the R
 Package diffIRT
 
-- Retest reliability for each task: What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
+Load data
+
+```{r}
+
+```
+
+- Retest reliability for each task: 
+-- What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
+-- Table each task where rows are each task and cols are mean reliability from raw measures, mean reliability of ddm parameters, name of most reliable measure for that task
+
+```{r}
+retest_reliability ~ raw_1_fit_0 + (1|task_group)
+```
 
 - Variance breakdown for each measure
 
-- Change in parameter values depending on full vs. retest only sample: How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. 
+- Change in parameter values depending on full vs. retest only sample
+-- How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. 
 
 NOTE: The lack of clear systematicity in the changes of the parameter estimates can be difficult to interpret. A systematic change would have meant that the ranking remained the same regardless of the sample size. When the change is non-systematic in this way then a given subject that has high higher drift rates than most of the people in the full sample can appear to have lower drift rates than the same people when fit on the retest sample only. 
 
@@ -36,8 +49,15 @@ Of course these parameter estimates themselves are not very interpretable in the
 
 - Parameter reliability depending on sample size: in addition to comparing just 150 vs 500
 
-The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate much as we see in the above graph. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size. Below we plot this for one task (for visualization ease). The lower end of the error bars in the first quantile, the point is the median and the upper bound is the last quantile of the reliability estimates for varying sample sizes. Indeed, we find the predicted pattern of decreasing variance in reliability estimates depending on sample size.
+The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size.
 
 - Is the H in HDDM important? (h vs flat)
 -- Change in parameter value?
 -- Change in parameter reliability?
+
+- Clustering
+-- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
+-- Are these clusters more reliable than using either the raw or the DDM measures alone?
+
+- Prediction
+-- Do raw or DDM measures (or factor scores) predict real world outcomes better?
