@@ -94,15 +94,38 @@ test_data_hddm_retest_sample = merge(test_data_hddm_retest_sample, hddm_refits, 
 rm(test_data, hddm_refits, tmp)
 ```
 
+### Create point estimates
+
+#### Using hddm full sample
+
+```{r}
+
+```
+
+#### Using hddm retest only sample
+
+```{r}
+
+```
+
+### Load bootstrapped reliabilities
+
+```{r}
+
+```
+
+## DDM vs raw reliability overall
+
+```{r}
+retest_reliability ~ raw_1_fit_0 + (1|task_group)
+```
+
+
 ## Best measure for each task
 
 - Retest reliability for each task: 
 -- What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
 -- Table each task where rows are each task and cols are mean reliability from raw measures, mean reliability of ddm parameters, name of most reliable measure for that task
-
-```{r}
-retest_reliability ~ raw_1_fit_0 + (1|task_group)
-```
 
 ## Variance breakdown measure types
 
