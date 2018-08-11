@@ -20,9 +20,12 @@ The tasks included in this report are:
 
 ```{r}
 measure_labels <- read.csv('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/input/measure_labels.csv')
+
 measure_labels = measure_labels %>% select(-measure_description)
+
 measure_labels = measure_labels %>% 
   filter(ddm_task == 1)
+
 measure_labels = measure_labels %>%
   mutate(dv = as.character(dv)) %>%
   separate(dv, c("task_group", "var"), sep = "\\.", remove=FALSE, extra = "merge")
@@ -36,7 +39,8 @@ test_data <- read.csv(paste0(retest_data_path,'t1_data/variables_exhaustive.csv'
 
 test_data_subs = as.character(test_data$X)
 
-test_data <- test_data[,c(names(test_data) %in% measure_labels$dv)]
+test_data = test_data %>%
+  select(measure_labels$dv)
 
 test_data$sub_id = test_data_subs
 
@@ -49,7 +53,8 @@ retest_data <- read.csv(paste0(retest_data_path,'variables_exhaustive.csv'))
 
 retest_data_subs = as.character(retest_data$X)
 
-retest_data <- retest_data[,c(names(retest_data) %in% measure_labels$dv)]
+retest_data = retest_data %>%
+  select(measure_labels$dv)
 
 retest_data$sub_id = retest_data_subs
 
@@ -65,6 +70,10 @@ Since HDDM parameters depend on the sample on which they are fit we refit the mo
 ```{r}
 hddm_refits <- read.csv(paste0(retest_data_path,'t1_data/hddm_refits_exhaustive.csv'))
 
+test_data_hddm_full_sample <- test_data
+
+tmp = names(test_data_hddm_full_sample)[names(test_data_hddm_full_sample) %in% names(hddm_refits) == FALSE]
+
 hddm_refit_subs = as.character(hddm_refits$X)
 
 hddm_refits = hddm_refits[, c(names(hddm_refits) %in% measure_labels$dv)]
@@ -73,27 +82,16 @@ hddm_refits$sub_id <- hddm_refit_subs
 
 rm(hddm_refit_subs)
 
-#For later comparison of whether fitting the DDM parameters on full or retest sample makes a big difference
-test_data_hddm_full_sample <- test_data
+###RERUN MOTOR SS FOR REFIT (MISSING REACTIVE CONTROL HDDM DRIFT) - after correction this should just be sub_id
+#tmp
 
-#drop hddm columns from test_data with hddm full sample
-test_data_hddm_retest_sample = cbind(test_data_hddm_full_sample$sub_id, test_data_hddm_full_sample[,names(test_data_hddm_full_sample) %in% names(hddm_refits) == FALSE])
-
-tmp = names(test_data_hddm_full_sample)[names(test_data_hddm_full_sample) %in% names(hddm_refits) == FALSE]
-
-###RERUN MOTOR SS FOR REFIT (MISSING REACTIVE CONTROL HDDM DRIFT)
-tmp
-
-test_data_hddm_full_sample %>%
-  select()
-
-#fix naming before merging
-names(test_data_hddm_retest_sample)[which(names(test_data_hddm_retest_sample) == 'test_data_hddm_full_sample$sub_id')] <-'sub_id'
+test_data_hddm_retest_sample = test_data_hddm_full_sample %>%
+  select(tmp)
 
 #merge hddm refits to test data
 test_data_hddm_retest_sample = merge(test_data_hddm_retest_sample, hddm_refits, by="sub_id")
 
-rm(test_data, hddm_refits)
+rm(test_data, hddm_refits, tmp)
 ```
 
 ## Best measure for each task
