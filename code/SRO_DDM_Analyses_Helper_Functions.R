@@ -10,4 +10,11 @@ render_this <- function(){rmarkdown::render('/Users/zeynepenkavi/Dropbox/Poldrac
 
 options(scipen = 1, digits = 4)
 
-sem <- function(x) {sd(x, na.rm=T) / sqrt(length(x))}
+helper_func_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/SRO_Retest_Helper_Functions/'
+
+source(paste0(helper_func_path, 'g_legend.R'))
+source(paste0(helper_func_path, 'sem.R'))
+source(paste0(helper_func_path, 'trim.R'))
+source(paste0(helper_func_path, 'match_t1_t2.R'))
+source(paste0(helper_func_path, 'get_retest_stats.R'))
+source(paste0(helper_func_path, 'get_numeric_cols.R'))
