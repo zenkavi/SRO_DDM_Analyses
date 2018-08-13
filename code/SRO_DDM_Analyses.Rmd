@@ -114,11 +114,8 @@ names(rel_df) = rel_df_cols
 row.names(rel_df) <- numeric_cols
 
 for(i in 1:length(numeric_cols)){
-  rel_df[numeric_cols[i], 'spearman'] <- get_spearman(numeric_cols[i]) 
-  rel_df[numeric_cols[i], 'icc'] <- get_icc(numeric_cols[i])
+  rel_df[numeric_cols[i], 'icc'] <- get_retest_stats(numeric_cols[i])
   rel_df[numeric_cols[i], 'pearson'] <- get_pearson(numeric_cols[i])
-  rel_df[numeric_cols[i], 'partial_eta_sq'] <- get_partial_eta(numeric_cols[i])
-  rel_df[numeric_cols[i], 'sem'] <- get_sem(numeric_cols[i])
   rel_df[numeric_cols[i], 'var_subs'] <- get_var_breakdown(numeric_cols[i])$subs
   rel_df[numeric_cols[i], 'var_ind'] <- get_var_breakdown(numeric_cols[i])$ind
   rel_df[numeric_cols[i], 'var_resid'] <- get_var_breakdown(numeric_cols[i])$resid
@@ -130,7 +127,7 @@ rel_df$task = 'task'
 rel_df[grep('survey', rel_df$dv), 'task'] = 'survey'
 rel_df[grep('holt', rel_df$dv), 'task'] = "task"
 rel_df = rel_df %>%
-  select(dv, task, spearman, icc, pearson, partial_eta_sq, sem, var_subs, var_ind, var_resid)
+  select(dv, task, icc, pearson, var_subs, var_ind, var_resid)
 ```
 
 #### Using hddm retest only sample
