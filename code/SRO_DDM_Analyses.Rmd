@@ -111,18 +111,19 @@ rel_df = as.data.frame(matrix(ncol = length(rel_df_cols)))
 
 names(rel_df) = rel_df_cols
 
-row.names(rel_df) <- numeric_cols
-
 for(i in 1:length(numeric_cols)){
   
   tmp = get_retest_stats(numeric_cols[i], metric = c('icc', 'pearson', 'var_breakdown'))
-  rel_df = rbind(rel_df, tmp)
   
+  if(i == 1){
+    rel_df = tmp
+  }
+  else{
+    rel_df = rbind(rel_df, tmp)
+  }
 }
 
-
-rel_df = rel_df %>% drop_na()
-
+row.names(rel_df) <- numeric_cols
 rel_df$dv = row.names(rel_df)
 row.names(rel_df) = seq(1:nrow(rel_df))
 rel_df$task = 'task'
