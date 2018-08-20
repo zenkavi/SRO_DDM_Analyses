@@ -134,16 +134,67 @@ rel_df = rel_df %>%
   select(dv, task, icc, pearson, var_subs, var_ind, var_resid)
 ```
 
+Reassign df's and clean up
+
+```{r}
+rel_df_full_sample = rel_df
+rm(test_data, rel_df, tmp, i, numeric_cols, rel_df_cols)
+```
+
 #### Using hddm retest only sample
 
 ```{r}
+#for matching function to work properly assign name back to test_data
 test_data  = test_data_hddm_retest_sample
+
+numeric_cols = get_numeric_cols()
+
+#Create df of point estimate reliabilities
+rel_df_cols = c('icc', 'pearson', 'var_subs', 'var_ind', 'var_resid')
+
+rel_df = as.data.frame(matrix(ncol = length(rel_df_cols)))
+
+names(rel_df) = rel_df_cols
+
+for(i in 1:length(numeric_cols)){
+  
+  tmp = get_retest_stats(numeric_cols[i], metric = c('icc', 'pearson', 'var_breakdown'))
+  
+  if(i == 1){
+    rel_df = tmp
+  }
+  else{
+    rel_df = rbind(rel_df, tmp)
+  }
+}
+
+row.names(rel_df) <- numeric_cols
+rel_df$dv = row.names(rel_df)
+row.names(rel_df) = seq(1:nrow(rel_df))
+rel_df$task = 'task'
+rel_df[grep('survey', rel_df$dv), 'task'] = 'survey'
+rel_df[grep('holt', rel_df$dv), 'task'] = "task"
+rel_df = rel_df %>%
+  select(dv, task, icc, pearson, var_subs, var_ind, var_resid)
+```
+
+Reassign df's and clean up
+
+```{r}
+rel_df_retest_sample = rel_df
+rm(test_data, rel_df, tmp, i, numeric_cols, rel_df_cols)
 ```
 
 ### Load bootstrapped reliabilities
 
-```{r}
+Extract ddm vars only
 
+```{r}
+boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')))
+
+boot_df = process_boot_df(boot_df)
+
+boot_df = boot_df[boot_df$dv %in% retest_report_vars,]
 ```
 
 ## DDM vs raw reliability overall
