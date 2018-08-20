@@ -194,7 +194,7 @@ Using full sample fits' reliabilities
 ```{r}
 fullfit_boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')))
 
-fullfit_boot_df = process_fullfit_boot_df(fullfit_boot_df)
+fullfit_boot_df = process_boot_df(fullfit_boot_df)
 
 fullfit_boot_df = fullfit_boot_df[fullfit_boot_df$dv %in% measure_labels$dv,]
 ```
@@ -207,12 +207,67 @@ refit_boot_df = read.csv(gzfile(paste0(retest_data_path,'refits_bootstrap_merged
 refit_boot_df = process_boot_df(refit_boot_df)
 ```
 
+## T1 HDDM parameters
+
+Before going on with the rest of the report first decide on whether there are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
+
+Differences in distributions: using scaled differences
+
+```{r}
+hddm_pars_fullfit = test_data_hddm_fullfit %>%
+  select(sub_id, unique(refit_boot_df$dv)) %>%
+  mutate(hddm_sample = "fullfit")
+
+hddm_pars_refit = test_data_hddm_refit %>%
+  select(sub_id, unique(refit_boot_df$dv)) %>%
+  mutate(hddm_sample = "refit")
+
+hddm_pars = rbind(hddm_pars_fullfit, hddm_pars_refit)
+rm(hddm_pars_fullfit, hddm_pars_refit)
+
+hddm_pars = hddm_pars %>%
+  gather(dv, value, -sub_id, -hddm_sample) %>%
+  spread(hddm_sample, value) %>%
+  mutate(diff = fullfit - refit) %>%
+  group_by(dv) %>%
+  mutate(scaled_diff = scale(diff)) %>%
+  select(sub_id, dv, scaled_diff) %>%
+  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv")
+
+hddm_pars %>%
+  na.omit() %>%
+  ggplot(aes(scaled_diff))+
+  geom_density(aes(fill = dv), alpha = 0.2, color = NA)+
+  geom_density(fill = "black", alpha = 1, color=NA)+
+  theme(legend.position = "none")+
+  xlab("Scaled difference of HDDM parameter estimate (full - refit)")
+```
+
+Does the distribution of scaled difference scores have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
+
+```{r}
+# summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
+summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
+```
+
+Are the rankings the same regardless of the sample (this is what you really care for)
+
+```{r}
+
+```
+
+Difference in reliability
+
+```{r}
+
+```
+
+
 ## DDM vs raw reliability overall
 
 ```{r}
 retest_reliability ~ raw_1_fit_0 + (1|task_group)
 ```
-
 
 ## Best measure for each task
 
