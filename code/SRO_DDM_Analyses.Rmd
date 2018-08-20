@@ -232,10 +232,10 @@ hddm_pars = hddm_pars %>%
   group_by(dv) %>%
   mutate(scaled_diff = scale(diff)) %>%
   select(sub_id, dv, scaled_diff) %>%
-  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv")
+  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv") %>%
+  na.omit()
 
 hddm_pars %>%
-  na.omit() %>%
   ggplot(aes(scaled_diff))+
   geom_density(aes(fill = dv), alpha = 0.2, color = NA)+
   geom_density(fill = "black", alpha = 1, color=NA)+
@@ -292,7 +292,7 @@ Conclusion: Going to use parameter estimates from refits to retest sample only f
 Clean up
 
 ```{r}
-rm(hddm_pars, hddm_vars, hddm_rels)
+rm(hddm_pars, hddm_rels)
 
 boot_df = fullfit_boot_df %>%
   filter(dv %in% unique(refit_boot_df$dv) == FALSE)
@@ -313,8 +313,6 @@ rm(test_data_hddm_fullfit, test_data_hddm_refit)
 ## DDM vs raw reliability overall
 
 ```{r}
-# retest_reliability ~ ddm_raw + (1|task_group)
-
 rel_df = rel_df %>%
   select(dv, icc) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
@@ -327,8 +325,10 @@ boot_df = boot_df %>%
 ```
 
 ```{r}
-rel_df %>%
-  mutate(contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
+ddm_point_plot = rel_df %>%
+  mutate(rt_acc = as.character(rt_acc),
+    contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
+  filter(rt_acc != "other") %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_boxplot()+
   facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
@@ -342,6 +342,89 @@ rel_df %>%
         text = element_text(size=16))+
   guides(fill = guide_legend(ncol = 2, byrow=F))
 
+mylegend<-g_legend(ddm_point_plot)
+
+grob_name <- names(mylegend$grobs)[1]
+
+#manually fix the legend
+#move non-decision down
+#key
+mylegend$grobs[grob_name][[1]]$layout[11,c(1:4)] <- c(4,8,4,8)
+mylegend$grobs[grob_name][[1]]$layout[12,c(1:4)] <- c(4,8,4,8)
+#text
+mylegend$grobs[grob_name][[1]]$layout[17,c(1:4)] <- c(4,10,4,10)
+#move threshold down
+#key
+mylegend$grobs[grob_name][[1]]$layout[9,c(1:4)] <- c(3,8,3,8)
+mylegend$grobs[grob_name][[1]]$layout[10,c(1:4)] <- c(3,8,3,8)
+#text
+mylegend$grobs[grob_name][[1]]$layout[16,c(1:4)] <- c(3,10,3,10)
+#move drift rate right and up
+#key
+mylegend$grobs[grob_name][[1]]$layout[7,c(1:4)] <- c(2,8,2,8)
+mylegend$grobs[grob_name][[1]]$layout[8,c(1:4)] <- c(2,8,2,8)
+#text
+mylegend$grobs[grob_name][[1]]$layout[15,c(1:4)] <- c(2,10,2,10)
+
+grid.arrange(ddm_point_plot +theme(legend.position="none"),
+             mylegend, nrow=2, heights=c(10, 1))
+
+
+rm(mylegend, ddm_point_plot)
+```
+
+```{r}
+ddm_boot_plot = boot_df %>%
+  group_by(dv) %>%
+  summarise(mean_icc = mean(icc),
+            rt_acc = unique(rt_acc),
+            overall_difference = unique(overall_difference),
+            raw_fit = unique(raw_fit)) %>%
+  mutate(rt_acc = as.character(rt_acc),
+    contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
+  filter(rt_acc != "other") %>%
+  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
+  geom_boxplot()+
+  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  ylab("ICC")+
+  xlab("")+
+  theme(legend.title = element_blank(),
+        legend.position = 'bottom',
+        legend.text = element_text(size=16),
+        strip.text = element_text(size=16),
+        axis.text = element_text(size = 16),
+        text = element_text(size=16))+
+  guides(fill = guide_legend(ncol = 2, byrow=F))
+
+mylegend<-g_legend(ddm_boot_plot)
+
+grob_name <- names(mylegend$grobs)[1]
+
+#manually fix the legend
+#move non-decision down
+#key
+mylegend$grobs[grob_name][[1]]$layout[11,c(1:4)] <- c(4,8,4,8)
+mylegend$grobs[grob_name][[1]]$layout[12,c(1:4)] <- c(4,8,4,8)
+#text
+mylegend$grobs[grob_name][[1]]$layout[17,c(1:4)] <- c(4,10,4,10)
+#move threshold down
+#key
+mylegend$grobs[grob_name][[1]]$layout[9,c(1:4)] <- c(3,8,3,8)
+mylegend$grobs[grob_name][[1]]$layout[10,c(1:4)] <- c(3,8,3,8)
+#text
+mylegend$grobs[grob_name][[1]]$layout[16,c(1:4)] <- c(3,10,3,10)
+#move drift rate right and up
+#key
+mylegend$grobs[grob_name][[1]]$layout[7,c(1:4)] <- c(2,8,2,8)
+mylegend$grobs[grob_name][[1]]$layout[8,c(1:4)] <- c(2,8,2,8)
+#text
+mylegend$grobs[grob_name][[1]]$layout[15,c(1:4)] <- c(2,10,2,10)
+
+grid.arrange(ddm_boot_plot +theme(legend.position="none"),
+             mylegend, nrow=2, heights=c(10, 1))
+
+
+rm(mylegend, ddm_boot_plot)
 ```
 
 ## Best measure for each task
