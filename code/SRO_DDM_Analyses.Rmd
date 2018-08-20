@@ -70,9 +70,9 @@ Since HDDM parameters depend on the sample on which they are fit we refit the mo
 ```{r}
 hddm_refits <- read.csv(paste0(retest_data_path,'t1_data/hddm_refits_exhaustive.csv'))
 
-test_data_hddm_full_sample <- test_data
+test_data_hddm_fullfit <- test_data
 
-tmp = names(test_data_hddm_full_sample)[names(test_data_hddm_full_sample) %in% names(hddm_refits) == FALSE]
+tmp = names(test_data_hddm_fullfit)[names(test_data_hddm_fullfit) %in% names(hddm_refits) == FALSE]
 
 hddm_refit_subs = as.character(hddm_refits$X)
 
@@ -86,11 +86,11 @@ rm(hddm_refit_subs)
 # after correction this should just be sub_id
 #tmp
 
-test_data_hddm_retest_sample = test_data_hddm_full_sample %>%
+test_data_hddm_refit = test_data_hddm_fullfit %>%
   select(tmp)
 
 #merge hddm refits to test data
-test_data_hddm_retest_sample = merge(test_data_hddm_retest_sample, hddm_refits, by="sub_id")
+test_data_hddm_refit = merge(test_data_hddm_refit, hddm_refits, by="sub_id")
 
 rm(test_data, hddm_refits, tmp)
 ```
@@ -101,7 +101,7 @@ rm(test_data, hddm_refits, tmp)
 
 ```{r}
 #for matching function to work properly assign name back to test_data
-test_data  = test_data_hddm_full_sample
+test_data  = test_data_hddm_fullfit
 
 numeric_cols = get_numeric_cols()
 
@@ -137,7 +137,7 @@ rel_df = rel_df %>%
 Reassign df's and clean up
 
 ```{r}
-rel_df_full_sample = rel_df
+rel_df_fullfit = rel_df
 rm(test_data, rel_df, tmp, i, numeric_cols, rel_df_cols)
 ```
 
@@ -145,7 +145,7 @@ rm(test_data, rel_df, tmp, i, numeric_cols, rel_df_cols)
 
 ```{r}
 #for matching function to work properly assign name back to test_data
-test_data  = test_data_hddm_retest_sample
+test_data  = test_data_hddm_refit
 
 numeric_cols = get_numeric_cols()
 
@@ -181,20 +181,30 @@ rel_df = rel_df %>%
 Reassign df's and clean up
 
 ```{r}
-rel_df_retest_sample = rel_df
+rel_df_refit = rel_df
 rm(test_data, rel_df, tmp, i, numeric_cols, rel_df_cols)
 ```
 
 ### Load bootstrapped reliabilities
 
-Extract ddm vars only
+Extract ddm vars only  
+
+Using full sample fits' reliabilities  
 
 ```{r}
-boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')))
+fullfit_boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')))
 
-boot_df = process_boot_df(boot_df)
+fullfit_boot_df = process_fullfit_boot_df(fullfit_boot_df)
 
-boot_df = boot_df[boot_df$dv %in% retest_report_vars,]
+fullfit_boot_df = fullfit_boot_df[fullfit_boot_df$dv %in% measure_labels$dv,]
+```
+
+Refits bootstrapped reliabilities  
+
+```{r}
+refit_boot_df = read.csv(gzfile(paste0(retest_data_path,'refits_bootstrap_merged.csv.gz')))
+
+refit_boot_df = process_boot_df(refit_boot_df)
 ```
 
 ## DDM vs raw reliability overall
@@ -223,7 +233,7 @@ Of course these parameter estimates themselves are not very interpretable in the
 
 ### Parameter stability
 
-### Prameter reliability
+### Parameter reliability
 
 - Parameter reliability depending on sample size: in addition to comparing just 150 vs 500
 
