@@ -82,7 +82,8 @@ hddm_refits$sub_id <- hddm_refit_subs
 
 rm(hddm_refit_subs)
 
-###RERUN MOTOR SS FOR REFIT (MISSING REACTIVE CONTROL HDDM DRIFT) - after correction this should just be sub_id
+###RERAN MOTOR SS FOR REFIT (MISSING REACTIVE CONTROL HDDM DRIFT) - still missing; while missing the values from fitting to the full sample are used
+# after correction this should just be sub_id
 #tmp
 
 test_data_hddm_retest_sample = test_data_hddm_full_sample %>%
