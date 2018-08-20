@@ -246,22 +246,54 @@ hddm_pars %>%
 Does the distribution of scaled difference scores have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
 
 ```{r}
-# summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
-summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
+summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
+# Same result
+# summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
 ```
 
-Are the rankings the same regardless of the sample (this is what you really care for)
+Are there differences in reliability depending which sample the HDDM parameters are estimated from? No.
 
 ```{r}
+hddm_rels_fullfit = rel_df_fullfit %>%
+  filter(dv %in% unique(refit_boot_df$dv)) %>%
+  select(dv, icc)
 
+hddm_rels_refit = rel_df_refit %>%
+  filter(dv %in% unique(refit_boot_df$dv)) %>%
+  select(dv, icc) 
+
+hddm_rels = hddm_rels_fullfit %>%
+  left_join(hddm_rels_refit, by = "dv") %>%
+  rename(fullfit = icc.x, refit = icc.y) %>%
+  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv")
+
+rm(hddm_rels_fullfit, hddm_rels_refit)
+
+hddm_rels %>%
+  ggplot(aes(fullfit, refit, col=rt_acc))+
+  geom_point()+
+  geom_abline(slope=1, intercept = 0)+
+  xlab("Reliability of HDDM params using n=552")+
+  ylab("Reliability of HDDM params using n=150")+
+  theme(legend.title = element_blank())
 ```
-
-Difference in reliability
 
 ```{r}
+hddm_rels = hddm_rels %>%
+  gather(sample, value, -dv, -rt_acc)
 
+summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
 ```
 
+You should compare model fits using either sample. That would tell you which estimates explain observed data better though given the lack of difference in parameter estimates I don't expect these to differ either.
+
+Conclusion: Going to use parameter estimates from refits to retest sample only for t1 data in the rest of this report because I think they are more comparable to the parameter estimates from t2.
+
+Clean up
+
+```{r}
+rm(hddm_pars, hddm_vars, hddm_rels)
+```
 
 ## DDM vs raw reliability overall
 
