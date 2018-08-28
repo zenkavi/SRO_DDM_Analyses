@@ -316,13 +316,13 @@ Data wrangling df's containing point estimate reliabilities and bootstrapped rel
 
 ```{r}
 rel_df = rel_df %>%
-  select(dv, icc) %>%
+  select(dv, icc, var_subs, var_ind, var_resid) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
   mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
          contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"))
 
 boot_df = boot_df %>%
-  select(dv, icc) %>%
+  select(dv, icc, var_subs, var_ind, var_resid) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
   mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
          contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"))
@@ -461,11 +461,55 @@ summary(mer2)
 
 ## Best measure for each task
 
-- Retest reliability for each task: 
--- What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
--- Table each task where rows are each task and cols are mean reliability from raw measures, mean reliability of ddm parameters, name of most reliable measure for that task
+What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
+
+Even though overall the ddm parameters are not significantly less reliable the most reliable measure is more frequently a raw measure. There are some examples of an EZ estimate being the best for a task as well. Regardless of raw vs ddm the best measure is always a non-contrast measure. 
+
+```{r}
+rel_df %>%
+  group_by(task_group) %>%
+  filter(icc == max(icc)) %>%
+  select(task_group, everything())
+```
 
 ## Variance breakdown measure types
+
+Converting variance estimates for each measure to percentage of all variance for comparability.
+
+```{r}
+rel_df = rel_df %>%
+  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
+         var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
+         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
+
+boot_df = boot_df %>%
+  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
+         var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
+         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
+```
+
+```{r}
+rel_df %>%
+  filter(rt_acc != "other") %>%
+  group_by(rt_acc, contrast) %>%
+  summarise(mean_var_subs_pct = mean(var_subs_pct),
+            mean_var_ind_pct = mean(var_ind_pct),
+            mean_var_resid_pct = mean(var_resid_pct),
+            sem_var_subs_pct = sem(var_subs_pct),
+            sem_var_ind_pct = sem(var_ind_pct),
+            sem_var_resid_pct = sem(var_resid_pct)) %>%
+  gather(key, val, -rt_acc, -contrast) %>%
+  separate(key, into = c("tmp1", "tmp2", "type"), sep = "_", extra = "drop") %>%
+  select(-tmp2) %>%
+  spread(tmp1, val) %>%
+  ggplot(aes(type, mean, color=rt_acc))+
+  geom_point(position=position_dodge(width=0.5))+
+  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))
+
+unique(rel_df$rt_acc)
+```
+
+## Sample size effects
 
 - Change in parameter values depending on full vs. retest only sample
 -- How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. 
@@ -473,8 +517,6 @@ summary(mer2)
 NOTE: The lack of clear systematicity in the changes of the parameter estimates can be difficult to interpret. A systematic change would have meant that the ranking remained the same regardless of the sample size. When the change is non-systematic in this way then a given subject that has high higher drift rates than most of the people in the full sample can appear to have lower drift rates than the same people when fit on the retest sample only. 
 
 Of course these parameter estimates themselves are not very interpretable in their 'goodness' as they don't reflect anything about model fits. To determine the model fits for both cases I have written functions to sample from the posterior predictive and calculate $R^2$'s for each subject.
-
-## Sample size effects
 
 ### Parameter stability
 
