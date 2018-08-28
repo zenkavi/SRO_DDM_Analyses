@@ -63,9 +63,9 @@ retest_data = retest_data[retest_data$sub_id %in% test_data$sub_id,]
 rm(retest_data_subs)
 ```
 
-### Replace HDDM parameters in t1 data
+### HDDM parameters in t1 data
 
-Since HDDM parameters depend on the sample on which they are fit we refit the model on t1 data for the subjects that have t2 data. Here we replace the HDDM parameters in the current t1 dataset with these refitted values. 
+Since HDDM parameters depend on the sample on which they are fit we also refit the model on t1 data only for the subjects that have t2 data.
 
 ```{r}
 hddm_refits <- read.csv(paste0(retest_data_path,'t1_data/hddm_refits_exhaustive.csv'))
@@ -95,7 +95,7 @@ test_data_hddm_refit = merge(test_data_hddm_refit, hddm_refits, by="sub_id")
 rm(test_data, hddm_refits, tmp)
 ```
 
-### Create point estimates
+### Create reliability point estimates
 
 #### Using hddm full sample
 
@@ -211,6 +211,8 @@ refit_boot_df = process_boot_df(refit_boot_df)
 
 Before going on with the rest of the report first decide on whether there are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
 
+### Parameter stability
+
 Differences in distributions: using scaled differences
 
 ```{r}
@@ -250,6 +252,8 @@ summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
 # Same result
 # summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
 ```
+
+### Parameter reliability
 
 Are there differences in reliability depending which sample the HDDM parameters are estimated from? No.
 
@@ -340,11 +344,7 @@ ddm_point_plot = rel_df %>%
   ylab("ICC")+
   xlab("")+
   theme(legend.title = element_blank(),
-        legend.position = 'bottom',
-        legend.text = element_text(size=16),
-        strip.text = element_text(size=16),
-        axis.text = element_text(size = 16),
-        text = element_text(size=16))+
+        legend.position = 'bottom')+
   guides(fill = guide_legend(ncol = 2, byrow=F))
 
 mylegend<-g_legend(ddm_point_plot)
@@ -396,11 +396,7 @@ ddm_boot_plot = boot_df %>%
   ylab("ICC")+
   xlab("")+
   theme(legend.title = element_blank(),
-        legend.position = 'bottom',
-        legend.text = element_text(size=16),
-        strip.text = element_text(size=16),
-        axis.text = element_text(size = 16),
-        text = element_text(size=16))+
+        legend.position = 'bottom')+
   guides(fill = guide_legend(ncol = 2, byrow=F))
 
 mylegend<-g_legend(ddm_boot_plot)
