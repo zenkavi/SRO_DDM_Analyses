@@ -1,5 +1,6 @@
 library(tidyverse)
 library(gridExtra)
+library(lme4)
 library(MCMCglmm)
 library(psych)
 library(rmarkdown)

@@ -243,7 +243,7 @@ hddm_pars %>%
   xlab("Scaled difference of HDDM parameter estimate (full - refit)")
 ```
 
-Does the distribution of scaled difference scores have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
+Does the distribution of scaled difference scores (between using n=150 or n=552) have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
 
 ```{r}
 summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
@@ -312,22 +312,27 @@ rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 ## DDM vs raw reliability overall
 
+Data wrangling df's containing point estimate reliabilities and bootstrapped reliabilities
+
 ```{r}
 rel_df = rel_df %>%
   select(dv, icc) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
-  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"))
+  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
+         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"))
 
 boot_df = boot_df %>%
   select(dv, icc) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
-  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"))
+  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
+         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"))
 ```
+
+Plot reliability point estimates comparing DDM measures to raw measures faceting for contrast measures.
 
 ```{r}
 ddm_point_plot = rel_df %>%
-  mutate(rt_acc = as.character(rt_acc),
-    contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
+  mutate(rt_acc = as.character(rt_acc)) %>%
   filter(rt_acc != "other") %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_boxplot()+
@@ -373,15 +378,17 @@ grid.arrange(ddm_point_plot +theme(legend.position="none"),
 rm(mylegend, ddm_point_plot)
 ```
 
+Plot averaged bootstrapped reliability estimates per measure comparing DDM measures to raw measures faceting for contrast measures.
+
 ```{r}
 ddm_boot_plot = boot_df %>%
   group_by(dv) %>%
   summarise(mean_icc = mean(icc),
             rt_acc = unique(rt_acc),
             overall_difference = unique(overall_difference),
-            raw_fit = unique(raw_fit)) %>%
-  mutate(rt_acc = as.character(rt_acc),
-    contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
+            raw_fit = unique(raw_fit),
+            contrast = unique(contrast)) %>%
+  mutate(rt_acc = as.character(rt_acc)) %>%
   filter(rt_acc != "other") %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_boxplot()+
@@ -425,6 +432,31 @@ grid.arrange(ddm_boot_plot +theme(legend.position="none"),
 
 
 rm(mylegend, ddm_boot_plot)
+```
+
+Model testing if the reliability of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
+
+Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as well as their interaction is necessary.
+
+Conclusion: Model with fixed effect just for contrast and not for raw vs ddm and no interaction is the best. But to answer the question on lack of difference for ddm vs raw I'll look at the model with both fixed effects for now.
+
+```{r}
+mer1 = lmer(icc ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(icc ~ contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(icc ~ ddm_raw + contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(icc ~ ddm_raw * contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+anova(mer1, mer2, mer3)
+anova(mer1a, mer2, mer3)
+```
+
+```{r}
+rm(mer1, mer3, mer1a)
+```
+
+Raw measures do not significantly differ from ddm parameters in their reliability but non-contrast measures are significantly more reliable compared to contrast measures.
+
+```{r}
+summary(mer2)
 ```
 
 ## Best measure for each task
