@@ -488,25 +488,88 @@ boot_df = boot_df %>%
          var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 rel_df %>%
   filter(rt_acc != "other") %>%
-  group_by(rt_acc, contrast) %>%
+  group_by(rt_acc, contrast, raw_fit) %>%
   summarise(mean_var_subs_pct = mean(var_subs_pct),
             mean_var_ind_pct = mean(var_ind_pct),
             mean_var_resid_pct = mean(var_resid_pct),
             sem_var_subs_pct = sem(var_subs_pct),
             sem_var_ind_pct = sem(var_ind_pct),
             sem_var_resid_pct = sem(var_resid_pct)) %>%
-  gather(key, val, -rt_acc, -contrast) %>%
-  separate(key, into = c("tmp1", "tmp2", "type"), sep = "_", extra = "drop") %>%
-  select(-tmp2) %>%
-  spread(tmp1, val) %>%
-  ggplot(aes(type, mean, color=rt_acc))+
-  geom_point(position=position_dodge(width=0.5))+
-  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))
+  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_subs_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
+  geom_point(position=position_dodge(width=0.75), size = 5)+
+  geom_errorbar(aes(ymin = mean_var_subs_pct - sem_var_subs_pct, ymax = mean_var_subs_pct + sem_var_subs_pct), position=position_dodge(width=0.75))+
+  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  ylab("% of between subjects variance")+
+  xlab("")+
+  theme(legend.title = element_blank(),
+        legend.position = 'bottom')
+```
 
-unique(rel_df$rt_acc)
+```{r message=FALSE, warning=FALSE}
+rel_df %>%
+  filter(rt_acc != "other") %>%
+  group_by(rt_acc, contrast, raw_fit) %>%
+  summarise(mean_var_subs_pct = mean(var_subs_pct),
+            mean_var_ind_pct = mean(var_ind_pct),
+            mean_var_resid_pct = mean(var_resid_pct),
+            sem_var_subs_pct = sem(var_subs_pct),
+            sem_var_ind_pct = sem(var_ind_pct),
+            sem_var_resid_pct = sem(var_resid_pct)) %>%
+  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_resid_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
+  geom_point(position=position_dodge(width=0.75), size = 5)+
+  geom_errorbar(aes(ymin = mean_var_resid_pct - sem_var_resid_pct, ymax = mean_var_resid_pct + sem_var_resid_pct), position=position_dodge(width=0.75))+
+  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  ylab("% of residual variance")+
+  xlab("")+
+  theme(legend.title = element_blank(),
+        legend.position = 'bottom')
+```
+
+Model testing if the percentage of between subjects variance of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
+
+Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as well as their interaction is necessary.
+
+Conclusion: Model with fixed effects for both is best.
+
+```{r}
+mer1 = lmer(var_subs_pct ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(var_subs_pct ~ contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(var_subs_pct ~ ddm_raw + contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(var_subs_pct ~ ddm_raw * contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+anova(mer1, mer2, mer3)
+anova(mer1a, mer2, mer3)
+```
+
+```{r}
+rm(mer1, mer1a, mer3)
+```
+
+Raw and non-contrast measures have higher between subjects variance (ie are between individual difference measures)
+
+```{r}
+summary(mer2)
+```
+
+Model testing if the percentage of residual variance of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
+
+Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as well as their interaction is necessary.
+
+Conclusion: Model with fixed effect just for contrast is best. And plot above already shows that contrast measures have higher residual variance.
+
+```{r}
+mer1 = lmer(var_resid_pct ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(var_resid_pct ~ contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(var_resid_pct ~ ddm_raw + contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(var_resid_pct ~ ddm_raw * contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+anova(mer1, mer2, mer3)
+anova(mer1a, mer2, mer3)
+```
+
+```{r}
+rm(mer1, mer1a, mer2, mer3)
 ```
 
 ## Sample size effects
