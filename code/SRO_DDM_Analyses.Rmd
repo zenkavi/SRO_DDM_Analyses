@@ -568,20 +568,13 @@ anova(mer1a, mer2, mer3)
 rm(mer1, mer1a, mer2, mer3)
 ```
 
-## Sample size effects
+## Sample size effects on reliability
 
-- Change in parameter values depending on full vs. retest only sample
--- How much do parameter values change depending on whether the model was fit using the whole sample vs only the retest sample. 
+Differences in DDM parameter reliability for t1 data using either n=552 or n=150 were reported above under [T1 HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/SRO_DDM_Analyses.nb.html#t1_hddm_parameters). No meaningful differences exist between these two sample sizes.
 
-NOTE: The lack of clear systematicity in the changes of the parameter estimates can be difficult to interpret. A systematic change would have meant that the ranking remained the same regardless of the sample size. When the change is non-systematic in this way then a given subject that has high higher drift rates than most of the people in the full sample can appear to have lower drift rates than the same people when fit on the retest sample only. 
+But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
 
-Of course these parameter estimates themselves are not very interpretable in their 'goodness' as they don't reflect anything about model fits. To determine the model fits for both cases I have written functions to sample from the posterior predictive and calculate $R^2$'s for each subject.
-
-### Parameter stability
-
-### Parameter reliability
-
-- Parameter reliability depending on sample size: in addition to comparing just 150 vs 500
+Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow.
 
 The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size.
 
