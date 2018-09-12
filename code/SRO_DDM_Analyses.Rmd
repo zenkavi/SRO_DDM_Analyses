@@ -127,11 +127,6 @@ for(i in 1:length(numeric_cols)){
 row.names(rel_df) <- numeric_cols
 rel_df$dv = row.names(rel_df)
 row.names(rel_df) = seq(1:nrow(rel_df))
-rel_df$task = 'task'
-rel_df[grep('survey', rel_df$dv), 'task'] = 'survey'
-rel_df[grep('holt', rel_df$dv), 'task'] = "task"
-rel_df = rel_df %>%
-  select(dv, task, icc, pearson, var_subs, var_ind, var_resid)
 ```
 
 Reassign df's and clean up
@@ -171,11 +166,6 @@ for(i in 1:length(numeric_cols)){
 row.names(rel_df) <- numeric_cols
 rel_df$dv = row.names(rel_df)
 row.names(rel_df) = seq(1:nrow(rel_df))
-rel_df$task = 'task'
-rel_df[grep('survey', rel_df$dv), 'task'] = 'survey'
-rel_df[grep('holt', rel_df$dv), 'task'] = "task"
-rel_df = rel_df %>%
-  select(dv, task, icc, pearson, var_subs, var_ind, var_resid)
 ```
 
 Reassign df's and clean up
@@ -543,7 +533,7 @@ anova(mer1a, mer2, mer3)
 rm(mer1, mer1a, mer3)
 ```
 
-Raw and non-contrast measures have higher between subjects variance (ie are between individual difference measures)
+Raw and non-contrast measures have higher between subjects variance (ie are better individual difference measures)
 
 ```{r}
 summary(mer2)
@@ -574,7 +564,53 @@ Differences in DDM parameter reliability for t1 data using either n=552 or n=150
 
 But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
 
-Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow.
+Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. [revisit this - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]
+
+```{r}
+# sample 25 subjects
+# calculate reliability point estimate for those 25
+# sample another 25 and add to the first 25
+# calculate reliability point estimate for those 50
+# ...
+# output: cols = dv, icc_25, var_subs_25, var_ind_25, var_resid_25, ...
+
+test_data_150 = test_data
+retest_data_150 = retest_data
+
+test_data_125 = sample_n(test_data_150, 125)
+test_data_100 = sample_n(test_data_125, 100)
+test_data_75 = sample_n(test_data_100, 75)
+test_data_50 = sample_n(test_data_75, 50)
+test_data_25 = sample_n(test_data_50, 25)
+
+#for matching function to work properly assign name back to test_data
+test_data  = test_data_hddm_fullfit
+
+numeric_cols = get_numeric_cols()
+
+#Create df of point estimate reliabilities
+rel_df_cols = c('icc', 'pearson', 'var_subs', 'var_ind', 'var_resid')
+
+rel_df = as.data.frame(matrix(ncol = length(rel_df_cols)))
+
+names(rel_df) = rel_df_cols
+
+for(i in 1:length(numeric_cols)){
+  
+  tmp = get_retest_stats(numeric_cols[i], metric = c('icc', 'pearson', 'var_breakdown'))
+  
+  if(i == 1){
+    rel_df = tmp
+  }
+  else{
+    rel_df = rbind(rel_df, tmp)
+  }
+}
+
+row.names(rel_df) <- numeric_cols
+rel_df$dv = row.names(rel_df)
+row.names(rel_df) = seq(1:nrow(rel_df))
+```
 
 The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size.
 
