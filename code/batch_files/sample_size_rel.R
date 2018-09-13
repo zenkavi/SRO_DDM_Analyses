@@ -8,7 +8,8 @@ test_data_file_name <- args[1]
 retest_data_file_name <- args[2] 
 data_dir <- args[3]
 out_dir  <- args[4]
-sample_sizes <- eval(parse(text=args[5]))
+# sample_sizes <- eval(parse(text=args[5]))
+sample_sizes <- as.numeric(args[5])
 iterations <- as.numeric(args[6])
 dv <- args[7]
 
