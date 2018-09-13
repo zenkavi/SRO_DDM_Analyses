@@ -19,11 +19,17 @@ library(psych)
 
 helper_func_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/'
 
+print("Reading in helper functions...")
+
 source(paste0(helper_func_path, 'match_t1_t2.R'))
 source(paste0(helper_func_path, 'get_retest_stats.R'))
 
+print("Helper functions read in.")
+
 #set seed to reproduce results
 set.seed(3987439)
+
+print("Seed set.")
 
 #Create df of point estimate reliabilities
 rel_df_cols = c('icc', 'var_subs', 'var_ind', 'var_resid', 'dv', 'sample_size', 'iteration')
@@ -31,6 +37,8 @@ rel_df_cols = c('icc', 'var_subs', 'var_ind', 'var_resid', 'dv', 'sample_size', 
 rel_df_sample_size = as.data.frame(matrix(ncol = length(rel_df_cols)))
 
 names(rel_df_sample_size) = rel_df_cols
+
+print("Defining sample generation function...")
 
 make_samples = function(sample_sizes){
   while(length(sample_sizes)>0){
@@ -48,6 +56,8 @@ make_samples = function(sample_sizes){
     sample_sizes = sample_sizes[-which(sample_sizes == cur_sample_size)]
   }
 }
+
+print("Starting reliability loop...")
 
 #output of this should have iterations*length(sample_size) rows 
 for(it in 1:iterations) {
@@ -74,6 +84,8 @@ for(it in 1:iterations) {
     
   }
 }
+
+print("Finished reliability loop.")
 
 rel_df_sample_size = rel_df_sample_size[-which(is.na(rel_df_sample_size$dv)),]
 
