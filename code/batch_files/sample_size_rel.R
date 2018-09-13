@@ -11,7 +11,7 @@ out_dir  <- args[4]
 # sample_sizes <- eval(parse(text=args[5]))
 dv <- args[5]
 iterations <- as.numeric(args[6])
-sample_sizes <- as.numeric(args[7])
+sample_sizes <- as.numeric(unlist(str_split(args[7])))
 
 print(dv)
 print(iterations)
