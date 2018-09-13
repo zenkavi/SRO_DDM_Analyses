@@ -5,3 +5,5 @@
 SRO_DDM_Analyses.Rproj
 all_ddm_sample_size_estimates.csv
 output/workspaces/*
+batch_files/*/.out
+batch_files/*/.err
