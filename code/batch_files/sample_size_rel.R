@@ -16,19 +16,13 @@ dv <- args[7]
 library(tidyverse)
 library(psych)
 
-helper_func_path = '...'
+helper_func_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_Retest_Analyses/code/SRO_Retest_Helper_Functions/'
 
 source(paste0(helper_func_path, 'match_t1_t2.R'))
 source(paste0(helper_func_path, 'get_retest_stats.R'))
 
-test_data = read.csv(paste0(data_dir, test_data_file_name))
-retest_data = read.csv(paste0(data_dir, retest_data_file_name))
-
 #set seed to reproduce results
 set.seed(3987439)
-
-#get list of dv's for which reliability will be calculated for
-numeric_cols = get_numeric_cols()
 
 #Create df of point estimate reliabilities
 rel_df_cols = c('icc', 'var_subs', 'var_ind', 'var_resid', 'dv', 'sample_size', 'iteration')
@@ -57,11 +51,14 @@ make_samples = function(sample_sizes){
 #output of this should have iterations*length(sample_size) rows 
 for(it in 1:iterations) {
   
-  print(it)
+  test_data = read.csv(paste0(data_dir, test_data_file_name))
+  retest_data = read.csv(paste0(data_dir, retest_data_file_name))
   
   make_samples(sample_sizes)
   
   for(ss in sample_sizes){
+    
+    print(paste0(it,'_',ss))
     
     #set test and retest data to df's of sample size that are being tested
     test_data  = get(paste0("test_data_", as.character(ss)))
@@ -72,14 +69,11 @@ for(it in 1:iterations) {
     tmp$sample_size = ss
     tmp$iteration = it
     
-    if(it == 1){
-      rel_df_sample_size = tmp
-    }
-    else{
-      rel_df_sample_size = rbind(rel_df_sample_size, tmp)
-    }
+    rel_df_sample_size = rbind(rel_df_sample_size, tmp)
     
   }
 }
+
+rel_df_sample_size = rel_df_sample_size[-which(is.na(rel_df_sample_size$dv)),]
 
 write.csv(rel_df_sample_size, paste0(out_dir,dv,'_rel_df_sample_size.csv' ), row.names=FALSE)
