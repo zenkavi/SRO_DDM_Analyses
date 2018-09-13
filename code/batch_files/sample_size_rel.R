@@ -16,7 +16,7 @@ dv <- args[7]
 library(tidyverse)
 library(psych)
 
-helper_func_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_Retest_Analyses/code/SRO_Retest_Helper_Functions/'
+helper_func_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/'
 
 source(paste0(helper_func_path, 'match_t1_t2.R'))
 source(paste0(helper_func_path, 'get_retest_stats.R'))
