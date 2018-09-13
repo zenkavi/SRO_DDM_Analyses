@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=sample_size_rel
-#SBATCH --output=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/sample_size_rel.job.out
-#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/sample_size_rel.job.err
+#SBATCH --job-name=sample_size_rel_{DV}
+#SBATCH --output=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/sample_size_rel_{DV}.job.out
+#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/sample_size_rel_{DV}.job.err
 #SBATCH -p russpold,owners,normal
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
