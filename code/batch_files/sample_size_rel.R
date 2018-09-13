@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+#Set up environment
+library(tidyverse)
+library(psych)
+
 args = commandArgs(trailingOnly=TRUE)
 
 #Usage:
@@ -16,10 +20,6 @@ sample_sizes <- as.numeric(unlist(str_split(args[7])))
 print(dv)
 print(iterations)
 print(sample_sizes)
-
-#Set up environment
-library(tidyverse)
-library(psych)
 
 helper_func_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/'
 
