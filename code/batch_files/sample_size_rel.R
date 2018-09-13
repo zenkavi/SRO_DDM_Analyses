@@ -13,6 +13,10 @@ dv <- args[5]
 iterations <- as.numeric(args[6])
 sample_sizes <- as.numeric(args[7])
 
+print(dv)
+print(iterations)
+print(sample_sizes)
+
 #Set up environment
 library(tidyverse)
 library(psych)
