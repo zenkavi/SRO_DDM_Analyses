@@ -2,6 +2,7 @@
 #Set up environment
 library(tidyverse)
 library(psych)
+library(stringr)
 
 args = commandArgs(trailingOnly=TRUE)
 
