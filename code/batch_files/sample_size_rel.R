@@ -2,13 +2,14 @@
 args = commandArgs(trailingOnly=TRUE)
 
 #Usage:
-#Rscript --vanilla sample_size_rel.R test_data_file_name retest_data_file_name data_dir out_dir sample_sizes
+#Rscript --vanilla sample_size_rel.R test_data_file_name retest_data_file_name data_dir out_dir sample_sizes iterations dv
 
 test_data_file_name <- args[1]
 retest_data_file_name <- args[2] 
 data_dir <- args[3]
 out_dir  <- args[4]
 sample_sizes <- args[5]
+iterations <- eval(parse(text=args[6]))
 
 #Set up environment
 library(tidyverse)
@@ -18,12 +19,11 @@ helper_func_path = '...'
 
 source(paste0(helper_func_path, 'match_t1_t2.R'))
 source(paste0(helper_func_path, 'get_retest_stats.R'))
-source(paste0(helper_func_path, 'get_numeric_cols.R'))
 
 test_data_150 = read.csv(paste0(data_dir, test_data_file_name))
 retest_data_150 = read.csv(paste0(data_dir, retest_data_file_name))
 
-#set seed to reproduc
+#set seed to reproduce results
 set.seed(3987439)
 
 #get list of dv's for which reliability will be calculated for
@@ -46,7 +46,7 @@ make_samples = function(sample_sizes){
 }
 
 #output of this should have 100*4*273 rows (109200)
-for(it in 1:100) {
+for(it in 1:iterations) {
   
   make_samples(sample_sizes)
   
@@ -63,7 +63,7 @@ for(it in 1:100) {
   retest_data_50 = retest_data_150[retest_data_150$sub_id %in% test_data_50$sub_id,]
   retest_data_25 = retest_data_150[retest_data_150$sub_id %in% test_data_25$sub_id,]
   
-  for(ss in c(25, 50, 75, 100, 125)){
+  for(ss in sample_sizes){
     #set test and retest data to df's of sample size that are being tested
     test_data  = get(paste0("test_data_", as.character(ss)))
     retest_data = get(paste0("retest_data_", as.character(ss)))
@@ -84,3 +84,5 @@ for(it in 1:100) {
     } 
   }
 }
+
+write.csv(rel_df_sample_size, paste0(out_dir,dv,'_rel_df_sample_size.csv' ), row.names=FALSE)
