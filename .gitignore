@@ -7,3 +7,4 @@ all_ddm_sample_size_estimates.csv
 output/workspaces/*
 batch_files/*/.out
 batch_files/*/.err
+output/batch_output
