@@ -571,6 +571,12 @@ Note: Not refitting HDDM's for each of these sample sizes since a. there were no
 ```{r}
 rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.gz')))
 
+#Check if all vars are there
+numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
+```
+
+
+```{r}
 rel_df_sample_size %>% 
   group_by(dv, sample_size) %>%
   summarise(mean_icc = mean(icc),
@@ -583,7 +589,7 @@ rel_df_sample_size %>%
             sem_var_resid = sem(var_resid)) %>%
   ggplot(aes(sample_size, mean_icc))+
   geom_point(aes(group = dv), alpha = 0.1)+
-  geom_line(aes(group = dv), alpha = 0.1)+
+  geom_line(aes(group = dv), alpha = 0.1)
   geom_errorbar(aes(ymin = mean_icc-sem_icc, ymax = mean_icc+sem_icc, group=dv), alpha = 0.1)
 ```
 
