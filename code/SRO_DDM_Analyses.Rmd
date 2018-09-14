@@ -571,7 +571,20 @@ Note: Not refitting HDDM's for each of these sample sizes since a. there were no
 ```{r}
 rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.gz')))
 
-numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
+rel_df_sample_size %>% 
+  group_by(dv, sample_size) %>%
+  summarise(mean_icc = mean(icc),
+            sem_icc = sem(icc), 
+            mean_var_subs = mean(var_subs),
+            sem_var_subs = sem(var_subs),
+            mean_var_ind = mean(var_ind),
+            sem_var_ind = sem(var_ind),
+            mean_var_resid = mean(var_resid),
+            sem_var_resid = sem(var_resid)) %>%
+  ggplot(aes(sample_size, mean_icc))+
+  geom_point(aes(group = dv), alpha = 0.1)+
+  geom_line(aes(group = dv), alpha = 0.1)+
+  geom_errorbar(aes(ymin = mean_icc-sem_icc, ymax = mean_icc+sem_icc, group=dv), alpha = 0.1)
 ```
 
 Assign the retest sample datasets to correct names.
