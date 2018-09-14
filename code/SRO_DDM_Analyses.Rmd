@@ -574,27 +574,36 @@ rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.
 #Check if all vars are there
 # numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
 
+rel_df_sample_size = rel_df_sample_size %>%
+  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
+  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
+         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"),
+         contrast = factor(contrast, levels=c("non-contrast", "contrast")),
+         var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
+         var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
+         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
+
 rel_df_sample_size_summary = rel_df_sample_size %>% 
-  group_by(dv, sample_size) %>%
+  group_by(dv, sample_size, ddm_raw, contrast) %>%
   summarise(mean_icc = mean(icc),
             sem_icc = sem(icc), 
-            mean_var_subs = mean(var_subs),
-            sem_var_subs = sem(var_subs),
-            mean_var_ind = mean(var_ind),
-            sem_var_ind = sem(var_ind),
-            mean_var_resid = mean(var_resid),
-            sem_var_resid = sem(var_resid))
+            mean_var_subs_pct = mean(var_subs_pct),
+            sem_var_subs_pct = sem(var_subs_pct),
+            mean_var_ind_pct = mean(var_ind_pct),
+            sem_var_ind_pct = sem(var_ind_pct),
+            mean_var_resid_pct = mean(var_resid_pct),
+            sem_var_resid_pct = sem(var_resid_pct))
 
 tmp = rel_df_sample_size %>% 
   group_by(sample_size) %>%
   summarise(mean_icc = mean(icc),
             sem_icc = sem(icc), 
-            mean_var_subs = mean(var_subs),
-            sem_var_subs = sem(var_subs),
-            mean_var_ind = mean(var_ind),
-            sem_var_ind = sem(var_ind),
-            mean_var_resid = mean(var_resid),
-            sem_var_resid = sem(var_resid))
+            mean_var_subs_pct = mean(var_subs_pct),
+            sem_var_subs_pct = sem(var_subs_pct),
+            mean_var_ind_pct = mean(var_ind_pct),
+            sem_var_ind_pct = sem(var_ind_pct),
+            mean_var_resid_pct = mean(var_resid_pct),
+            sem_var_resid_pct = sem(var_resid_pct))
 ```
 
 Does the mean reliability change with sample size?
@@ -621,33 +630,16 @@ Does the change in reliabiliity with sample size vary by variable type?
 The changes do not differ by raw vs. ddm measures. It does differ by whether the measure is a contrast measure: For contrast measures all increases in reliability with sample size are larger than the increases for non-contrast measures. This implies that larger sample sizes are even more crucial for studies using contrast measures as trait-level measures.
 
 ```{r}
-rel_df_sample_size = rel_df_sample_size %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
-  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
-         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
-  mutate(contrast = factor(contrast, levels=c("non-contrast", "contrast")))
-
-rel_df_sample_size_summary = rel_df_sample_size %>% 
-  group_by(dv, sample_size, ddm_raw, contrast) %>%
-  summarise(mean_icc = mean(icc),
-            sem_icc = sem(icc), 
-            mean_var_subs = mean(var_subs),
-            sem_var_subs = sem(var_subs),
-            mean_var_ind = mean(var_ind),
-            sem_var_ind = sem(var_ind),
-            mean_var_resid = mean(var_resid),
-            sem_var_resid = sem(var_resid))
-
 tmp = rel_df_sample_size %>% 
   group_by(sample_size, ddm_raw, contrast) %>%
   summarise(mean_icc = mean(icc),
             sem_icc = sem(icc), 
-            mean_var_subs = mean(var_subs),
-            sem_var_subs = sem(var_subs),
-            mean_var_ind = mean(var_ind),
-            sem_var_ind = sem(var_ind),
-            mean_var_resid = mean(var_resid),
-            sem_var_resid = sem(var_resid))
+            mean_var_subs_pct = mean(var_subs_pct),
+            sem_var_subs_pct = sem(var_subs_pct),
+            mean_var_ind_pct = mean(var_ind_pct),
+            sem_var_ind_pct = sem(var_ind_pct),
+            mean_var_resid_pct = mean(var_resid_pct),
+            sem_var_resid_pct = sem(var_resid_pct))
 ```
 
 ```{r}
@@ -670,14 +662,38 @@ summary(lmer(icc ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_
 
 Does variability of reliability change with sample size?
 
-```{r}
+Yes. Variability of reliability decreases with sample size. It does so more strongly for contrast measures.
 
+```{r}
+rel_df_sample_size_summary %>%
+  ggplot(aes(sample_size, sem_icc))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(sample_size,sem_icc, color=ddm_raw))+
+  geom_point(data = tmp, aes(sample_size,sem_icc, color=ddm_raw))+
+  facet_wrap(~contrast)+
+  ylab("Standard error of mean of reliability \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+summary(lmer(sem_icc ~ factor(sample_size) * contrast + (1|dv), rel_df_sample_size_summary))
 ```
 
 Does between subjects variance change with sample size?
 
 ```{r}
-
+rel_df_sample_size_summary %>%
+  ggplot(aes(sample_size, mean_var_subs_pct))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(sample_size,mean_var_subs_pct, color=ddm_raw))+
+  geom_point(data = tmp, aes(sample_size,mean_var_subs_pct, color=ddm_raw))+
+  facet_wrap(~contrast)+
+  ylab("Mean percentage of between subjects variance \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
 ```
 
 Does within subjects variance change with sample size?
