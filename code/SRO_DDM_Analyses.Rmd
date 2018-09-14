@@ -683,6 +683,10 @@ summary(lmer(sem_icc ~ factor(sample_size) * contrast + (1|dv), rel_df_sample_si
 
 Does between subjects variance change with sample size?
 
+Yes. Between subjects variance decreases with sample size. This is more pronounced for non-contrast measures.
+
+This goes against my intuitions. Looking at the change in between subjects percentage of individual measures' there seems to be a lot of inter-measure variance (more pronounced below for within subject variance). I'm not sure if there is something in common for the measures that show increasing between subjects variability with sample size and that separates them from those that show decreasing between subjects variability with sample size (the slight majority).
+
 ```{r}
 rel_df_sample_size_summary %>%
   ggplot(aes(sample_size, mean_var_subs_pct))+
@@ -690,16 +694,35 @@ rel_df_sample_size_summary %>%
   geom_line(data = tmp, aes(sample_size,mean_var_subs_pct, color=ddm_raw))+
   geom_point(data = tmp, aes(sample_size,mean_var_subs_pct, color=ddm_raw))+
   facet_wrap(~contrast)+
-  ylab("Mean percentage of between subjects variance \n of 100 samples of size n")+
+  ylab("Mean percentage of \n between subjects variance \n of 100 samples of size n")+
   xlab("Sample size")+
   theme(legend.title = element_blank(),
         legend.position = "bottom")
 ```
 
+```{r}
+summary(lmer(var_subs_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
 Does within subjects variance change with sample size?
 
-```{r}
+Yes. This again goes against my intuition but here the inter-meausre differences are even more pronounced. There appears to be some measures for which the change in two measurements at different time points is larger the more subjects are tested and those that show a smaller decrease in within subject variance with larger sample sizes. I still don't know if these two types of measures have anything that distinguishes them.
 
+```{r}
+rel_df_sample_size_summary %>%
+  ggplot(aes(sample_size, mean_var_ind_pct))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(sample_size,mean_var_ind_pct, color=ddm_raw))+
+  geom_point(data = tmp, aes(sample_size,mean_var_ind_pct, color=ddm_raw))+
+  facet_wrap(~contrast)+
+  ylab("Mean percentage of \n within subjects variance \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+summary(lmer(var_subs_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Does residual variance change with sample size?
