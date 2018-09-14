@@ -27,7 +27,7 @@ helper_func_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses
 print("Reading in helper functions...")
 
 source(paste0(helper_func_path, 'match_t1_t2.R'))
-source(paste0(helper_func_path, 'get_retest_stats.R'))
+source(paste0(helper_func_path, 'get_retest_stats_sherlock.R'))
 
 print("Helper functions read in.")
 

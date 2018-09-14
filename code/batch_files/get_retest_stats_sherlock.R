@@ -29,7 +29,8 @@ get_retest_stats = function(dv_var, t1_df = test_data, t2_df = retest_data, merg
   
   if('icc' %in% metric | 'var_breakdown' %in% metric){
     df = df %>% select(-dv, -sub_id)
-    icc = ICC(df)
+    #Look in to differences between ICC calculations using lmer
+    icc = ICC(df, lmer=FALSE)
     
     if('icc' %in% metric){
       out$icc = icc$results['Average_fixed_raters', 'ICC']
