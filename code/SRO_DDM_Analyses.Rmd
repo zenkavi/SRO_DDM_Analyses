@@ -566,18 +566,15 @@ Differences in DDM parameter reliability for t1 data using either n=552 or n=150
 
 But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
 
-Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. [revisit this - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]
+Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[revisit this - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]*
 
 ```{r}
 rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.gz')))
 
 #Check if all vars are there
-numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
-```
+# numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
 
-
-```{r}
-rel_df_sample_size %>% 
+rel_df_sample_size_summary = rel_df_sample_size %>% 
   group_by(dv, sample_size) %>%
   summarise(mean_icc = mean(icc),
             sem_icc = sem(icc), 
@@ -586,21 +583,114 @@ rel_df_sample_size %>%
             mean_var_ind = mean(var_ind),
             sem_var_ind = sem(var_ind),
             mean_var_resid = mean(var_resid),
-            sem_var_resid = sem(var_resid)) %>%
-  ggplot(aes(sample_size, mean_icc))+
-  geom_point(aes(group = dv), alpha = 0.1)+
-  geom_line(aes(group = dv), alpha = 0.1)
-  geom_errorbar(aes(ymin = mean_icc-sem_icc, ymax = mean_icc+sem_icc, group=dv), alpha = 0.1)
+            sem_var_resid = sem(var_resid))
+
+tmp = rel_df_sample_size %>% 
+  group_by(sample_size) %>%
+  summarise(mean_icc = mean(icc),
+            sem_icc = sem(icc), 
+            mean_var_subs = mean(var_subs),
+            sem_var_subs = sem(var_subs),
+            mean_var_ind = mean(var_ind),
+            sem_var_ind = sem(var_ind),
+            mean_var_resid = mean(var_resid),
+            sem_var_resid = sem(var_resid))
 ```
 
-Assign the retest sample datasets to correct names.
+Does the mean reliability change with sample size?
+
+Yes. The larger the sample size the more reliable is a given measure on average. The largest increase in reliability is when shifting from 25 to 50 subjects. This is important because many studies using these measures have sample sizes <50 per group.
 
 ```{r}
-test_data = test_data_150
-retest_data = retest_data_150
+rel_df_sample_size_summary %>%
+  ggplot(aes(sample_size, mean_icc))+
+  geom_line(aes(group = dv), alpha = 0.1)+
+  geom_line(data = tmp,aes(sample_size,mean_icc), color="red")+
+  geom_point(data = tmp,aes(sample_size,mean_icc), color="red")+
+  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="red", width = 0.1)+
+  ylab("Mean reliability of 100 samples of size n")+
+  xlab("Sample size")
 ```
 
-The reliability of a measure depends on the different sources of variability. It would be larger the larger the between subject variability (BSV) is (and the lower within subject, WSV, and error variances, ERV, are). Larger sample sizes do not necessarily imply larger BSV. If there is a true BSV for the whole sample then BSV's of subsamples would have distribution that would be centered around this value with some variance. This variance would be smaller the larger the sample size. Because the distribution is centered around the true BSV the median reliability estimate from 100 samples would not deviate. But the variance of that reliability estimate would. Specifically the variance of the reliability estimates should decrease with increasing sample size.
+```{r}
+summary(lmer(icc ~ factor(sample_size) + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Does the change in reliabiliity with sample size vary by variable type?
+
+The changes do not differ by raw vs. ddm measures. It does differ by whether the measure is a contrast measure: For contrast measures all increases in reliability with sample size are larger than the increases for non-contrast measures. This implies that larger sample sizes are even more crucial for studies using contrast measures as trait-level measures.
+
+```{r}
+rel_df_sample_size = rel_df_sample_size %>%
+  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
+  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
+         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast")) %>%
+  mutate(contrast = factor(contrast, levels=c("non-contrast", "contrast")))
+
+rel_df_sample_size_summary = rel_df_sample_size %>% 
+  group_by(dv, sample_size, ddm_raw, contrast) %>%
+  summarise(mean_icc = mean(icc),
+            sem_icc = sem(icc), 
+            mean_var_subs = mean(var_subs),
+            sem_var_subs = sem(var_subs),
+            mean_var_ind = mean(var_ind),
+            sem_var_ind = sem(var_ind),
+            mean_var_resid = mean(var_resid),
+            sem_var_resid = sem(var_resid))
+
+tmp = rel_df_sample_size %>% 
+  group_by(sample_size, ddm_raw, contrast) %>%
+  summarise(mean_icc = mean(icc),
+            sem_icc = sem(icc), 
+            mean_var_subs = mean(var_subs),
+            sem_var_subs = sem(var_subs),
+            mean_var_ind = mean(var_ind),
+            sem_var_ind = sem(var_ind),
+            mean_var_resid = mean(var_resid),
+            sem_var_resid = sem(var_resid))
+```
+
+```{r}
+rel_df_sample_size_summary %>%
+  ggplot(aes(sample_size, mean_icc))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(sample_size,mean_icc, color=ddm_raw))+
+  geom_point(data = tmp, aes(sample_size,mean_icc, color=ddm_raw))+
+  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="red", width = 0.1)+
+  facet_wrap(~contrast)+
+  ylab("Mean reliability of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+summary(lmer(icc ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Does variability of reliability change with sample size?
+
+```{r}
+
+```
+
+Does between subjects variance change with sample size?
+
+```{r}
+
+```
+
+Does within subjects variance change with sample size?
+
+```{r}
+
+```
+
+Does residual variance change with sample size?
+
+```{r}
+
+```
 
 ## Hierarchical estimation consequences
 
