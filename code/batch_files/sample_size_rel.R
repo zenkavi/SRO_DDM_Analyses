@@ -94,4 +94,6 @@ print("Finished reliability loop.")
 
 rel_df_sample_size = rel_df_sample_size[-which(is.na(rel_df_sample_size$dv)),]
 
+print(paste0("Writing out rel_df_sample_size for ", dv))
+
 write.csv(rel_df_sample_size, paste0(out_dir,dv,'_rel_df_sample_size.csv' ), row.names=FALSE)
