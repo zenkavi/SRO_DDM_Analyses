@@ -722,13 +722,26 @@ rel_df_sample_size_summary %>%
 ```
 
 ```{r}
-summary(lmer(var_subs_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+summary(lmer(var_ind_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Does residual variance change with sample size?
 
 ```{r}
+rel_df_sample_size_summary %>%
+  ggplot(aes(sample_size, mean_var_resid_pct))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(sample_size,mean_var_resid_pct, color=ddm_raw))+
+  geom_point(data = tmp, aes(sample_size,mean_var_resid_pct, color=ddm_raw))+
+  facet_wrap(~contrast)+
+  ylab("Mean percentage of residual variance \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
 
+```{r}
+summary(lmer(var_resid_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 ## Hierarchical estimation consequences
