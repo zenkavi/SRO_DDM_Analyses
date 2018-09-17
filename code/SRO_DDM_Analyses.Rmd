@@ -746,11 +746,66 @@ summary(lmer(var_resid_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iterat
 
 Conclusion: Larger samples are better for reliability but not necessarily always for the same reasons; for some variables this is due to increasing between subjects variance while for others it's due to decreasing residual variance (?).
 
+```{r}
+rm(rel_df_sample_size, rel_df_sample_size_summary)
+```
+
 ## Hierarchical estimation consequences
 
 - Is the H in HDDM important? (h vs flat)
--- Change in parameter value?
--- Change in parameter reliability?
+
+```{r}
+retest_hddm_flat = read.csv('/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_02-03-2018/retest_hddm_flat.csv')
+
+retest_hddm_flat = retest_hddm_flat %>% rename(sub_id = subj_id)
+
+test_hddm_flat = read.csv('/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_02-03-2018/t1_data/t1_hddm_flat.csv')
+
+test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
+
+# Check if all the variables are there (no for now)
+sum(names(retest_hddm_flat) %in% numeric_cols) == length(names(retest_hddm_flat))
+names(retest_hddm_flat)[which(names(retest_hddm_flat) %in% numeric_cols == FALSE)]
+
+sum(names(test_hddm_flat) %in% numeric_cols) == length(names(test_hddm_flat))
+names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
+```
+
+-- Change in parameter value
+
+Standardized differences? Raw difference
+Plot raw difference for retest vs test for each of 3 parameters
+
+```{r}
+#Should not be necessary later
+common_cols = names(retest_hddm_flat)[names(retest_hddm_flat) %in% names(retest_data)]
+
+retest_hddm_hier = retest_data %>% select(common_cols) %>% mutate(hddm="hierarchical")
+test_hddm_hier = test_data %>% select(common_cols)  %>% mutate(hddm="hierarchical")
+retest_hddm_flat = retest_hddm_flat %>% select(common_cols) %>% mutate(hddm="flat")
+test_hddm_flat = test_hddm_flat %>% select(common_cols) %>% mutate(hddm="flat")
+
+retest_flat_difference = rbind(retest_hddm_hier, retest_hddm_flat)
+retest_flat_difference %>%
+  gather(dv, value, -sub_id, -hddm) %>%
+  spread(hddm, value) %>%
+  mutate(diff = hierarchical - flat)
+```
+
+-- Change in parameter reliability
+
+```{r}
+test_data_150 = test_data
+retest_data_150 = retest_data
+
+test_data = test_hddm_flat
+retest_data = retest_hddm_flat
+```
+
+```{r}
+test_data = test_data_150
+retest_data = retest_data_150
+```
 
 ## Clustering
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
