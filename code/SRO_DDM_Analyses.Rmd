@@ -771,7 +771,7 @@ sum(names(test_hddm_flat) %in% numeric_cols) == length(names(test_hddm_flat))
 names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
 ```
 
--- Change in parameter value
+### Change in parameter value
 
 Standardized differences? Raw difference
 Plot raw difference for retest vs test for each of 3 parameters
@@ -824,10 +824,10 @@ flat_difference %>%
   ggplot(aes(hierarchical, flat))+
   geom_point()+
   geom_abline(aes(intercept=0, slope=1), color="red")+
-  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par, scales="free")
+  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par)
 ```
 
--- Change in parameter reliability
+### Change in parameter reliability
 
 ```{r}
 test_data_150 = test_data
@@ -864,14 +864,22 @@ rm(test_data_150, retest_data_150)
 ```
 
 ```{r}
+rel_df_flat = rel_df_flat %>%
+  left_join(rel_df[,c("dv", "icc", "rt_acc", "contrast")], by = "dv") 
+
 rel_df_flat %>%
-  left_join(rel_df[,c("dv", "icc", "rt_acc", "contrast")], by = "dv") %>%
   ggplot(aes(icc.y, icc.x))+
   geom_point()+
   geom_abline(aes(slope=1, intercept = 0), color="red")+
   facet_wrap(~rt_acc)+
   xlab("Hierarchical reliability")+
   ylab("Flat reliability")
+```
+
+```{r}
+with(rel_df_flat %>% filter(rt_acc == "drift rate"), t.test(icc.x, icc.y, paired=T))
+with(rel_df_flat %>% filter(rt_acc == "threshold"), t.test(icc.x, icc.y, paired=T))
+with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, paired=T))
 ```
 
 ## Clustering
