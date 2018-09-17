@@ -775,6 +775,7 @@ names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
 
 Standardized differences? Raw difference
 Plot raw difference for retest vs test for each of 3 parameters
+Percent change - using hierarchical as baseline: what percent does the flat parameter change compared to the hierarchical
 
 ```{r}
 #Should not be necessary later
@@ -786,10 +787,44 @@ retest_hddm_flat = retest_hddm_flat %>% select(common_cols) %>% mutate(hddm="fla
 test_hddm_flat = test_hddm_flat %>% select(common_cols) %>% mutate(hddm="flat")
 
 retest_flat_difference = rbind(retest_hddm_hier, retest_hddm_flat)
-retest_flat_difference %>%
+retest_flat_difference = retest_flat_difference %>%
   gather(dv, value, -sub_id, -hddm) %>%
   spread(hddm, value) %>%
-  mutate(diff = hierarchical - flat)
+  mutate(diff_pct = (hierarchical - flat)/hierarchical*100,
+         time = "retest",
+         par = ifelse(grepl("drift", dv), "drift", ifelse(grepl("thresh", dv), "thresh", ifelse(grepl("non_decision", dv), "non_decision", NA))))
+
+test_flat_difference = rbind(test_hddm_hier, test_hddm_flat)
+test_flat_difference = test_flat_difference %>%
+  gather(dv, value, -sub_id, -hddm) %>%
+  spread(hddm, value) %>%
+  mutate(diff_pct = (hierarchical - flat)/hierarchical*100,
+         time = "test",
+         par = ifelse(grepl("drift", dv), "drift", ifelse(grepl("thresh", dv), "thresh", ifelse(grepl("non_decision", dv), "non_decision", NA))))
+
+flat_difference = rbind(test_flat_difference, retest_flat_difference)
+
+flat_difference %>%
+  ggplot(aes(diff_pct))+
+  geom_histogram()+
+  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par, scales="free")
+```
+
+Is the average percentage change different than 0? No.
+[RUN MODEL TO COMPARE TO 0. NOT TO BASELINE PARAMETER]
+
+```{r}
+summary(lmer(diff_pct ~ time*par+(1|dv), flat_difference %>% mutate(pars = factor(par, levels = c("thresh", "drift", "non_decision")))))
+```
+
+Do people change in the same way? Mostly.
+
+```{r}
+flat_difference %>%
+  ggplot(aes(hierarchical, flat))+
+  geom_point()+
+  geom_abline(aes(intercept=0, slope=1), color="red")+
+  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par, scales="free")
 ```
 
 -- Change in parameter reliability
@@ -797,6 +832,8 @@ retest_flat_difference %>%
 ```{r}
 test_data_150 = test_data
 retest_data_150 = retest_data
+
+rel_df_flat
 
 test_data = test_hddm_flat
 retest_data = retest_hddm_flat
