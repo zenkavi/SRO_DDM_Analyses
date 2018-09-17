@@ -744,6 +744,8 @@ rel_df_sample_size_summary %>%
 summary(lmer(var_resid_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
+Conclusion: Larger samples are better for reliability but not necessarily always for the same reasons; for some variables this is due to increasing between subjects variance while for others it's due to decreasing residual variance (?).
+
 ## Hierarchical estimation consequences
 
 - Is the H in HDDM important? (h vs flat)
