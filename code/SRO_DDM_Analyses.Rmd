@@ -885,6 +885,52 @@ with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, pair
 ## Clustering
 
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
+If the former they would be less useful than if the latter.  
+
+you could look at this with factor analysis but there are more variables than observations. so first i'll just explore correlations  
+
+Correlate each DDM measure with  
+- raw measures within task  
+- other ddm measures across tasks  
+
+```{r}
+tmp = data.frame(cor(test_data_std, use="complete.obs"))
+tmp = tmp %>%
+  mutate(dv = row.names(.)) %>%
+  gather(key, value, -dv) %>%
+  filter(value != 1 & duplicated(value)==FALSE)
+
+tmp = tmp %>%
+  left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
+  rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
+    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
+  rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
+  mutate(task_task = ifelse(task_group_1 == task_group_2 & (ddm_raw_1 == "ddm" | ddm_raw_2 == "ddm"), "task-task", ifelse(task_group_1 != task_group_2 & (ddm_raw_1 == "ddm" | ddm_raw_2 == "ddm"), "ddm-ddm",NA)))
+
+tmp_med = tmp %>%
+  na.exclude() %>%
+  group_by(task_task) %>%
+  summarise(median_abs_cor = median(abs(value)),
+            mean_abs_cor = mean(abs(value)))
+
+tmp %>%
+  na.exclude() %>%
+  ggplot(aes(abs(value)))+
+  geom_histogram()+
+  geom_vline(data=tmp_med, aes(xintercept=median_abs_cor), color="red", linetype = "dashed")+
+  facet_wrap(~task_task)+
+  xlab("Absolute correlation")
+```
+
+```{r}
+tmp_med
+```
+
+
+
+```{r}
+summary(lmer(abs(value)~task_ddm+(1|var_1), tmp))
+```
 
 Factor analysis
 
