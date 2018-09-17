@@ -833,15 +833,45 @@ flat_difference %>%
 test_data_150 = test_data
 retest_data_150 = retest_data
 
-rel_df_flat
-
 test_data = test_hddm_flat
 retest_data = retest_hddm_flat
 ```
 
 ```{r}
+rel_df_cols = c('icc', 'var_subs', 'var_ind', 'var_resid', 'dv')
+
+rel_df_flat = as.data.frame(matrix(ncol = length(rel_df_cols)))
+
+names(rel_df_flat) = rel_df_cols
+
+numeric_cols = get_numeric_cols()
+
+for(i in 1:length(numeric_cols)){
+  
+  dv = numeric_cols[i]
+  tmp = get_retest_stats(dv, metric = c('icc', 'var_breakdown'))
+  tmp$dv = dv
+  rel_df_flat = rbind(rel_df_flat, tmp)
+}
+
+rel_df_flat = rel_df_flat[-which(is.na(rel_df_flat$dv)),]
+```
+
+```{r}
 test_data = test_data_150
 retest_data = retest_data_150
+rm(test_data_150, retest_data_150)
+```
+
+```{r}
+rel_df_flat %>%
+  left_join(rel_df[,c("dv", "icc", "rt_acc", "contrast")], by = "dv") %>%
+  ggplot(aes(icc.y, icc.x))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept = 0), color="red")+
+  facet_wrap(~rt_acc)+
+  xlab("Hierarchical reliability")+
+  ylab("Flat reliability")
 ```
 
 ## Clustering
