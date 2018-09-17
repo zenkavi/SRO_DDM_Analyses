@@ -883,7 +883,32 @@ with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, pair
 ```
 
 ## Clustering
+
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
+
+Factor analysis
+
+```{r}
+#standardize data
+numeric_cols = get_numeric_cols()
+
+test_data_std = test_data %>% mutate_if(is.numeric, scale)
+
+test_data_std = test_data_std %>% select(-sub_id)
+
+fit <- prcomp(test_data_std %>% na.omit())
+
+summary(fit)
+plot(fit, type = "lines")
+
+fit <- principal(test_data_std, nfactors=3, rotate="varimax")
+fit
+
+tmp = fa(test_data_std, 3, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
+
+tmp$loadings
+```
+
 -- Are these clusters more reliable than using either the raw or the DDM measures alone?
 
 ## Prediction
