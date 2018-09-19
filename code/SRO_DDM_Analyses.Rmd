@@ -957,12 +957,14 @@ all_data_cor %>%
   ggplot(aes(abs(value)))+
   geom_histogram()+
   geom_vline(data=all_data_cor_med, aes(xintercept=median_abs_cor), color="red", linetype = "dashed")+
-  facet_grid(time~task_task, scales="free")+
+  facet_grid(time~task_task)+
   xlab("Absolute correlation")
 ```
 
+(Absolute) correlations between raw and ddm measures within a task are higher than those between ddm measures across tasks.
+
 ```{r}
-med_cor
+all_data_cor_med
 ```
 
 ```{r}
@@ -972,20 +974,7 @@ summary(lmer(abs(value)~task_task+(1|var_1), tmp %>% na.exclude()))
 Factor analysis
 
 ```{r}
-#standardize data
-numeric_cols = get_numeric_cols()
 
-fit <- prcomp(test_data_std %>% na.omit())
-
-summary(fit)
-plot(fit, type = "lines")
-
-fit <- principal(test_data_std, nfactors=3, rotate="varimax")
-fit
-
-tmp = fa(test_data_std, 3, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
-
-tmp$loadings
 ```
 
 -- Are these clusters more reliable than using either the raw or the DDM measures alone?

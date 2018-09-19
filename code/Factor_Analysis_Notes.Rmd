@@ -1,0 +1,104 @@
+---
+title: 'Factor Analysis Notes'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/SRO_DDM_Analyses_Helper_Functions.R')
+
+input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
+```
+
+Read in data
+
+```{r}
+test_data = read.csv(paste0(input_path, 'test_data.csv'))
+retest_data = read.csv(paste0(input_path, 'retest_data.csv'))
+```
+
+Standardize data
+
+```{r}
+#Standardize datasets
+test_data_std = test_data %>% mutate_if(is.numeric, scale)
+test_data_std = test_data_std %>% select(-sub_id)
+
+retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
+retest_data_std = retest_data_std %>% select(-sub_id)
+```
+
+#PCA
+
+##`stats` package functions
+
+### `princomp` and `prcomp`  
+[Difference between the two](https://stats.stackexchange.com/questions/20101/what-is-the-difference-between-r-functions-prcomp-and-princomp)
+
+> The difference between them is nothing to do with the type of PCA they perform, just the method they use. As the help page for prcomp says:
+
+>The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy.
+
+>On the other hand, the princomp help page says:
+
+>The calculation is done using eigen on the correlation or covariance matrix, as determined by cor. This is done for compatibility with the S-PLUS result. A preferred method of calculation is to use svd on x, as is done in prcomp."
+
+>So, prcomp is preferred, although in practice you are unlikely to see much difference (for example, if you run the examples on the help pages you should get identical results).
+
+Using the t1 data for retest participants only with 273 variables and 150 subjects `princomp` doesn't work because there are more variables than subjects.
+
+```{r}
+fit <- princomp(test_data_std %>% na.omit())
+```
+
+Changing to `prcomp` works.
+
+```{r}
+fit <- prcomp(test_data_std %>% na.omit())
+```
+
+Explore components  
+
+For ~70% of the variance you'd need ~20 components. Given that there are 14 tasks is this a good decomposition? If you believe that each task measures multiple cognitive processes then maybe.
+
+```{r}
+out = data.frame(t(data.frame((summary(fit)$importance)))) %>%
+  mutate(PC = row.names(.),
+         PC = factor(as.numeric(gsub("PC", "", PC)))) %>%
+  select(PC, everything()) 
+out
+```
+
+Scree plot
+
+```{r}
+out %>%
+  ggplot(aes(PC, Proportion.of.Variance)) +
+  geom_bar(stat="identity")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+Concepts
+
+contribution
+correlation
+quality of representation
+contribution
+
+##`psych` package functions
+
+```{r}
+fit <- principal(test_data_std, nfactors=3, rotate="oblimin")
+fit
+
+#doesn't work - 'ml' is the method used in the ontology paper so don't really want to diverge from it
+#tmp = fa(test_data_std, 1, rotate='oblimin', fm='ml', n.obs=0, scores='tenBerge')
+tmp = fa(test_data_std, 3, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
+
+```
+
+# Resources
+
+[PCA Essentials](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
