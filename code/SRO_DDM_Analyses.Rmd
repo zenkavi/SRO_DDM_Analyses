@@ -885,35 +885,41 @@ with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, pair
 ## Clustering
 
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
-If the former they would be less useful than if the latter.  
+(If the former they would be less useful than if the latter.)  
 
-you could look at this with factor analysis but there are more variables than observations. so first i'll just explore correlations  
+This could be analyzed with factor analysis but there are more variables than observations so as a first pass we'll explore correlations.    
 
-Correlate each DDM measure with  
-- raw measures within task  
-- other ddm measures across tasks  
+For this we correlate each DDM measure with:    
+1. raw measures within task  
+2. other ddm measures across tasks  
 
 ```{r}
+#Standardize datasets
 test_data_std = test_data %>% mutate_if(is.numeric, scale)
 test_data_std = test_data_std %>% select(-sub_id)
 
 retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
 retest_data_std = retest_data_std %>% select(-sub_id)
 
+#Get correlation table for test data and melt into long form
 test_data_cor = data.frame(cor(test_data_std, use="complete.obs"))
 test_data_cor = test_data_cor %>%
   mutate(dv = row.names(.)) %>%
   gather(key, value, -dv) %>%
   filter(value != 1 & duplicated(value)==FALSE)
 
+#Add measure type info to long form correlation table
 test_data_cor = test_data_cor %>%
   left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
   rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
   rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
-  mutate(task_task = ifelse(task_group_1 == task_group_2 & (ddm_raw_1 == "ddm" | ddm_raw_2 == "ddm"), "task-task", ifelse(task_group_1 != task_group_2 & (ddm_raw_1 == "ddm" | ddm_raw_2 == "ddm"), "ddm-ddm",NA)), 
-         time="retest")
+  #task-task: if the measures are from the same task and one of them is a ddm measure while the other is raw
+  #ddm-ddm: if the measures are NOT from the same task and they are both ddm measures
+  mutate(task_task = ifelse((task_group_1 == task_group_2) & ((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") | (ddm_raw_1 == "raw" & ddm_raw_2 == "ddm")), "task-task", ifelse((task_group_1 != task_group_2) & (ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm"), "ddm-ddm",NA)), 
+         time="test")
 
+#summarise by relationship between correlated variables for plotting
 test_data_cor_med = test_data_cor %>%
   na.exclude() %>%
   group_by(task_task) %>%
@@ -921,6 +927,7 @@ test_data_cor_med = test_data_cor %>%
             mean_abs_cor = mean(abs(value)),
             time="test")
 
+#Get same correlation table for retest data
 retest_data_cor = data.frame(cor(retest_data_std, use="complete.obs"))
 retest_data_cor = retest_data_cor %>%
   mutate(dv = row.names(.)) %>%
@@ -932,7 +939,7 @@ retest_data_cor = retest_data_cor %>%
   rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
   rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
-  mutate(task_task = ifelse(task_group_1 == task_group_2 & (ddm_raw_1 == "ddm" | ddm_raw_2 == "ddm"), "task-task", ifelse(task_group_1 != task_group_2 & (ddm_raw_1 == "ddm" | ddm_raw_2 == "ddm"), "ddm-ddm",NA)),
+  mutate(task_task = ifelse((task_group_1 == task_group_2) & ((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") | (ddm_raw_1 == "raw" & ddm_raw_2 == "ddm")), "task-task", ifelse((task_group_1 != task_group_2) & (ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm"), "ddm-ddm",NA)),
          time="retest")
 
 retest_data_cor_med = retest_data_cor %>%
