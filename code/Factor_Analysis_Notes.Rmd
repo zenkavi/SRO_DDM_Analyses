@@ -56,12 +56,15 @@ fit <- princomp(test_data_std %>% na.omit())
 Changing to `prcomp` works.
 
 ```{r}
-fit <- prcomp(test_data_std %>% na.omit())
+#mean imputation on standardized data
+test_data_std[is.na(test_data_std)]=0
+
+fit <- prcomp(test_data_std)
 ```
 
 Explore components  
 
-For ~70% of the variance you'd need ~20 components. Given that there are 14 tasks is this a good decomposition? If you believe that each task measures multiple cognitive processes then maybe.
+For ~70% of the variance you'd need ~30 components. Given that there are 14 tasks is this a good decomposition? If you believe that each task measures multiple cognitive processes then maybe.
 
 ```{r}
 out = data.frame(t(data.frame((summary(fit)$importance)))) %>%
@@ -82,10 +85,58 @@ out %>%
 
 Concepts
 
-contribution
-correlation
-quality of representation
-contribution
+- eigenvalue: amount of variance explained by each PC  
+
+- coordinate/correlation: the correlation between the variable and the PC  
+- quality of representation: squared correlation; how well the variable is represented by the PC; variance of variable explained by the PC  
+- contribution: varianc of PC explained by the variable
+
+`fit$rotation` Factor loadings (variables)   
+`fit$scores` Factor scores (individuals)
+
+```{r}
+data.frame(fit$rotation)
+```
+
+```{r}
+data.frame(fit$x)
+```
+
+Plot variables on first two dimensions
+
+```{r}
+data.frame(fit$rotation) %>%
+  mutate(dv = row.names(.)) %>%
+  ggplot(aes(PC1, PC2, label=dv, col=abs(PC1*PC2)))+
+  geom_point()+
+  # geom_text(hjust = 0)+
+  theme_minimal()+
+  geom_hline(aes(yintercept=0))+
+  geom_vline(aes(xintercept=0))
+```
+
+```{r}
+fviz_pca_var(fit, col.var = "contrib")
+```
+
+Plot individuals on first two dimensions
+
+```{r}
+data.frame(fit$x) %>%
+  mutate(sub_id = test_data$sub_id) %>%
+  ggplot(aes(PC1, PC2, label=sub_id, col=abs(PC1*PC2)))+
+  geom_point()+
+  # geom_text(hjust = 0)+
+  theme_minimal()+
+  geom_hline(aes(yintercept=0))+
+  geom_vline(aes(xintercept=0))+
+  xlim(c(-16, 16))
+```
+
+```{r}
+fviz_pca_ind(fit, col.ind = "cos2")
+```
+
 
 ##`psych` package functions
 
