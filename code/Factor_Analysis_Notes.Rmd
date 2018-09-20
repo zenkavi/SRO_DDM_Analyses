@@ -83,6 +83,10 @@ out %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
+```{r}
+
+```
+
 Concepts
 
 - eigenvalue: amount of variance explained by each PC  

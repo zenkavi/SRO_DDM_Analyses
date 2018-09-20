@@ -21,7 +21,7 @@ input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
 The tasks included in this report are:  
 
 ```{r}
-measure_labels <- read.csv('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/input/measure_labels.csv')
+measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
 
 measure_labels = measure_labels %>% select(-measure_description)
 
@@ -755,11 +755,11 @@ rm(rel_df_sample_size, rel_df_sample_size_summary)
 - Is the H in HDDM important? (h vs flat)
 
 ```{r}
-retest_hddm_flat = read.csv('/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_02-03-2018/retest_hddm_flat.csv')
+retest_hddm_flat = read.csv(paste0(retest_data_path,'retest_hddm_flat.csv'))
 
 retest_hddm_flat = retest_hddm_flat %>% rename(sub_id = subj_id)
 
-test_hddm_flat = read.csv('/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_02-03-2018/t1_data/t1_hddm_flat.csv')
+test_hddm_flat = read.csv(paste0(retest_data_path,'/t1_data/t1_hddm_flat.csv'))
 
 test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
 
