@@ -431,8 +431,7 @@ boot_df = boot_df %>%
 
 ```{r message=FALSE, warning=FALSE}
 rel_df %>%
-  filter(rt_acc != "other") %>%
-  group_by(rt_acc, contrast, raw_fit) %>%
+  group_by(rt_acc, overall_difference, raw_fit) %>%
   summarise(mean_var_subs_pct = mean(var_subs_pct),
             mean_var_ind_pct = mean(var_ind_pct),
             mean_var_resid_pct = mean(var_resid_pct),
@@ -442,7 +441,7 @@ rel_df %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_subs_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_point(position=position_dodge(width=0.75), size = 5)+
   geom_errorbar(aes(ymin = mean_var_subs_pct - sem_var_subs_pct, ymax = mean_var_subs_pct + sem_var_subs_pct), position=position_dodge(width=0.75))+
-  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  facet_wrap(~overall_difference)+
   ylab("% of between subjects variance")+
   xlab("")+
   theme(legend.title = element_blank(),
@@ -451,8 +450,7 @@ rel_df %>%
 
 ```{r message=FALSE, warning=FALSE}
 rel_df %>%
-  filter(rt_acc != "other") %>%
-  group_by(rt_acc, contrast, raw_fit) %>%
+  group_by(rt_acc, overall_difference, raw_fit) %>%
   summarise(mean_var_subs_pct = mean(var_subs_pct),
             mean_var_ind_pct = mean(var_ind_pct),
             mean_var_resid_pct = mean(var_resid_pct),
@@ -462,7 +460,7 @@ rel_df %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_resid_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_point(position=position_dodge(width=0.75), size = 5)+
   geom_errorbar(aes(ymin = mean_var_resid_pct - sem_var_resid_pct, ymax = mean_var_resid_pct + sem_var_resid_pct), position=position_dodge(width=0.75))+
-  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  facet_wrap(~overall_difference)+
   ylab("% of residual variance")+
   xlab("")+
   theme(legend.title = element_blank(),
@@ -477,9 +475,9 @@ Conclusion: Model with fixed effects for both is best.
 
 ```{r}
 mer1 = lmer(var_subs_pct ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer1a = lmer(var_subs_pct ~ contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer2 = lmer(var_subs_pct ~ ddm_raw + contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer3 = lmer(var_subs_pct ~ ddm_raw * contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(var_subs_pct ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(var_subs_pct ~ ddm_raw +  overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(var_subs_pct ~ ddm_raw *  overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
 anova(mer1, mer2, mer3)
 anova(mer1a, mer2, mer3)
 ```
@@ -488,7 +486,7 @@ anova(mer1a, mer2, mer3)
 rm(mer1, mer1a, mer3)
 ```
 
-Raw and non-contrast measures have higher between subjects variance (ie are better individual difference measures)
+Contrast measures have lower between subjects variability (ie are worse individual difference measures). Raw and ddm measures do not differ significantly.
 
 ```{r}
 summary(mer2)
@@ -498,19 +496,29 @@ Model testing if the percentage of residual variance of raw measures differs fro
 
 Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as well as their interaction is necessary.
 
-Conclusion: Model with fixed effect just for contrast is best. And plot above already shows that contrast measures have higher residual variance.
+Conclusion: Interactive model is best
 
 ```{r}
 mer1 = lmer(var_resid_pct ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer1a = lmer(var_resid_pct ~ contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer2 = lmer(var_resid_pct ~ ddm_raw + contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer3 = lmer(var_resid_pct ~ ddm_raw * contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(var_resid_pct ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(var_resid_pct ~ ddm_raw + overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(var_resid_pct ~ ddm_raw * overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
 anova(mer1, mer2, mer3)
 anova(mer1a, mer2, mer3)
 ```
 
 ```{r}
-rm(mer1, mer1a, mer2, mer3)
+rm(mer1, mer1a, mer2)
+```
+
+Both contrast and condition measures have higher residual variance. Raw and ddm measures do not differ.
+
+```{r}
+summary(mer3)
+```
+
+```{r}
+rm(mer3)
 ```
 
 ## Sample size effects on reliability

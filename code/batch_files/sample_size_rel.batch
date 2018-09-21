@@ -10,4 +10,4 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=zenkavi@stanford.edu
 source activate SRO
-Rscript --vanilla sample_size_rel.R test_data.csv retest_data.csv /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/ /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/ {DV} 100 25,50,75,100,125
+Rscript --vanilla sample_size_rel.R test_data.csv retest_data.csv /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/ /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/ {DV} 100 10,15,20,25,50,75,100,125
