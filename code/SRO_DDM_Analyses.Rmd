@@ -23,13 +23,14 @@ The tasks included in this report are:
 ```{r}
 measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
 
-measure_labels = measure_labels %>% select(-measure_description)
-
 measure_labels = measure_labels %>% 
-  filter(ddm_task == 1)
-
-measure_labels = measure_labels %>%
-  mutate(dv = as.character(dv)) %>%
+  select(-measure_description) %>%
+  filter(ddm_task == 1) %>%
+  select(-ddm_task) %>%
+  filter(rt_acc != "other") %>%
+  mutate(dv = as.character(dv),
+         overall_difference = factor(overall_difference,levels = c("overall", "difference", "condition"), labels = c("non-contrast", "contrast", "condition")),
+         ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm")) %>%
   separate(dv, c("task_group", "var"), sep = "\\.", remove=FALSE, extra = "merge")
 
 unique(measure_labels$task_group)
@@ -108,7 +109,7 @@ test_data  = test_data_hddm_fullfit
 numeric_cols = get_numeric_cols()
 
 #Create df of point estimate reliabilities
-rel_df_cols = c('icc', 'pearson', 'var_subs', 'var_ind', 'var_resid')
+rel_df_cols = c('icc', 'pearson', 'var_subs', 'var_ind', 'var_resid', 'dv')
 
 rel_df = as.data.frame(matrix(ncol = length(rel_df_cols)))
 
@@ -116,19 +117,22 @@ names(rel_df) = rel_df_cols
 
 for(i in 1:length(numeric_cols)){
   
-  tmp = get_retest_stats(numeric_cols[i], metric = c('icc', 'pearson', 'var_breakdown'))
+  cur_dv = numeric_cols[i]
   
-  if(i == 1){
-    rel_df = tmp
+  tmp = get_retest_stats(cur_dv, metric = c('icc', 'pearson', 'var_breakdown'))
+  
+  if(nrow(tmp) == 0){
+    tmp[1,]=NA
+    tmp$dv = NA
+  } else {
+    tmp$dv = cur_dv
   }
-  else{
-    rel_df = rbind(rel_df, tmp)
-  }
+  
+  rel_df = rbind(rel_df, tmp)
+  
 }
 
-row.names(rel_df) <- numeric_cols
-rel_df$dv = row.names(rel_df)
-row.names(rel_df) = seq(1:nrow(rel_df))
+rel_df= rel_df[-which(is.na(rel_df$dv)),]
 ```
 
 Reassign df's and clean up
@@ -147,7 +151,7 @@ test_data  = test_data_hddm_refit
 numeric_cols = get_numeric_cols()
 
 #Create df of point estimate reliabilities
-rel_df_cols = c('icc', 'pearson', 'var_subs', 'var_ind', 'var_resid')
+rel_df_cols = c('icc', 'pearson', 'var_subs', 'var_ind', 'var_resid', 'dv')
 
 rel_df = as.data.frame(matrix(ncol = length(rel_df_cols)))
 
@@ -155,19 +159,22 @@ names(rel_df) = rel_df_cols
 
 for(i in 1:length(numeric_cols)){
   
-  tmp = get_retest_stats(numeric_cols[i], metric = c('icc', 'pearson', 'var_breakdown'))
+  cur_dv = numeric_cols[i]
   
-  if(i == 1){
-    rel_df = tmp
+  tmp = get_retest_stats(cur_dv, metric = c('icc', 'pearson', 'var_breakdown'))
+  
+  if(nrow(tmp) == 0){
+    tmp[1,]=NA
+    tmp$dv = NA
+  } else {
+    tmp$dv = cur_dv
   }
-  else{
-    rel_df = rbind(rel_df, tmp)
-  }
+  
+  rel_df = rbind(rel_df, tmp)
+  
 }
 
-row.names(rel_df) <- numeric_cols
-rel_df$dv = row.names(rel_df)
-row.names(rel_df) = seq(1:nrow(rel_df))
+rel_df= rel_df[-which(is.na(rel_df$dv)),]
 ```
 
 Reassign df's and clean up
@@ -184,7 +191,7 @@ Extract ddm vars only
 Using full sample fits' reliabilities  
 
 ```{r}
-fullfit_boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')))
+fullfit_boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')), header=T)
 
 fullfit_boot_df = process_boot_df(fullfit_boot_df)
 
@@ -194,7 +201,7 @@ fullfit_boot_df = fullfit_boot_df[fullfit_boot_df$dv %in% measure_labels$dv,]
 Refits bootstrapped reliabilities  
 
 ```{r}
-refit_boot_df = read.csv(gzfile(paste0(retest_data_path,'refits_bootstrap_merged.csv.gz')))
+refit_boot_df = read.csv(gzfile(paste0(retest_data_path,'refits_bootstrap_merged.csv.gz')), header=T)
 
 refit_boot_df = process_boot_df(refit_boot_df)
 ```
@@ -202,7 +209,6 @@ refit_boot_df = process_boot_df(refit_boot_df)
 ## T1 HDDM parameters
 
 Before going on with the rest of the report first decide on whether there are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
-
 ### Parameter stability
 
 Differences in distributions: using scaled differences
@@ -227,6 +233,7 @@ hddm_pars = hddm_pars %>%
   mutate(scaled_diff = scale(diff)) %>%
   select(sub_id, dv, scaled_diff) %>%
   left_join(measure_labels[,c("dv", "rt_acc")], by = "dv") %>%
+  filter(rt_acc %in% c("rt", "accuracy") == FALSE) %>%
   na.omit()
 
 hddm_pars %>%
@@ -261,7 +268,8 @@ hddm_rels_refit = rel_df_refit %>%
 hddm_rels = hddm_rels_fullfit %>%
   left_join(hddm_rels_refit, by = "dv") %>%
   rename(fullfit = icc.x, refit = icc.y) %>%
-  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv")
+  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv") %>%
+  filter(rt_acc %in% c("rt", "accuracy") == FALSE)
 
 rm(hddm_rels_fullfit, hddm_rels_refit)
 
@@ -273,6 +281,8 @@ hddm_rels %>%
   ylab("Reliability of HDDM params using n=150")+
   theme(legend.title = element_blank())
 ```
+
+Do hddm parameters differ in their reliability depending on whether they are derived from n=150 or n=552? No.
 
 ```{r}
 hddm_rels = hddm_rels %>%
@@ -313,138 +323,81 @@ Data wrangling df's containing point estimate reliabilities and bootstrapped rel
 ```{r}
 rel_df = rel_df %>%
   select(dv, icc, var_subs, var_ind, var_resid) %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
-  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
-         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"))
+  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv")
 
 boot_df = boot_df %>%
   select(dv, icc, var_subs, var_ind, var_resid) %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
-  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
-         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"))
+  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv")
 ```
 
 Plot reliability point estimates comparing DDM measures to raw measures faceting for contrast measures.
 
 ```{r}
-ddm_point_plot = rel_df %>%
+rel_df %>%
   mutate(rt_acc = as.character(rt_acc)) %>%
-  filter(rt_acc != "other") %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_boxplot()+
-  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  facet_wrap(~overall_difference)+
   ylab("ICC")+
   xlab("")+
   theme(legend.title = element_blank(),
-        legend.position = 'bottom')+
-  guides(fill = guide_legend(ncol = 2, byrow=F))
+        legend.position = 'bottom')#+
+  # guides(fill = guide_legend(ncol = 2, byrow=F))
 
-mylegend<-g_legend(ddm_point_plot)
+#ADD FIX_DDM_LEGEND
+#fix_ddm_legend(ddm_point_plot)
 
-grob_name <- names(mylegend$grobs)[1]
-
-#manually fix the legend
-#move non-decision down
-#key
-mylegend$grobs[grob_name][[1]]$layout[11,c(1:4)] <- c(4,8,4,8)
-mylegend$grobs[grob_name][[1]]$layout[12,c(1:4)] <- c(4,8,4,8)
-#text
-mylegend$grobs[grob_name][[1]]$layout[17,c(1:4)] <- c(4,10,4,10)
-#move threshold down
-#key
-mylegend$grobs[grob_name][[1]]$layout[9,c(1:4)] <- c(3,8,3,8)
-mylegend$grobs[grob_name][[1]]$layout[10,c(1:4)] <- c(3,8,3,8)
-#text
-mylegend$grobs[grob_name][[1]]$layout[16,c(1:4)] <- c(3,10,3,10)
-#move drift rate right and up
-#key
-mylegend$grobs[grob_name][[1]]$layout[7,c(1:4)] <- c(2,8,2,8)
-mylegend$grobs[grob_name][[1]]$layout[8,c(1:4)] <- c(2,8,2,8)
-#text
-mylegend$grobs[grob_name][[1]]$layout[15,c(1:4)] <- c(2,10,2,10)
-
-grid.arrange(ddm_point_plot +theme(legend.position="none"),
-             mylegend, nrow=2, heights=c(10, 1))
-
-
-rm(mylegend, ddm_point_plot)
+#rm(mylegend, ddm_point_plot)
 ```
 
 Plot averaged bootstrapped reliability estimates per measure comparing DDM measures to raw measures faceting for contrast measures.
 
 ```{r}
-ddm_boot_plot = boot_df %>%
+boot_df %>%
   group_by(dv) %>%
   summarise(mean_icc = mean(icc),
             rt_acc = unique(rt_acc),
             overall_difference = unique(overall_difference),
-            raw_fit = unique(raw_fit),
-            contrast = unique(contrast)) %>%
+            raw_fit = unique(raw_fit)) %>%
   mutate(rt_acc = as.character(rt_acc)) %>%
-  filter(rt_acc != "other") %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_boxplot()+
-  facet_wrap(~factor(contrast, levels=c("non-contrast", "contrast"), labels=c("Non-contrast", "Contrast")))+
+  facet_wrap(~overall_difference)+
   ylab("ICC")+
   xlab("")+
   theme(legend.title = element_blank(),
-        legend.position = 'bottom')+
-  guides(fill = guide_legend(ncol = 2, byrow=F))
+        legend.position = 'bottom')#+
+  # guides(fill = guide_legend(ncol = 2, byrow=F))
 
-mylegend<-g_legend(ddm_boot_plot)
+#ADD FIX_DDM_LEGEND
+#fix_ddm_legend(ddm_boot_plot)
 
-grob_name <- names(mylegend$grobs)[1]
-
-#manually fix the legend
-#move non-decision down
-#key
-mylegend$grobs[grob_name][[1]]$layout[11,c(1:4)] <- c(4,8,4,8)
-mylegend$grobs[grob_name][[1]]$layout[12,c(1:4)] <- c(4,8,4,8)
-#text
-mylegend$grobs[grob_name][[1]]$layout[17,c(1:4)] <- c(4,10,4,10)
-#move threshold down
-#key
-mylegend$grobs[grob_name][[1]]$layout[9,c(1:4)] <- c(3,8,3,8)
-mylegend$grobs[grob_name][[1]]$layout[10,c(1:4)] <- c(3,8,3,8)
-#text
-mylegend$grobs[grob_name][[1]]$layout[16,c(1:4)] <- c(3,10,3,10)
-#move drift rate right and up
-#key
-mylegend$grobs[grob_name][[1]]$layout[7,c(1:4)] <- c(2,8,2,8)
-mylegend$grobs[grob_name][[1]]$layout[8,c(1:4)] <- c(2,8,2,8)
-#text
-mylegend$grobs[grob_name][[1]]$layout[15,c(1:4)] <- c(2,10,2,10)
-
-grid.arrange(ddm_boot_plot +theme(legend.position="none"),
-             mylegend, nrow=2, heights=c(10, 1))
-
-
-rm(mylegend, ddm_boot_plot)
+#rm(mylegend, ddm_boot_plot)
 ```
 
 Model testing if the reliability of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
 
 Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as well as their interaction is necessary.
 
-Conclusion: Model with fixed effect just for contrast and not for raw vs ddm and no interaction is the best. But to answer the question on lack of difference for ddm vs raw I'll look at the model with both fixed effects for now.
+Conclusion: Interactive model is best.
 
 ```{r}
 mer1 = lmer(icc ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer1a = lmer(icc ~ contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer2 = lmer(icc ~ ddm_raw + contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer3 = lmer(icc ~ ddm_raw * contrast + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(icc ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(icc ~ ddm_raw + overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(icc ~ ddm_raw * overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
 anova(mer1, mer2, mer3)
 anova(mer1a, mer2, mer3)
 ```
 
 ```{r}
-rm(mer1, mer3, mer1a)
+rm(mer1, mer2, mer1a)
 ```
 
-Raw measures do not significantly differ from ddm parameters in their reliability but non-contrast measures are significantly more reliable compared to contrast measures.
+Raw measures do not significantly differ from ddm parameters in their reliability but non-contrast measures are significantly more reliable compared to contrast and condition measures.
 
 ```{r}
-summary(mer2)
+summary(mer3)
 ```
 
 ## Best measure for each task
