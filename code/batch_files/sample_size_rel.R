@@ -80,8 +80,8 @@ for(it in 1:iterations) {
     test_data  = get(paste0("test_data_", as.character(ss)))
     retest_data = get(paste0("retest_data_", as.character(ss)))
     
-    test_data_dv_level_len = length(unique(test_data$dv))
-    retest_data_dv_level_len = length(unique(retest_data$dv))
+    test_data_dv_level_len = length(unique(test_data[,dv]))
+    retest_data_dv_level_len = length(unique(retest_data[,dv]))
     
     if(test_data_dv_level_len >=2 & retest_data_dv_level_len >= 2){
       tmp = get_retest_stats(dv, metric = c('icc', 'var_breakdown'))
