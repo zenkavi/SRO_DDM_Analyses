@@ -529,6 +529,21 @@ But even 150 is a large sample size for psychological studies, especially forced
 
 Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[revisit this - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]*
 
+Note: Some variables do not have enough variance to calculate reliability for difference sample sizes. These variables are:  
+>stroop.post_error_slowing  
+>simon.std_rt_error  
+>shape_matching.post_error_slowing  
+>directed_forgetting.post_error_slowing  
+>choice_reaction_time.post_error_slowing  
+>choice_reaction_time.std_rt_error  
+>dot_pattern_expectancy.post_error_slowing  
+>motor_selective_stop_signal.go_rt_std_error  
+>motor_selective_stop_signal.go_rt_error  
+>attention_network_task.post_error_slowing  
+>recent_probes.post_error_slowing  
+>simon.post_error_slowing  
+>dot_pattern_expectancy.BY_errors  
+
 ```{r}
 rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.gz')))
 
