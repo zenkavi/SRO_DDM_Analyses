@@ -644,20 +644,21 @@ rel_df_sample_size_summary %>%
 
 
 ```{r}
-summary(lmer(icc ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+summary(lmer(icc ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Does variability of reliability change with sample size?
 
-Yes. Variability of reliability decreases with sample size. It does so more strongly for contrast measures.
+No.
 
 ```{r}
 rel_df_sample_size_summary %>%
+  na.exclude() %>%
   ggplot(aes(sample_size, sem_icc))+
   geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
   geom_line(data = tmp, aes(sample_size,sem_icc, color=ddm_raw))+
   geom_point(data = tmp, aes(sample_size,sem_icc, color=ddm_raw))+
-  facet_wrap(~contrast)+
+  facet_wrap(~overall_difference)+
   ylab("Standard error of mean of reliability \n of 100 samples of size n")+
   xlab("Sample size")+
   theme(legend.title = element_blank(),
@@ -665,7 +666,7 @@ rel_df_sample_size_summary %>%
 ```
 
 ```{r}
-summary(lmer(sem_icc ~ factor(sample_size) * contrast + (1|dv), rel_df_sample_size_summary))
+summary(lmer(sem_icc ~ sample_size * overall_difference + (1|dv), rel_df_sample_size_summary))
 ```
 
 Does between subjects variance change with sample size?
@@ -676,11 +677,12 @@ This goes against my intuitions. Looking at the change in between subjects perce
 
 ```{r}
 rel_df_sample_size_summary %>%
+  na.exclude() %>%
   ggplot(aes(sample_size, mean_var_subs_pct))+
   geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
   geom_line(data = tmp, aes(sample_size,mean_var_subs_pct, color=ddm_raw))+
   geom_point(data = tmp, aes(sample_size,mean_var_subs_pct, color=ddm_raw))+
-  facet_wrap(~contrast)+
+  facet_wrap(~overall_difference)+
   ylab("Mean percentage of \n between subjects variance \n of 100 samples of size n")+
   xlab("Sample size")+
   theme(legend.title = element_blank(),
@@ -688,7 +690,7 @@ rel_df_sample_size_summary %>%
 ```
 
 ```{r}
-summary(lmer(var_subs_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+summary(lmer(var_subs_pct ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Does within subjects variance change with sample size?
@@ -697,11 +699,12 @@ Yes. This again goes against my intuition but here the inter-meausre differences
 
 ```{r}
 rel_df_sample_size_summary %>%
+  na.exclude() %>%
   ggplot(aes(sample_size, mean_var_ind_pct))+
   geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
   geom_line(data = tmp, aes(sample_size,mean_var_ind_pct, color=ddm_raw))+
   geom_point(data = tmp, aes(sample_size,mean_var_ind_pct, color=ddm_raw))+
-  facet_wrap(~contrast)+
+  facet_wrap(~overall_difference)+
   ylab("Mean percentage of \n within subjects variance \n of 100 samples of size n")+
   xlab("Sample size")+
   theme(legend.title = element_blank(),
@@ -709,18 +712,19 @@ rel_df_sample_size_summary %>%
 ```
 
 ```{r}
-summary(lmer(var_ind_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+summary(lmer(var_ind_pct ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Does residual variance change with sample size?
 
 ```{r}
 rel_df_sample_size_summary %>%
+  na.exclude() %>%
   ggplot(aes(sample_size, mean_var_resid_pct))+
   geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
   geom_line(data = tmp, aes(sample_size,mean_var_resid_pct, color=ddm_raw))+
   geom_point(data = tmp, aes(sample_size,mean_var_resid_pct, color=ddm_raw))+
-  facet_wrap(~contrast)+
+  facet_wrap(~overall_difference)+
   ylab("Mean percentage of residual variance \n of 100 samples of size n")+
   xlab("Sample size")+
   theme(legend.title = element_blank(),
@@ -728,7 +732,7 @@ rel_df_sample_size_summary %>%
 ```
 
 ```{r}
-summary(lmer(var_resid_pct ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
+summary(lmer(var_resid_pct ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Conclusion: Larger samples are better for reliability but not necessarily always for the same reasons; for some variables this is due to increasing between subjects variance while for others it's due to decreasing residual variance (?).
@@ -750,12 +754,14 @@ test_hddm_flat = read.csv(paste0(retest_data_path,'/t1_data/t1_hddm_flat.csv'))
 
 test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
 
-# Check if all the variables are there (no for now)
-sum(names(retest_hddm_flat) %in% numeric_cols) == length(names(retest_hddm_flat))
-names(retest_hddm_flat)[which(names(retest_hddm_flat) %in% numeric_cols == FALSE)]
+numeric_cols = get_numeric_cols()
 
-sum(names(test_hddm_flat) %in% numeric_cols) == length(names(test_hddm_flat))
-names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
+# Check if all the variables are there (no for now)
+# sum(names(retest_hddm_flat) %in% numeric_cols) == length(names(retest_hddm_flat))
+# names(retest_hddm_flat)[which(names(retest_hddm_flat) %in% numeric_cols == FALSE)]
+
+# sum(names(test_hddm_flat) %in% numeric_cols) == length(names(test_hddm_flat))
+# names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
 ```
 
 ### Change in parameter value
