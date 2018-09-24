@@ -551,16 +551,13 @@ rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.
 # numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
 
 rel_df_sample_size = rel_df_sample_size %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc")], by = "dv") %>%
-  mutate(ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm"),
-         contrast = ifelse(overall_difference == "difference", "contrast", "non-contrast"),
-         contrast = factor(contrast, levels=c("non-contrast", "contrast")),
-         var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
+  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc","ddm_raw")], by = "dv") %>%
+  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
          var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
 
 rel_df_sample_size_summary = rel_df_sample_size %>% 
-  group_by(dv, sample_size, ddm_raw, contrast) %>%
+  group_by(dv, sample_size, ddm_raw, overall_difference) %>%
   summarise(mean_icc = mean(icc),
             sem_icc = sem(icc), 
             mean_var_subs_pct = mean(var_subs_pct),
