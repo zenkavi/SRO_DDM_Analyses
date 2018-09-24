@@ -33,3 +33,21 @@ p1 = boot_df %>%
 ggsave('Boot_ddm_plot.jpeg', device = "jpeg", plot=p1, path = "../output/figures/", width = 38, height = 8, units = "in", limitsize = FALSE, dpi = 300)
 
 ```
+
+
+```{r}
+rel_df_sample_size_summary %>%
+  na.omit() %>%
+  ggplot(aes(factor(sample_size), mean_icc))+
+  geom_line(aes(group = dv), alpha = 0.1)+
+  geom_line(data = tmp,aes(factor(sample_size),mean_icc, group=1), color="purple", size=1)+
+  geom_point(data = tmp,aes(factor(sample_size),mean_icc), color="purple", size=2)+
+  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="purple", width = 0.1)+
+  ylab("Mean reliability of \n 100 samples of size n")+
+  xlab("Sample size")+
+  ylim(-1,1)+
+  theme(axis.text = element_text(size=36),
+        axis.title= element_text(size=36))
+
+ggsave('Sample_size.jpeg', device = "jpeg", path = "../output/figures/", width = 12, height = 8, units = "in", limitsize = FALSE, dpi = 300)
+```

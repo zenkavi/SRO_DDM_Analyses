@@ -569,13 +569,13 @@ rel_df_sample_size_summary = rel_df_sample_size %>%
 
 tmp = rel_df_sample_size %>% 
   group_by(sample_size) %>%
-  summarise(mean_icc = mean(icc),
+  summarise(mean_icc = mean(icc,na.rm=T),
             sem_icc = sem(icc), 
-            mean_var_subs_pct = mean(var_subs_pct),
+            mean_var_subs_pct = mean(var_subs_pct,na.rm=T),
             sem_var_subs_pct = sem(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct),
+            mean_var_ind_pct = mean(var_ind_pct, na.rm=T),
             sem_var_ind_pct = sem(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct),
+            mean_var_resid_pct = mean(var_resid_pct,na.rm=T),
             sem_var_resid_pct = sem(var_resid_pct))
 ```
 
@@ -585,13 +585,15 @@ Yes. The larger the sample size the more reliable is a given measure on average.
 
 ```{r}
 rel_df_sample_size_summary %>%
-  ggplot(aes(sample_size, mean_icc))+
+  na.omit() %>%
+  ggplot(aes(factor(sample_size), mean_icc))+
   geom_line(aes(group = dv), alpha = 0.1)+
-  geom_line(data = tmp,aes(sample_size,mean_icc), color="red")+
-  geom_point(data = tmp,aes(sample_size,mean_icc), color="red")+
-  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="red", width = 0.1)+
+  geom_line(data = tmp,aes(factor(sample_size),mean_icc, group=1), color="purple", size=1)+
+  geom_point(data = tmp,aes(factor(sample_size),mean_icc), color="purple", size=2)+
+  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="purple", width = 0.1)+
   ylab("Mean reliability of 100 samples of size n")+
-  xlab("Sample size")
+  xlab("Sample size")+
+  ylim(-1,1)
 ```
 
 ```{r}
