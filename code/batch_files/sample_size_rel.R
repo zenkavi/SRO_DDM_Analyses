@@ -80,7 +80,16 @@ for(it in 1:iterations) {
     test_data  = get(paste0("test_data_", as.character(ss)))
     retest_data = get(paste0("retest_data_", as.character(ss)))
     
-    tmp = get_retest_stats(dv, metric = c('icc', 'var_breakdown'))
+    test_data_dv_level_len = length(unique(test_data$dv))
+    retest_data_dv_level_len = length(unique(retest_data$dv))
+    
+    if(test_data_dv_level_len >=2 & retest_data_dv_level_len >= 2){
+      tmp = get_retest_stats(dv, metric = c('icc', 'var_breakdown'))
+    } else{
+      print("DV levels <2")
+      tmp = data.frame(icc = NA, var_subs = NA, var_ind = NA, var_resid = NA)
+    }
+    
     tmp$dv = dv
     tmp$sample_size = ss
     tmp$iteration = it
