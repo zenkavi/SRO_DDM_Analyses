@@ -10,6 +10,4 @@ motor_selective_stop_signal.go_rt_error
 attention_network_task.post_error_slowing
 recent_probes.post_error_slowing
 simon.post_error_slowing
-choice_reaction_time.missed_percent
 dot_pattern_expectancy.BY_errors
-simon.missed_percent
