@@ -596,8 +596,16 @@ rel_df_sample_size_summary %>%
   ylim(-1,1)
 ```
 
+When <15 subjects are used to calculate the measures they are significantly less reliable.
+
 ```{r}
 summary(lmer(icc ~ factor(sample_size) + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Are there differences between any other sample sizes? This ignores the differences between variables but there seems to be only differences between n=10 and all other larger sample size.
+
+```{r}
+with(rel_df_sample_size_summary, pairwise.t.test(mean_icc, sample_size, p.adjust.method = "bonferroni"))
 ```
 
 Does the change in reliabiliity with sample size vary by variable type?
@@ -606,30 +614,34 @@ The changes do not differ by raw vs. ddm measures. It does differ by whether the
 
 ```{r}
 tmp = rel_df_sample_size %>% 
-  group_by(sample_size, ddm_raw, contrast) %>%
-  summarise(mean_icc = mean(icc),
+  group_by(sample_size, ddm_raw, overall_difference) %>%
+  summarise(mean_icc = mean(icc, na.rm=T),
             sem_icc = sem(icc), 
-            mean_var_subs_pct = mean(var_subs_pct),
+            mean_var_subs_pct = mean(var_subs_pct, na.rm=T),
             sem_var_subs_pct = sem(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct),
+            mean_var_ind_pct = mean(var_ind_pct, na.rm=T),
             sem_var_ind_pct = sem(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct),
-            sem_var_resid_pct = sem(var_resid_pct))
+            mean_var_resid_pct = mean(var_resid_pct, na.rm=T),
+            sem_var_resid_pct = sem(var_resid_pct)) %>%
+  na.exclude()
 ```
 
 ```{r}
 rel_df_sample_size_summary %>%
-  ggplot(aes(sample_size, mean_icc))+
+  filter(!is.na(overall_difference)) %>%
+  ggplot(aes(factor(sample_size), mean_icc))+
   geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
-  geom_line(data = tmp, aes(sample_size,mean_icc, color=ddm_raw))+
-  geom_point(data = tmp, aes(sample_size,mean_icc, color=ddm_raw))+
-  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="red", width = 0.1)+
-  facet_wrap(~contrast)+
+  geom_line(data = tmp, aes(factor(sample_size),mean_icc, color=ddm_raw, group=ddm_raw))+
+  geom_point(data = tmp, aes(factor(sample_size),mean_icc, color=ddm_raw))+
+  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc, color=ddm_raw), width = 0.1)+
+  facet_wrap(~overall_difference)+
   ylab("Mean reliability of 100 samples of size n")+
   xlab("Sample size")+
   theme(legend.title = element_blank(),
-        legend.position = "bottom")
+        legend.position = "bottom")+
+  ylim(-1,1)
 ```
+
 
 ```{r}
 summary(lmer(icc ~ factor(sample_size) * contrast + (1|dv) + (1|iteration), rel_df_sample_size))
