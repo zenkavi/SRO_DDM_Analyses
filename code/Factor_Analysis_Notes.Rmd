@@ -349,6 +349,21 @@ Not a great fit.
 summary(tmp)
 ```
 
+It's probably not great to use 
+1. untransformed (though scaled)  
+2. highly correlated 
+variables.
+
+To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)
+ I'll apply the cleaning methods from the ontology pipeline - transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and dropping variables with r>0.85.
+
+```{r}
+selected_variables_clean = remove_correlated_task_variables(selected_variables_clean)
+
+clean_test_data = cbind(sub_id = test_data$sub_id, as.data.frame(apply(test_data[, -which(names(test_data) %in% c("sub_id"))], 2, remove_outliers)))
+
+clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
+```
 
 # Concepts
 
