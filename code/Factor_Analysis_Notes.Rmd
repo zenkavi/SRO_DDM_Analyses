@@ -358,11 +358,26 @@ To reduce the number of variables in a data-driven way (instead of just selectin
  I'll apply the cleaning methods from the ontology pipeline - transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and dropping variables with r>0.85.
 
 ```{r}
-selected_variables_clean = remove_correlated_task_variables(selected_variables_clean)
+clean_test_data = remove_correlated_task_variables(test_data)
+```
 
-clean_test_data = cbind(sub_id = test_data$sub_id, as.data.frame(apply(test_data[, -which(names(test_data) %in% c("sub_id"))], 2, remove_outliers)))
+```{r}
+clean_test_data = cbind(sub_id = clean_test_data$sub_id, as.data.frame(apply(clean_test_data[, -which(names(clean_test_data) %in% c("sub_id"))], 2, remove_outliers)))
+```
 
+```{r}
+numeric_cols = get_numeric_cols()
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data) == T]
 clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
+```
+
+```{r}
+clean_test_data
+#check imputation
+#check subject id removal
+#check scaling in ian's code
+
+fa_clean = fa(clean_test_data, 5, rotate='oblimin', fm='ml', n.obs=0, scores='tenBerge')
 ```
 
 # Concepts
