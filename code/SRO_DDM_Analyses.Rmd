@@ -599,7 +599,7 @@ rel_df_sample_size_summary %>%
 When <15 subjects are used to calculate the measures they are significantly less reliable.
 
 ```{r}
-summary(lmer(icc ~ factor(sample_size) + (1|dv) + (1|iteration), rel_df_sample_size))
+summary(lmer(icc ~ sample_size + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
 Are there differences between any other sample sizes? This ignores the differences between variables but there seems to be only differences between n=10 and all other larger sample size.
