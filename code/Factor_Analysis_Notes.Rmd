@@ -9,6 +9,10 @@ toc_float: yes
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/SRO_DDM_Analyses_Helper_Functions.R')
 
+test_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Complete_03-29-2018/'
+
+retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
+
 input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
 
 library(FactoMineR)
@@ -16,11 +20,49 @@ library(missForest)
 library(factoextra)
 ```
 
-Read in data
 
 ```{r}
-test_data = read.csv(paste0(input_path, 'test_data.csv'))
-retest_data = read.csv(paste0(input_path, 'retest_data.csv'))
+measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
+
+measure_labels = measure_labels %>% 
+  select(-measure_description) %>%
+  filter(ddm_task == 1) %>%
+  select(-ddm_task) %>%
+  filter(rt_acc != "other") %>%
+  mutate(dv = as.character(dv),
+         overall_difference = factor(overall_difference,levels = c("overall", "difference", "condition"), labels = c("non-contrast", "contrast", "condition")),
+         ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm")) %>%
+  separate(dv, c("task_group", "var"), sep = "\\.", remove=FALSE, extra = "merge")
+```
+
+### Load time 1 data
+```{r}
+test_data <- read.csv(paste0(test_data_path,'variables_exhaustive.csv'))
+
+test_data_subs = as.character(test_data$X)
+
+test_data = test_data %>%
+  select(measure_labels$dv)
+
+test_data$sub_id = test_data_subs
+
+rm(test_data_subs)
+```
+
+### Load time 2 data 
+```{r}
+retest_data <- read.csv(paste0(retest_data_path,'variables_exhaustive.csv'))
+
+retest_data_subs = as.character(retest_data$X)
+
+retest_data = retest_data %>%
+  select(measure_labels$dv)
+
+retest_data$sub_id = retest_data_subs
+
+retest_data = retest_data[retest_data$sub_id %in% test_data$sub_id,]
+
+rm(retest_data_subs)
 ```
 
 Standardize data
@@ -36,12 +78,12 @@ retest_data_std = retest_data_std %>% select(-sub_id)
 
 #PCA
 
-
 ## `FactoMineR` package
 
 Following the tutorial [here](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
 
 ```{r eval=FALSE}
+#Imputation with missForest package - SLOW
 test_data_std_miss <- missForest(as.matrix(test_data_std))
 ```
 
@@ -56,11 +98,14 @@ test_pca <- PCA(test_data_std, graph = FALSE, scale.unit = FALSE)
 test_pca
 ```
 
-Eigenvalues don't go <1 until dimension 89.
+Eigenvalues don't go <1 until dimension 89. 
+
+NOTE: Normally you should have as many eigenvalues as variables (columns) BUT if you fit it to data with more variables than individuals (row) you only have `nrow` eigenvalues.
 
 ```{r}
 eig_val = get_eigenvalue(test_pca)
-head(eig_val)
+nrow(eig_val)
+head(eig_val, 20)
 ```
 
 ```{r}
@@ -73,12 +118,59 @@ var
 ```
 
 ```{r}
-# Coordinates
+# Coordinates - factor loadings
 head(var$coord)
-# Cos2: quality on the factore map
+```
+
+```{r}
+# Correlation between the variable and the PC - almost the same as above. Not sure where the minor difference comes from.
+head(var$cor)
+```
+
+```{r}
+# Cos2: quality on the factore map - squared coordinates: how well the variable is represented by the PC (?)
 head(var$cos2)
-# Contributions to the principal components
-head(var$contrib)
+```
+
+```{r}
+# Contributions to the principal components - in percentage: how well the variable represents the PC (?)
+head(as.data.frame(var$contrib)%>% 
+       mutate(dv = row.names(.)) %>%
+       select(dv, everything()) %>%
+       arrange(-Dim.1))
+```
+
+```{r}
+fviz_pca_var(test_pca, geom=c("point"), col.var = "contrib")
+```
+
+```{r}
+fviz_pca_var(test_pca, geom=c("point"), col.var = "cos2")
+```
+
+```{r}
+ind <- get_pca_ind(test_pca)
+ind
+```
+
+```{r}
+#Coordinates for individuals - factor scores: how well is a subject represented by a given PC
+head(ind$coord)
+```
+
+```{r}
+#Contribution of each individual to each dimension: how well does a subjcet represent a PC
+head(ind$contrib)
+```
+
+Note n=522 in this plot.
+
+```{r}
+fviz_pca_ind(test_pca, geom=c("point"), col.ind="contrib")
+```
+
+```{r}
+fviz_pca_ind(test_pca, geom=c("point"), col.ind="cos2")
 ```
 
 ##`stats` package functions

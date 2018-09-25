@@ -878,6 +878,10 @@ with(rel_df_flat %>% filter(rt_acc == "threshold"), t.test(icc.x, icc.y, paired=
 with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, paired=T))
 ```
 
+```{r}
+rm(flat_difference, rel_df_flat, retest_flat_difference, retest_hddm_flat, retest_hddm_hier, test_flat_difference,  test_hddm_flat, test_hddm_hier)
+```
+
 ## Clustering
 
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
@@ -964,7 +968,7 @@ all_data_cor_med
 ```
 
 ```{r}
-summary(lmer(abs(value)~task_task+(1|var_1), tmp %>% na.exclude()))
+rm(all_data_cor, all_data_cor_med, retest_data_cor, retest_data_cor_med, test_data_cor, test_data_cor_med)
 ```
 
 Factor analysis
