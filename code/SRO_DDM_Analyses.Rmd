@@ -898,7 +898,7 @@ retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
 retest_data_std = retest_data_std %>% select(-sub_id)
 
 #Get correlation table for test data and melt into long form
-test_data_cor = data.frame(cor(test_data_std, use="complete.obs"))
+test_data_cor = data.frame(cor(test_data_std, use="pairwise.complete.obs"))
 test_data_cor = test_data_cor %>%
   mutate(dv = row.names(.)) %>%
   gather(key, value, -dv) %>%
@@ -924,7 +924,7 @@ test_data_cor_med = test_data_cor %>%
             time="test")
 
 #Get same correlation table for retest data
-retest_data_cor = data.frame(cor(retest_data_std, use="complete.obs"))
+retest_data_cor = data.frame(cor(retest_data_std, use="pairwise.complete.obs"))
 retest_data_cor = retest_data_cor %>%
   mutate(dv = row.names(.)) %>%
   gather(key, value, -dv) %>%
