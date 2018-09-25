@@ -754,7 +754,7 @@ test_hddm_flat = read.csv(paste0(retest_data_path,'/t1_data/t1_hddm_flat.csv'))
 
 test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
 
-numeric_cols = get_numeric_cols()
+#numeric_cols = get_numeric_cols()
 
 # Check if all the variables are there (no for now)
 # sum(names(retest_hddm_flat) %in% numeric_cols) == length(names(retest_hddm_flat))
@@ -773,6 +773,7 @@ Percent change - using hierarchical as baseline: what percent does the flat para
 ```{r}
 #Should not be necessary later
 common_cols = names(retest_hddm_flat)[names(retest_hddm_flat) %in% names(retest_data)]
+common_cols=common_cols[common_cols %in% names(test_hddm_flat)]
 
 retest_hddm_hier = retest_data %>% select(common_cols) %>% mutate(hddm="hierarchical")
 test_hddm_hier = test_data %>% select(common_cols)  %>% mutate(hddm="hierarchical")
@@ -784,6 +785,7 @@ retest_flat_difference = retest_flat_difference %>%
   gather(dv, value, -sub_id, -hddm) %>%
   spread(hddm, value) %>%
   mutate(diff_pct = (hierarchical - flat)/hierarchical*100,
+         diff_pct = ifelse(diff_pct<(-100), -100, ifelse(diff_pct>100, 100, diff_pct)),
          time = "retest",
          par = ifelse(grepl("drift", dv), "drift", ifelse(grepl("thresh", dv), "thresh", ifelse(grepl("non_decision", dv), "non_decision", NA))))
 
@@ -792,6 +794,7 @@ test_flat_difference = test_flat_difference %>%
   gather(dv, value, -sub_id, -hddm) %>%
   spread(hddm, value) %>%
   mutate(diff_pct = (hierarchical - flat)/hierarchical*100,
+         diff_pct = ifelse(diff_pct<(-100), -100, ifelse(diff_pct>100, 100, diff_pct)),
          time = "test",
          par = ifelse(grepl("drift", dv), "drift", ifelse(grepl("thresh", dv), "thresh", ifelse(grepl("non_decision", dv), "non_decision", NA))))
 
@@ -858,7 +861,7 @@ rm(test_data_150, retest_data_150)
 
 ```{r}
 rel_df_flat = rel_df_flat %>%
-  left_join(rel_df[,c("dv", "icc", "rt_acc", "contrast")], by = "dv") 
+  left_join(rel_df[,c("dv", "icc", "rt_acc", "overall_difference")], by = "dv") 
 
 rel_df_flat %>%
   ggplot(aes(icc.y, icc.x))+

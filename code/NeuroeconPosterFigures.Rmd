@@ -64,37 +64,43 @@ ggsave('Sample_size.jpeg', device = "jpeg", path = "../output/figures/", width =
 ```
 
 ```{r}
-tmp = rel_df_sample_size %>% 
-  group_by(sample_size, ddm_raw, overall_difference) %>%
-  summarise(mean_icc = mean(icc, na.rm=T),
-            sem_icc = sem(icc), 
-            mean_var_subs_pct = mean(var_subs_pct, na.rm=T),
-            sem_var_subs_pct = sem(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct, na.rm=T),
-            sem_var_ind_pct = sem(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct, na.rm=T),
-            sem_var_resid_pct = sem(var_resid_pct)) %>%
-  na.exclude()
+flat_difference %>%
+  mutate(par = factor(par, levels = c("drift", "non_decision", "thresh"), labels = c("Drift Rate", "Non-decision", "Threshold")),
+         time = factor(time, levels = c("test", "retest"), labels = c("Test", "Retest"))) %>%
+  ggplot(aes(hierarchical, flat))+
+  geom_point(aes(color = par, shape = par, alpha=time), size=4)+
+  geom_abline(aes(intercept=0, slope=1), color="black", linetype="dashed")+
+  xlim(-5,5)+
+  ylim(-5,5)+
+  theme(legend.position = "bottom",
+        legend.title = element_blank(),
+        axis.text = element_text(size=16),
+        axis.title= element_text(size=22),
+        legend.text = element_text(size=16),
+        #legend.spacing.x = unit(0.4, "cm"),
+        #legend.key.size = unit(4, "cm"),
+        # legend.box = "vertical",
+        legend.box.margin = margin(.2, .2, .2, .2))+
+  scale_alpha_discrete(range = c(0.4, 0.8))+
+  xlab("Hierarchical Estimate")+
+  ylab("Non-hierarchical Estimate")
 
-rel_df_sample_size_summary %>%
-  filter(!is.na(overall_difference)) %>%
-  ggplot(aes(factor(sample_size), mean_icc))+
-  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
-  geom_line(data = tmp, aes(factor(sample_size),mean_icc, color=ddm_raw, group=ddm_raw), size=2)+
-  geom_point(data = tmp, aes(factor(sample_size),mean_icc, color=ddm_raw), size=4)+
-  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc, color=ddm_raw), width = 0.1)+
-  facet_wrap(~overall_difference)+
-  ylab("Mean reliability 100 \n samples of size n")+
-  xlab("Sample size")+
-  theme(legend.title = element_blank(),
-        legend.position = "bottom",
-        strip.text = element_text(size=36),
-        legend.text = element_text(size=36),
-        legend.spacing.x = unit(0.4, "cm"),
-        legend.key.size = unit(4, "cm"))+
-  ylim(-1,1)+
-  theme(axis.text = element_text(size=36),
-        axis.title= element_text(size=36))
+ggsave('Flat_vs_hier_est.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
+```
 
-ggsave('Sample_size_by_type.jpeg', device = "jpeg", path = "../output/figures/", width = 38, height = 8, units = "in", limitsize = FALSE, dpi = 300)
+```{r}
+rel_df_flat %>%
+  mutate(rt_acc = factor(rt_acc, levels = c("drift rate", "non-decision", "threshold"), labels = c("Drift Rate", "Non-decision", "Threshold"))) %>%
+  ggplot(aes(icc.y, icc.x, color = rt_acc))+
+  geom_point(size=4)+
+  geom_abline(aes(slope=1, intercept = 0), color="black", linetype = "dashed")+
+  xlab("Reliability of hierarchical estimate")+
+  ylab("Reliability of \n non-hierarchical estimate")+
+  theme(legend.position = "bottom",
+        legend.title = element_blank(),
+        axis.text = element_text(size=16),
+        axis.title= element_text(size=22),
+        legend.text = element_text(size=16))
+
+ggsave('Flat_vs_hier_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
