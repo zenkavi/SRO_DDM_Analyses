@@ -10,6 +10,10 @@ toc_float: yes
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/SRO_DDM_Analyses_Helper_Functions.R')
 
 input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
+
+library(FactoMineR)
+library(missForest)
+library(factoextra)
 ```
 
 Read in data
@@ -31,6 +35,51 @@ retest_data_std = retest_data_std %>% select(-sub_id)
 ```
 
 #PCA
+
+
+## `FactoMineR` package
+
+Following the tutorial [here](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
+
+```{r eval=FALSE}
+test_data_std_miss <- missForest(as.matrix(test_data_std))
+```
+
+```{r}
+#mean imputation on standardized data
+test_data_std[is.na(test_data_std)]=0
+
+test_pca <- PCA(test_data_std, graph = FALSE, scale.unit = FALSE)
+```
+
+```{r}
+test_pca
+```
+
+Eigenvalues don't go <1 until dimension 89.
+
+```{r}
+eig_val = get_eigenvalue(test_pca)
+head(eig_val)
+```
+
+```{r}
+fviz_eig(test_pca, addlabels = TRUE)
+```
+
+```{r}
+var <- get_pca_var(test_pca)
+var
+```
+
+```{r}
+# Coordinates
+head(var$coord)
+# Cos2: quality on the factore map
+head(var$cos2)
+# Contributions to the principal components
+head(var$contrib)
+```
 
 ##`stats` package functions
 
@@ -56,9 +105,6 @@ fit <- princomp(test_data_std %>% na.omit())
 Changing to `prcomp` works.
 
 ```{r}
-#mean imputation on standardized data
-test_data_std[is.na(test_data_std)]=0
-
 fit <- prcomp(test_data_std)
 ```
 
@@ -78,6 +124,7 @@ Scree plot
 
 ```{r}
 out %>%
+  filter(as.numeric(as.character(PC))<11)%>%
   ggplot(aes(PC, Proportion.of.Variance)) +
   geom_bar(stat="identity")+
   theme(axis.text.x = element_text(angle = 90))
