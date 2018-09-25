@@ -65,7 +65,7 @@ retest_data = retest_data[retest_data$sub_id %in% test_data$sub_id,]
 rm(retest_data_subs)
 ```
 
-Standardize data
+Standardize data and (mean) impute
 
 ```{r}
 #Standardize datasets
@@ -74,7 +74,17 @@ test_data_std = test_data_std %>% select(-sub_id)
 
 retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
 retest_data_std = retest_data_std %>% select(-sub_id)
+
+#mean imputation on standardized data
+test_data_std[is.na(test_data_std)]=0
+retest_data_std[is.na(retest_data_std)]=0
 ```
+
+#Difference between PCA and EFA
+
+>Despite all these similarities, there is a fundamental difference between them: PCA is a linear combination of variables; Factor Analysis is a measurement model of a latent variable.
+
+[Source](https://www.theanalysisfactor.com/the-fundamental-difference-between-principal-component-analysis-and-factor-analysis/)
 
 #PCA
 
@@ -88,9 +98,6 @@ test_data_std_miss <- missForest(as.matrix(test_data_std))
 ```
 
 ```{r}
-#mean imputation on standardized data
-test_data_std[is.na(test_data_std)]=0
-
 test_pca <- PCA(test_data_std, graph = FALSE, scale.unit = FALSE)
 ```
 
@@ -173,6 +180,12 @@ fviz_pca_ind(test_pca, geom=c("point"), col.ind="contrib")
 fviz_pca_ind(test_pca, geom=c("point"), col.ind="cos2")
 ```
 
+```{r}
+retest_data_std[is.na(retest_data_std)]=0
+
+str(predict(test_pca, newdata = retest_data_std))
+```
+
 ##`stats` package functions
 
 ### `princomp` and `prcomp`  
@@ -188,10 +201,10 @@ fviz_pca_ind(test_pca, geom=c("point"), col.ind="cos2")
 
 >So, prcomp is preferred, although in practice you are unlikely to see much difference (for example, if you run the examples on the help pages you should get identical results).
 
-Using the t1 data for retest participants only with 273 variables and 150 subjects `princomp` doesn't work because there are more variables than subjects.
+Using the t1 data for retest participants only with 273 variables and 150 subjects `princomp` doesn't would not work because there are more variables than subjects.
 
-```{r}
-fit <- princomp(test_data_std %>% na.omit())
+```{r eval=FALSE}
+fit <- princomp(test_data_std)
 ```
 
 Changing to `prcomp` works.
@@ -222,24 +235,13 @@ out %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
-```{r}
-
-```
-
-Concepts
-
-- eigenvalue: amount of variance explained by each PC  
-
-- coordinate/correlation: the correlation between the variable and the PC  
-- quality of representation: squared correlation; how well the variable is represented by the PC; variance of variable explained by the PC  
-- contribution: varianc of PC explained by the variable
-
-`fit$rotation` Factor loadings (variables)   
-`fit$scores` Factor scores (individuals)
+Factor loadings
 
 ```{r}
 data.frame(fit$rotation)
 ```
+
+Factor scores (n=522)
 
 ```{r}
 data.frame(fit$x)
@@ -258,10 +260,6 @@ data.frame(fit$rotation) %>%
   geom_vline(aes(xintercept=0))
 ```
 
-```{r}
-fviz_pca_var(fit, col.var = "contrib")
-```
-
 Plot individuals on first two dimensions
 
 ```{r}
@@ -276,23 +274,94 @@ data.frame(fit$x) %>%
   xlim(c(-16, 16))
 ```
 
-```{r}
-fviz_pca_ind(fit, col.ind = "cos2")
-```
-
-
 ##`psych` package functions
 
 ```{r}
-fit <- principal(test_data_std, nfactors=3, rotate="oblimin")
-fit
+fit_psych <- principal(test_data_std, nfactors=5, rotate="oblimin")
+```
 
+Scree plot from `psych` package
+
+```{r}
+data.frame(fit_psych$values) %>%
+  rename(eig = fit_psych.values) %>%
+  arrange(-eig) %>%
+  mutate(var_pct = eig/sum(eig)*100,
+         pc = 1:n()) %>%
+  filter(pc<11)%>%
+  ggplot(aes(pc, var_pct))+
+  geom_bar(stat="identity")
+```
+
+```{r}
+as.data.frame(fit_psych$loadings[]) %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, everything())
+```
+
+```{r}
+as.data.frame(fit_psych$scores)
+```
+
+#EFA
+
+##`stats` package functions
+
+```{r}
+fit_factanal <- factanal(test_data_std, 5, rotate = "promax", n.obs = 0, scores = "regression")
+```
+
+##`psych` package functions
+
+```{r eval=F}
+#To choose number of factors
+parallel <- fa.parallel(test_data_std, fm = 'minres', fa = 'fa')
+```
+
+```{r}
 #doesn't work - 'ml' is the method used in the ontology paper so don't really want to diverge from it
-#tmp = fa(test_data_std, 1, rotate='oblimin', fm='ml', n.obs=0, scores='tenBerge')
-tmp = fa(test_data_std, 3, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
+# tmp = fa(test_data_std, 1, rotate='oblimin', fm='ml', n.obs=0, scores='tenBerge')
+tmp = fa(test_data_std, 5, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
 
 ```
+
+```{r}
+fa_loadings = as.data.frame(tmp$loadings[]) %>%
+  mutate(dv = row.names(.))%>%
+  select(dv, everything())
+
+fa_loadings[fa_loadings<0.3]=NA
+
+fa_loadings %>% 
+  mutate(num_loading = 5-(is.na(MR1)+is.na(MR2)+is.na(MR3)+is.na(MR4)+is.na(MR5))) %>%
+  filter(num_loading!=0) %>%
+  arrange(-MR1) 
+```
+
+
+```{r}
+fa.diagram(tmp)
+```
+
+Not a great fit.
+
+```{r}
+summary(tmp)
+```
+
+
+# Concepts
+
+- eigenvalue: amount of variance explained by each PC  
+
+- coordinate/correlation: the correlation between the variable and the PC  
+- quality of representation: squared correlation; how well the variable is represented by the PC; variance of variable explained by the PC  
+- contribution: varianc of PC explained by the variable
+
+- Factor loadings (aka rotation) (variables)     
+- Factor scores (individuals)
 
 # Resources
 
 [PCA Essentials](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
+[Difference between PCA and EFA](http://www2.sas.com/proceedings/sugi30/203-30.pdf)
