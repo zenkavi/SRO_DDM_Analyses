@@ -434,10 +434,37 @@ summary(fa_clean)
 ```{r}
 set.seed(230948)
 
-clusters <- kmeans(clean_test_data_std, 5)
+#clustering people
+ind_clusters <- kmeans(clean_test_data_std, 5)
 
-str(clusters)
-clusters$centers
+str(ind_clusters)
+data.frame(ind_clusters$centers)
+```
+
+```{r}
+var_clusters <- kmeans(t(clean_test_data_std),5)
+```
+
+```{r}
+tmp = data_frame(cluster = var_clusters$cluster, dv = names(clean_test_data_std)) %>%
+  select(dv, cluster) %>%
+  mutate(dv = gsub(".ReflogTr", "", dv),
+         dv = gsub(".logTr", "", dv))%>%
+  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv")%>%
+    mutate(dv = reorder(dv, -cluster))
+
+tmp %>%
+  ggplot(aes(dv, cluster, fill = ddm_raw, color=rt_acc))+
+  geom_bar(stat="identity")+
+  coord_flip()+
+  xlab("")
+
+ggsave('var_clusters.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 50, units = "in", limitsize = FALSE, dpi = 100)
+
+```
+
+```{r}
+with(tmp, table(cluster, ddm_raw, rt_acc))
 ```
 
 # Concepts
