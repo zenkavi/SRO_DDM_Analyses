@@ -454,17 +454,18 @@ tmp = data_frame(cluster = var_clusters$cluster, dv = names(clean_test_data_std)
     mutate(dv = reorder(dv, -cluster))
 
 tmp %>%
-  ggplot(aes(dv, cluster, fill = ddm_raw, color=rt_acc))+
+  ggplot(aes(dv, cluster, alpha = ddm_raw, fill=rt_acc))+
   geom_bar(stat="identity")+
   coord_flip()+
-  xlab("")
+  xlab("")+
+  scale_alpha_discrete(range = c(0.4, 0.8))
 
 ggsave('var_clusters.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 50, units = "in", limitsize = FALSE, dpi = 100)
 
 ```
 
 ```{r}
-with(tmp, table(cluster, ddm_raw, rt_acc))
+with(tmp, table(rt_acc, ddm_raw, cluster))
 ```
 
 # Concepts
