@@ -625,7 +625,7 @@ plot(dend2, axes=FALSE)
 
 # Neuroecon Poster
 
-## PCA on EZ vars
+## PCA on EZ vars (3 factors)
 
 ```{r}
 ez_vars = grep("EZ", names(clean_test_data_std), value=T)
@@ -667,11 +667,10 @@ dend2 <- dend %>%
 # %>%
   set("labels", rep(NA,164))
 
-par(mar=c(15, 4, 2, 2) + 0.1)
 plot(dend2, axes=FALSE)
 ```
 
-## PCA on HDDM vars
+## PCA on HDDM vars (3 factors)
 
 ```{r}
 hddm_vars = grep("hddm", names(clean_test_data_std), value=T)
@@ -709,13 +708,10 @@ dend2 <- dend %>%
   set("leaves_cex", 1) %>% 
   set("leaves_col", tmp$rt_acc_cols)%>% 
   # color_labels(col = rt_acc_cols) 
-  color_labels(col = tmp$overall_diff_cols) 
+  #color_labels(col = tmp$overall_diff_cols) 
 # %>%
-#   set("labels", rep(NA,90))
-op <- par(no.readonly = TRUE)
-par(mar=c(15, 4, 2, 2) + 0.1)
+   set("labels", rep(NA,90))
 plot(dend2, axes=FALSE)
-par(op)
 ```
 
 Correlation of the factor scores between these two lower dimensional spaces
