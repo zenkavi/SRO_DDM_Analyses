@@ -18,6 +18,11 @@ input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
 library(FactoMineR)
 library(missForest)
 library(factoextra)
+library(cluster)
+library(dendextend)
+library(colorspace)
+
+op <- par(no.readonly = TRUE)
 ```
 
 ### Load measure labels
@@ -504,7 +509,7 @@ ggsave('efa_5.jpeg', device = "jpeg", path = "../output/figures/", width = 10, h
 
 #Clustering
 
-#`stats` package
+#`stats` package - kmeans
 
 ```{r}
 set.seed(230948)
@@ -535,7 +540,7 @@ tmp %>%
   xlab("")+
   scale_alpha_discrete(range = c(0.4, 0.8))
 
-ggsave('var_clusters.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 50, units = "in", limitsize = FALSE, dpi = 100)
+ggsave('kmeans_5_clusters.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 50, units = "in", limitsize = FALSE, dpi = 100)
 
 ```
 
@@ -543,29 +548,23 @@ ggsave('var_clusters.jpeg', device = "jpeg", path = "../output/figures/", width 
 with(tmp, table(rt_acc, ddm_raw, cluster))
 ```
 
-#`cluster` package
 
-```{r}
-library(cluster)
-```
+#`cluster` package - hclust
 
-```{r}
+Cluster all (hddm, ez, raw) variables without projecting to a lower dimensional space. [pretty ugly]
+
+```{r eval=FALSE}
+#Same thing done later with chaining in separate steps
 clean_test_data_std_dist = stats::dist(t(clean_test_data_std))
 
 hclust_out = hclust(clean_test_data_std_dist)
-
 ```
 
 ```{r}
-library(dendextend)
-
 dend = t(clean_test_data_std) %>%
   dist %>%
   hclust %>%
   as.dendrogram
-
-dend %>%
-  plot()
 
 rt_acc_cols <- rainbow_hcl(5)
 
@@ -578,16 +577,47 @@ tmp = data.frame(dv = dend %>% labels) %>%
   select(-dv) %>%
   rename(dv = dv2)
 
-tmp[is.na(tmp$cols),]
-
-rt_acc_cols = tmp$cols
-
+# tmp[is.na(tmp$cols),]
 
 dend2 <- dend %>% 
   set("leaves_pch", 19) %>% 
   set("leaves_cex", 1) %>% 
-  set("leaves_col", rt_acc_cols)%>% 
-  color_labels(col = rt_acc_cols) %>%
+  set("leaves_col", tmp$cols)%>% 
+  color_labels(col = tmp$cols) %>%
+  set("labels", rep(NA,419))
+
+plot(dend2, axes=FALSE)
+```
+
+Project on lower dimensional space and then cluster
+
+```{r}
+clean_test_data_low_dim = clean_test_pca$var$coord
+
+#no transpose because dv's are in rows
+dend = clean_test_data_low_dim%>%
+  dist %>%
+  hclust %>%
+  as.dendrogram
+
+rt_acc_cols <- rainbow_hcl(5)
+
+tmp = data.frame(dv = dend %>% labels) %>%
+  mutate(dv2 = dv,
+         dv = gsub(".ReflogTr", "", dv),
+         dv = gsub(".logTr", "", dv)) %>%
+  left_join(measure_labels[,c("dv", "rt_acc")], by="dv") %>%
+  mutate(cols = ifelse(rt_acc == "rt", rt_acc_cols[1], ifelse(rt_acc == "accuracy", rt_acc_cols[2], ifelse(rt_acc == "drift rate", rt_acc_cols[3], ifelse(rt_acc == "non-decision", rt_acc_cols[4], ifelse(rt_acc == "threshold", rt_acc_cols[5], NA)))))) %>%
+  select(-dv) %>%
+  rename(dv = dv2)
+
+# tmp[is.na(tmp$cols),]
+
+dend2 <- dend %>% 
+  set("leaves_pch", 19) %>% 
+  set("leaves_cex", 1) %>% 
+  set("leaves_col", tmp$cols)%>% 
+  color_labels(col = tmp$cols) %>%
   set("labels", rep(NA,419))
 
 plot(dend2, axes=FALSE)
@@ -636,13 +666,10 @@ dend2 <- dend %>%
   #color_labels(col = tmp$overall_diff_cols) 
 # %>%
   set("labels", rep(NA,164))
-op <- par(no.readonly = TRUE)
+
 par(mar=c(15, 4, 2, 2) + 0.1)
 plot(dend2, axes=FALSE)
-par(op)
 ```
-
-
 
 ## PCA on HDDM vars
 
@@ -711,6 +738,10 @@ Then use them for prediction
 
 ```
 
+
+```{r}
+par(op)
+```
 
 # Concepts
 
