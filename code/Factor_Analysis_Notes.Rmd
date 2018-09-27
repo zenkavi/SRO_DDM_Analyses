@@ -20,6 +20,7 @@ library(missForest)
 library(factoextra)
 ```
 
+### Load measure labels
 
 ```{r}
 measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
@@ -65,7 +66,7 @@ retest_data = retest_data[retest_data$sub_id %in% test_data$sub_id,]
 rm(retest_data_subs)
 ```
 
-Standardize data and (mean) impute
+### Standardize data and (mean) impute
 
 ```{r}
 #Standardize datasets
@@ -80,6 +81,55 @@ test_data_std[is.na(test_data_std)]=0
 retest_data_std[is.na(retest_data_std)]=0
 ```
 
+### Clean data
+
+It's probably not great to use 
+1. untransformed (though scaled)  
+2. highly correlated 
+variables.
+
+To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)
+ I'll apply the cleaning methods from the ontology pipeline - transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and dropping variables with r>0.85.
+
+Remove correlated variables within a task
+
+```{r}
+clean_test_data = remove_correlated_task_variables(test_data)
+```
+
+Remove outliers (>2.5 SD away)
+
+```{r}
+clean_test_data = cbind(sub_id = clean_test_data$sub_id, as.data.frame(apply(clean_test_data[, -which(names(clean_test_data) %in% c("sub_id"))], 2, remove_outliers)))
+```
+
+Transform skewed variables
+
+```{r}
+numeric_cols = get_numeric_cols()
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data) == T]
+clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
+```
+
+Drop subject identifier column, mean impute and drop cols with no variance
+
+```{r eval=FALSE}
+#Imputation with missForest package - SLOW
+test_data_std_miss <- missForest(as.matrix(test_data_std))
+```
+
+```{r}
+clean_test_data_std = clean_test_data %>% mutate_if(is.numeric, scale)
+clean_test_data_std = clean_test_data_std %>% select(-sub_id)
+
+#mean imputation
+clean_test_data_std[is.na(clean_test_data_std)]=0
+
+#drop cols with no variance
+clean_test_data_std = clean_test_data_std %>%
+  select_if(function(col) sd(col) != 0)
+```
+
 #Difference between PCA and EFA
 
 >Despite all these similarities, there is a fundamental difference between them: PCA is a linear combination of variables; Factor Analysis is a measurement model of a latent variable.
@@ -92,98 +142,165 @@ retest_data_std[is.na(retest_data_std)]=0
 
 Following the tutorial [here](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
 
-```{r eval=FALSE}
-#Imputation with missForest package - SLOW
-test_data_std_miss <- missForest(as.matrix(test_data_std))
+```{r}
+clean_test_pca <- PCA(clean_test_data_std, graph = FALSE, scale.unit = FALSE)
 ```
 
 ```{r}
-test_pca <- PCA(test_data_std, graph = FALSE, scale.unit = FALSE)
+clean_test_pca
 ```
 
-```{r}
-test_pca
-```
+Eigenvalues don't go <1 until dimension 90>. 
 
-Eigenvalues don't go <1 until dimension 89. 
-
-NOTE: Normally you should have as many eigenvalues as variables (columns) BUT if you fit it to data with more variables than individuals (row) you only have `nrow` eigenvalues.
+NOTE: You should have as many eigenvalues as variables (columns) BUT if you fit it to data with more variables than individuals (row) you only have `nrow` eigenvalues.
 
 ```{r}
-eig_val = get_eigenvalue(test_pca)
+eig_val = get_eigenvalue(clean_test_pca)
 nrow(eig_val)
+```
+
+```{r}
 head(eig_val, 20)
 ```
 
+Scree plot
+
 ```{r}
-fviz_eig(test_pca, addlabels = TRUE)
+fviz_eig(clean_test_pca, addlabels = TRUE)
 ```
 
 ```{r}
-var <- get_pca_var(test_pca)
+var <- get_pca_var(clean_test_pca)
 var
 ```
+
+Factor loadings
 
 ```{r}
 # Coordinates - factor loadings
 head(var$coord)
 ```
 
+Correlation between the variable and the PC - almost the same as above. Not sure where the minor difference comes from.
+
 ```{r}
-# Correlation between the variable and the PC - almost the same as above. Not sure where the minor difference comes from.
 head(var$cor)
 ```
 
+Cos2: quality on the factore map - squared coordinates: how well the variable is represented by the PC (?)
+
 ```{r}
-# Cos2: quality on the factore map - squared coordinates: how well the variable is represented by the PC (?)
 head(var$cos2)
 ```
 
+Contributions to the principal components - in percentage: how well the variable represents the PC (?)
+
 ```{r}
-# Contributions to the principal components - in percentage: how well the variable represents the PC (?)
 head(as.data.frame(var$contrib)%>% 
        mutate(dv = row.names(.)) %>%
        select(dv, everything()) %>%
        arrange(-Dim.1))
 ```
 
+Plot variables on first two components and color by their contribution.
+
 ```{r}
-fviz_pca_var(test_pca, geom=c("point"), col.var = "contrib")
+fviz_pca_var(clean_test_pca, geom=c("point"), col.var = "contrib")
+```
+
+Plot variables on first two components and color by their squared loadings.
+
+```{r}
+fviz_pca_var(clean_test_pca, geom=c("point"), col.var = "cos2")
 ```
 
 ```{r}
-fviz_pca_var(test_pca, geom=c("point"), col.var = "cos2")
-```
-
-```{r}
-ind <- get_pca_ind(test_pca)
+ind <- get_pca_ind(clean_test_pca)
 ind
 ```
 
+Coordinates for individuals - factor scores: how well is a subject represented by a given PC
+
 ```{r}
-#Coordinates for individuals - factor scores: how well is a subject represented by a given PC
 head(ind$coord)
 ```
 
+Contribution of each individual to each dimension: how well does a subjcet represent a PC
+
 ```{r}
-#Contribution of each individual to each dimension: how well does a subjcet represent a PC
 head(ind$contrib)
 ```
+
+Plot individuals on the first two dimensions and color by their contribution. Less structure compared to the plot of variables.
 
 Note n=522 in this plot.
 
 ```{r}
-fviz_pca_ind(test_pca, geom=c("point"), col.ind="contrib")
+fviz_pca_ind(clean_test_pca, geom=c("point"), col.ind="contrib")
+```
+
+Plot individuals on the first two dimensions and color by their squared scores.
+
+```{r}
+fviz_pca_ind(clean_test_pca, geom=c("point"), col.ind="cos2")
+```
+
+Use PCA from test data to predict retest data
+
+```{r}
+clean_data_cols = names(clean_test_data_std)
+clean_data_cols = gsub(".ReflogTr", "", clean_data_cols)
+clean_data_cols = gsub(".logTr", "", clean_data_cols)
+
+clean_data_log_cols = grep("\\.logTr", names(clean_test_data_std), value = T)
+clean_data_reflog_cols = grep("\\.ReflogTr", names(clean_test_data_std), value=T)
+
+#Extract the correct dv's from retest data
+clean_retest_data_std = retest_data_std %>% select(clean_data_cols)
+
+#Clean extracted retest data the way it has been cleaned for test data
+for(i in 1:length(names(clean_retest_data_std))){
+  if(names(clean_retest_data_std)[i] %in% gsub(".logTr", "", clean_data_log_cols)){
+    clean_retest_data_std[,i]=pos_log(clean_retest_data_std[,i])
+    names(clean_retest_data_std)[i] = paste0(names(clean_retest_data_std)[i],".logTr")
+    print(paste0("Pos log on ", names(retest_data_std)[i]))
+  }
+  if(names(clean_retest_data_std)[i] %in% gsub(".ReflogTr", "", clean_data_reflog_cols)){
+    clean_retest_data_std[,i]=neg_log(clean_retest_data_std[,i])
+    names(clean_retest_data_std)[i] = paste0(names(clean_retest_data_std)[i],".ReflogTr") 
+    print(paste0("Neg log on ", names(retest_data_std)[i]))
+  }
+}
+
+rm(clean_data_cols, clean_data_log_cols, clean_data_reflog_cols,i)
+
+# Check if all names match
+# sum(names(clean_retest_data_std) == names(clean_test_data_std))
+
+predict_retest = predict(clean_test_pca, newdata = clean_retest_data_std)
 ```
 
 ```{r}
-fviz_pca_ind(test_pca, geom=c("point"), col.ind="cos2")
+str(predict_retest)
 ```
 
-```{r}
-retest_data_std[is.na(retest_data_std)]=0
+Correlation between factor scores from test and retest
 
-str(predict(test_pca, newdata = retest_data_std))
+```{r}
+data.frame(predict_retest$coord) %>%
+  mutate(sub_id = retest_data $sub_id) %>%
+  gather(key, value, -sub_id) %>%
+  left_join(data.frame(clean_test_pca$ind$coord) %>% 
+              mutate(sub_id = clean_test_data$sub_id) %>%
+              gather(key, value, -sub_id), by = c("sub_id", "key")) %>%
+  ggplot(aes(value.y, value.x))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept=0))+
+  facet_wrap(~key)+
+  xlab("Factor score from test")+
+  ylab("Facot score from retest")
+
+
 ```
 
 ##`stats` package functions
@@ -210,7 +327,7 @@ fit <- princomp(test_data_std)
 Changing to `prcomp` works.
 
 ```{r}
-fit <- prcomp(test_data_std)
+fit <- prcomp(clean_test_data_std)
 ```
 
 Explore components  
@@ -277,7 +394,7 @@ data.frame(fit$x) %>%
 ##`psych` package functions
 
 ```{r}
-fit_psych <- principal(test_data_std, nfactors=5, rotate="oblimin")
+fit_psych <- principal(clean_test_data_std, nfactors=5, rotate="oblimin")
 ```
 
 Scree plot from `psych` package
@@ -293,35 +410,40 @@ data.frame(fit_psych$values) %>%
   geom_bar(stat="identity")
 ```
 
+Factor loadings
+
 ```{r}
 as.data.frame(fit_psych$loadings[]) %>%
   mutate(dv = row.names(.)) %>%
   select(dv, everything())
 ```
 
+Factor scores
+
 ```{r}
 as.data.frame(fit_psych$scores)
 ```
+
 
 #EFA
 
 ##`stats` package functions
 
-```{r}
-fit_factanal <- factanal(test_data_std, 5, rotate = "promax", n.obs = 0, scores = "regression")
+```{r eval=FALSE}
+fit_factanal <- factanal(clean_test_data_std, 5, rotate = "promax", n.obs = 0, scores = "regression")
 ```
 
 ##`psych` package functions
 
 ```{r eval=F}
 #To choose number of factors
-parallel <- fa.parallel(test_data_std, fm = 'minres', fa = 'fa')
+parallel <- fa.parallel(clean_test_data_std, fm = 'minres', fa = 'fa')
 ```
 
 ```{r}
 #doesn't work - 'ml' is the method used in the ontology paper so don't really want to diverge from it
 # tmp = fa(test_data_std, 1, rotate='oblimin', fm='ml', n.obs=0, scores='tenBerge')
-tmp = fa(test_data_std, 5, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
+tmp = fa(clean_test_data_std, 5, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
 
 ```
 
@@ -349,39 +471,6 @@ Not a great fit.
 summary(tmp)
 ```
 
-It's probably not great to use 
-1. untransformed (though scaled)  
-2. highly correlated 
-variables.
-
-To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)
- I'll apply the cleaning methods from the ontology pipeline - transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and dropping variables with r>0.85.
-
-```{r}
-clean_test_data = remove_correlated_task_variables(test_data)
-```
-
-```{r}
-clean_test_data = cbind(sub_id = clean_test_data$sub_id, as.data.frame(apply(clean_test_data[, -which(names(clean_test_data) %in% c("sub_id"))], 2, remove_outliers)))
-```
-
-```{r}
-numeric_cols = get_numeric_cols()
-numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data) == T]
-clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
-```
-
-```{r}
-clean_test_data_std = clean_test_data %>% mutate_if(is.numeric, scale)
-clean_test_data_std = clean_test_data_std %>% select(-sub_id)
-
-#mean imputation
-clean_test_data_std[is.na(clean_test_data_std)]=0
-
-#drop cols with no variance
-clean_test_data_std = clean_test_data_std %>%
-  select_if(function(col) sd(col) != 0)
-```
 
 ```{r}
 fa_clean = fa(clean_test_data_std, 5, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
@@ -519,6 +608,125 @@ dend2 <- dend %>%
 
 plot(dend2, axes=FALSE)
 ```
+
+# Neuroecon Poster
+
+## PCA on EZ vars
+
+```{r}
+ez_vars = grep("EZ", names(clean_test_data_std), value=T)
+
+ez_pca <- PCA(clean_test_data_std %>% select(ez_vars), ncp=3, graph = FALSE, scale.unit = FALSE)
+
+fviz_eig(ez_pca, addlabels = TRUE)
+```
+
+Hierarchical clustering of PCA loadings of EZ vars
+
+```{r}
+ez_var_low_dim = ez_pca$var$coord
+
+dend = ez_var_low_dim %>%
+  dist %>%
+  hclust %>%
+  as.dendrogram
+
+rt_acc_cols <- rainbow_hcl(3)
+overall_diff_cols <- rainbow_hcl(3)
+
+tmp = data.frame(dv = dend %>% labels) %>%
+  mutate(dv2 = dv,
+         dv = gsub(".ReflogTr", "", dv),
+         dv = gsub(".logTr", "", dv)) %>%
+  left_join(measure_labels[,c("dv", "rt_acc", "overall_difference")], by="dv") %>%
+  mutate(rt_acc_cols = ifelse(rt_acc == "drift rate", rt_acc_cols[1], ifelse(rt_acc == "non-decision", rt_acc_cols[2], ifelse(rt_acc == "threshold", rt_acc_cols[3], NA))),
+         overall_diff_cols = ifelse(overall_difference == "non-contrast", overall_diff_cols[1], ifelse(overall_difference == "contrast", overall_diff_cols[2], ifelse(overall_difference == "condition", overall_diff_cols[3], NA)))) %>%
+  select(-dv) %>%
+  rename(dv = dv2)
+
+dend2 <- dend %>% 
+  set("leaves_pch", 19) %>% 
+  set("leaves_cex", 1) %>% 
+  set("leaves_col", tmp$rt_acc_cols)%>% 
+  # color_labels(col = rt_acc_cols) 
+  #color_labels(col = tmp$overall_diff_cols) 
+# %>%
+  set("labels", rep(NA,164))
+op <- par(no.readonly = TRUE)
+par(mar=c(15, 4, 2, 2) + 0.1)
+plot(dend2, axes=FALSE)
+par(op)
+```
+
+
+
+## PCA on HDDM vars
+
+```{r}
+hddm_vars = grep("hddm", names(clean_test_data_std), value=T)
+
+hddm_pca <- PCA(clean_test_data_std %>% select(hddm_vars), ncp=3, graph = FALSE, scale.unit = FALSE)
+
+fviz_eig(hddm_pca, addlabels = TRUE)
+```
+
+Hierarchical clustering of PCA loadings of HDDM vars
+
+```{r}
+hddm_var_low_dim = hddm_pca$var$coord
+
+dend = hddm_var_low_dim %>%
+  dist %>%
+  hclust %>%
+  as.dendrogram
+
+rt_acc_cols <- rainbow_hcl(3)
+overall_diff_cols <- rainbow_hcl(3)
+
+tmp = data.frame(dv = dend %>% labels) %>%
+  mutate(dv2 = dv,
+         dv = gsub(".ReflogTr", "", dv),
+         dv = gsub(".logTr", "", dv)) %>%
+  left_join(measure_labels[,c("dv", "rt_acc", "overall_difference")], by="dv") %>%
+  mutate(rt_acc_cols = ifelse(rt_acc == "drift rate", rt_acc_cols[1], ifelse(rt_acc == "non-decision", rt_acc_cols[2], ifelse(rt_acc == "threshold", rt_acc_cols[3], NA))),
+         overall_diff_cols = ifelse(overall_difference == "non-contrast", overall_diff_cols[1], ifelse(overall_difference == "contrast", overall_diff_cols[2], ifelse(overall_difference == "condition", overall_diff_cols[3], NA)))) %>%
+  select(-dv) %>%
+  rename(dv = dv2)
+
+dend2 <- dend %>% 
+  set("leaves_pch", 19) %>% 
+  set("leaves_cex", 1) %>% 
+  set("leaves_col", tmp$rt_acc_cols)%>% 
+  # color_labels(col = rt_acc_cols) 
+  color_labels(col = tmp$overall_diff_cols) 
+# %>%
+#   set("labels", rep(NA,90))
+op <- par(no.readonly = TRUE)
+par(mar=c(15, 4, 2, 2) + 0.1)
+plot(dend2, axes=FALSE)
+par(op)
+```
+
+Correlation of the factor scores between these two lower dimensional spaces
+
+```{r}
+ez_pca$ind$coord
+
+hddm_pca$ind$coord
+```
+
+Lower dimensional factor scores are better individual difference factors - compare their reliability
+
+```{r}
+
+```
+
+Then use them for prediction
+
+```{r}
+
+```
+
 
 # Concepts
 
