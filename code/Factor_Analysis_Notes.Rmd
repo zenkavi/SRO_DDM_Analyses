@@ -670,6 +670,15 @@ dend2 <- dend %>%
 plot(dend2, axes=FALSE)
 ```
 
+```{r}
+ez_groups_3 = cutree(dend,3)
+table(ez_groups_3)
+```
+
+```{r}
+aggregate(ez_var_low_dim,list(ez_groups_3),median)
+```
+
 ## PCA on HDDM vars (3 factors)
 
 ```{r}
@@ -714,13 +723,7 @@ dend2 <- dend %>%
 plot(dend2, axes=FALSE)
 ```
 
-Correlation of the factor scores between these two lower dimensional spaces
-
-```{r}
-ez_pca$ind$coord
-
-hddm_pca$ind$coord
-```
+Correlation of the factor scores between these two lower dimensional spaces doesn't seem like a good idea because while the EZ clusters map somewhat on the parameters the hddm clusters have two distinct drift rate clusters and a mixed thresh/non-decision cluster. This is partially because there are more non-decision times and thresholds from the EZ estimations because we didn't allow all parameters to vary for the hddm's.
 
 Lower dimensional factor scores are better individual difference factors - compare their reliability
 
