@@ -440,6 +440,8 @@ fit_factanal <- factanal(clean_test_data_std, 5, rotate = "promax", n.obs = 0, s
 parallel <- fa.parallel(clean_test_data_std, fm = 'minres', fa = 'fa')
 ```
 
+EFA with 5 clusters
+
 ```{r}
 #doesn't work - 'ml' is the method used in the ontology paper so don't really want to diverge from it
 # tmp = fa(test_data_std, 1, rotate='oblimin', fm='ml', n.obs=0, scores='tenBerge')
@@ -447,19 +449,24 @@ tmp = fa(clean_test_data_std, 5, rotate='oblimin', fm='minres', n.obs=0, scores=
 
 ```
 
+Factor loadings of 5 factor EFA with 0.3 cutoff
+
 ```{r}
-fa_loadings = as.data.frame(tmp$loadings[]) %>%
+fa_loadings = as.data.frame(tmp$loadings[])
+
+fa_loadings[abs(fa_loadings)<0.3]=NA
+
+fa_loadings = fa_loadings %>% 
   mutate(dv = row.names(.))%>%
-  select(dv, everything())
-
-fa_loadings[fa_loadings<0.3]=NA
-
-fa_loadings %>% 
+  select(dv, everything()) %>%
   mutate(num_loading = 5-(is.na(MR1)+is.na(MR2)+is.na(MR3)+is.na(MR4)+is.na(MR5))) %>%
   filter(num_loading!=0) %>%
-  arrange(-MR1) 
+  arrange(-MR1, -MR2, -MR3, -MR4, -MR5) 
+
+fa_loadings
 ```
 
+Built-in plot for FA (ugly).
 
 ```{r}
 fa.diagram(tmp)
@@ -471,29 +478,10 @@ Not a great fit.
 summary(tmp)
 ```
 
+What do the factors look like?
 
 ```{r}
-fa_clean = fa(clean_test_data_std, 5, rotate='oblimin', fm='minres', n.obs=0, scores='tenBerge')
-```
-
-```{r}
-fa_clean_loadings = as.data.frame(fa_clean$loadings[])
-
-fa_clean_loadings[abs(fa_clean_loadings)<0.3]=NA
-
-fa_clean_loadings = fa_clean_loadings %>% 
-  mutate(dv = row.names(.))%>%
-  select(dv, everything()) %>%
-  mutate(num_loading = 5-(is.na(MR1)+is.na(MR2)+is.na(MR3)+is.na(MR4)+is.na(MR5))) %>%
-  filter(num_loading!=0) %>%
-  arrange(-MR1, -MR2, -MR3, -MR4, -MR5) 
-
-fa_clean_loadings
-```
-
-
-```{r}
-fa_clean_loadings %>% 
+fa_loadings %>% 
   select(-num_loading) %>%
   arrange(-MR1, -MR2, -MR3, -MR4, -MR5) %>%
   mutate(order_num = 1:n(),
@@ -510,12 +498,8 @@ fa_clean_loadings %>%
   theme(legend.position = "none")+
   ylab("Absolute Loading")
 
-ggsave('fa_diagram.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 50, units = "in", limitsize = FALSE, dpi = 100)
+ggsave('efa_5.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 50, units = "in", limitsize = FALSE, dpi = 100)
 
-```
-
-```{r}
-summary(fa_clean)
 ```
 
 #Clustering
