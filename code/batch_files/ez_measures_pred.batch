@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name=ez_measures_pred
+#SBATCH --output=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/ez_measures_pred.job.out
+#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/ez_measures_pred.job.err
+#SBATCH -p russpold,owners,normal
+#SBATCH --time=04:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mail-type=FAIL,END
+#SBATCH --mail-user=zenkavi@stanford.edu
+source activate SRO
+Rscript --vanilla ez_measures_pred.R
