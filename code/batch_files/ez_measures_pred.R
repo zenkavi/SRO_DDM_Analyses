@@ -1,6 +1,7 @@
 library(caret)
 
 input_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/'
+output_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/'
 
 ez_measures = read.csv(paste0(input_path, 'ez_measures.csv'))
 demog_fa_scores = read.csv(paste0(input_path, 'demog_fa_scores.csv'))
@@ -32,4 +33,4 @@ for(i in demog_factors){
 
 print("Done with loop. Saving...")
 
-write.csv(out, paste0(input_path, 'ez_measures_pred.csv'), row.names = FALSE)
+write.csv(out, paste0(output_path, 'ez_measures_pred.csv'), row.names = FALSE)
