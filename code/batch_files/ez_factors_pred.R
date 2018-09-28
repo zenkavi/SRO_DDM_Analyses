@@ -2,7 +2,7 @@ library(caret)
 
 input_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/'
 
-ez_pca_scores = read.csv(paste0(input_path, 'ez_factor_scores.csv'))
+ez_pca_scores = read.csv(paste0(input_path, 'ez_pca_scores.csv'))
 demog_fa_scores = read.csv(paste0(input_path, 'demog_fa_scores.csv'))
 
 demog_factors = c("Obesity","Daily_Smoking","Problem_Drinking","Mental_Health","Drug_Use", "Lifetime_Smoking","Binge_Drinking","Unsafe_Drinking", "Income")
