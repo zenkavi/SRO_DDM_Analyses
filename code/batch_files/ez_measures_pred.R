@@ -30,4 +30,6 @@ for(i in demog_factors){
   }
 }
 
-write.csv(paste0(input_path, 'ez_measures_pred.csv'))
+print("Done with loop. Saving...")
+
+write.csv(out, paste0(input_path, 'ez_measures_pred.csv'), row.names = FALSE)
