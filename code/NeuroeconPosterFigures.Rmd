@@ -123,3 +123,39 @@ rel_df_dvs %>%
 
 ggsave('EZ_clust_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
+
+```{r}
+ez_measures_pred = read.csv(paste0(input_path, 'ez_measures_pred.csv'))
+ez_factors_pred = read.csv(paste0(input_path, 'ez_factors_pred.csv'))
+
+ez_measures_pred = ez_measures_pred %>% na.exclude()
+ez_factors_pred = ez_factors_pred %>% na.exclude()
+
+tmp1=ez_factors_pred %>%
+  group_by(dv) %>%
+  summarise(mean_r2 = mean(Rsquared),
+            sem_r2 = sem(Rsquared)) %>%
+  mutate(pred="factor")
+
+tmp2 = ez_measures_pred %>%
+  group_by(dv) %>%
+  summarise(mean_r2 = mean(Rsquared), #%>%
+            sem_r2 = sem(Rsquared)) %>%
+  mutate(pred = "measure")
+
+rbind(tmp1,tmp2) %>%
+  ggplot(aes(dv, mean_r2, fill=pred))+
+  geom_bar(stat="identity", position = position_dodge(width = 0.9), alpha=0.75)+
+  geom_errorbar(aes(ymin=mean_r2-sem_r2, ymax = mean_r2+sem_r2),position = position_dodge(width = 0.9), width = 0.25)+
+  xlab("")+
+  ylab(expression('Mean R'^2))+
+  theme(legend.position = "bottom",
+        legend.title = element_blank(),
+        axis.text.y = element_text(size=16),
+        axis.text.x = element_text(size=14),
+        axis.title= element_text(size=22),
+        legend.text = element_text(size=16))+
+  scale_fill_manual(values=c("#E69F00", "#56B4E9"))
+
+ggsave('fvsm_pred.jpeg', device = "jpeg", path = "../output/figures/", width = 14, height = 6, units = "in", limitsize = FALSE, dpi = 300)
+```

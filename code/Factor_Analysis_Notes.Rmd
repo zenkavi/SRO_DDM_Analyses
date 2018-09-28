@@ -915,80 +915,49 @@ Covariates: Age, sex
 
 IV's: EZ measures vs. EZ factors in T1
 
-```{r}
-ez_measures = clean_test_data_std %>%
-  select(sub_id, ez_vars)
-ez_measures = merge(ez_measures, demog_data[,c("sub_id","Age", "Sex")], by="sub_id")
-ez_measures
-
-```
-
-```{r}
-demog_factors = names(demog_fa_scores)[-1]
-
-out = data.frame(dv=NA, iv=NA, Rsquared=NA, RsquaredSD=NA)
-
-ez_measures=ez_measures[-which(ez_measures$sub_id == "s202"),]
-demog_fa_scores=demog_fa_scores[-which(demog_fa_scores$sub_id == "s202"),]
-
-for(i in demog_factors){
-  for(j in ez_vars){
-    
-    x = ez_measures[,c("Age", "Sex", j)]
-    y = demog_fa_scores[,i]
-    
-    model = train(x,y,
-              method="lm",
-              trControl = trainControl(method="cv", number=10),
-              na.action = na.exclude)
-    
-    tmp = data.frame(dv = i, iv = j, Rsquared = model$results$Rsquared, RsquaredSD = model$results$RsquaredSD) 
-    
-    out = rbind(out, tmp)
-   
-  }
-}
-
-ez_measures_pred = out
-
-
-out = data.frame(dv=NA, iv=NA, Rsquared=NA, RsquaredSD=NA)
-
-ez_pca_scores = data.frame(ez_pca$ind$coord) %>% 
-  mutate(sub_id = clean_test_data$sub_id) %>%
-  rename( threshold = Dim.1, non_decision = Dim.2, drift_rate = Dim.3) %>%
-  filter(sub_id != "s202")
-
-ez_factors = c("threshold", "non_decision", "drift_rate")
-
-for(i in demog_factors_tmp){
-  for(j in ez_factors){
-    
-    x = ez_pca_scores[,c("Age", "Sex", j)]
-    y = demog_fa_scores[,i]
-    
-    model = train(x,y,
-              method="lm",
-              trControl = trainControl(method="cv", number=10),
-              na.action = na.exclude)
-    
-    tmp = data.frame(dv = i, iv = j, Rsquared = model$results$Rsquared, RsquaredSD = model$results$RsquaredSD) 
-    
-    out = rbind(out, tmp)
-   
-  }
-}
-
-ez_pca_pred = out
-```
-
 Comparison: Distribution of cross-validated R^2 for EZ dv predictions vs EZ factor predictions
 
 ```{r}
+ez_measures_pred = read.csv(paste0(input_path, 'ez_measures_pred.csv'))
+ez_factors_pred = read.csv(paste0(input_path, 'ez_factors_pred.csv'))
 
-#Bar/boxplot
-# x: DV factor
-# y: R^2
+ez_measures_pred = ez_measures_pred %>% na.exclude()
+ez_factors_pred = ez_factors_pred %>% na.exclude()
+
+tmp1=ez_factors_pred %>%
+  group_by(dv) %>%
+  summarise(mean_r2 = mean(Rsquared),
+            sem_r2 = sem(Rsquared)) %>%
+  mutate(pred="factor")
+
+tmp2 = ez_measures_pred %>%
+  group_by(dv) %>%
+  summarise(mean_r2 = mean(Rsquared), #%>%
+            sem_r2 = sem(Rsquared)) %>%
+  mutate(pred = "measure")
+
+rbind(tmp1,tmp2) %>%
+  ggplot(aes(dv, mean_r2, fill=pred))+
+  geom_bar(stat="identity", position = position_dodge(width = 0.9))+
+  geom_errorbar(aes(ymin=mean_r2-sem_r2, ymax = mean_r2+sem_r2),position = position_dodge(width = 0.9), width = 0.25)+
+  xlab("")+
+  ylab(expression('Mean R'^2))+
+  theme(legend.position = "bottom",
+        legend.title = element_blank())
+
+# rbind(ez_factors_pred %>% 
+#         select(-RsquaredSD) %>%
+#         rename(mean_r2=Rsquared,
+#                pred = iv) %>%
+#         select(dv, mean_r2, pred)
+#       ,tmp2) %>%
+#   ggplot(aes(dv, mean_r2, fill=pred))+
+#   geom_bar(stat="identity", position = position_dodge(width = 0.9))+
+#   # geom_errorbar(aes(ymin=mean_r2-sem_r2, ymax = mean_r2+sem_r2),position = position_dodge(width = 0.9), width = 0.25)+
+#   xlab("")+
+#   ylab(expression('Mean R'^2))+
+#   theme(legend.position = "bottom",
+#         legend.title = element_blank())
 ```
 
 
