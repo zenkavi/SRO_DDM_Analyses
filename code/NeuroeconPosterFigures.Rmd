@@ -104,3 +104,22 @@ rel_df_flat %>%
 
 ggsave('Flat_vs_hier_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
+
+```{r}
+rel_df_dvs %>%
+  left_join(measure_labels[,c("dv", "rt_acc")], by="dv") %>%
+  ggplot(aes(icc, fill=rt_acc))+
+  geom_density(position="identity",alpha=0.5, color=NA)+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom",
+        axis.text = element_text(size=16),
+        axis.title= element_text(size=22),
+        legend.text = element_text(size=16))+
+  xlab("Retest reliability")+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="drift_rate"], color="#E495A5", size=1.5)+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="non-decision"], color="#86B875", size=1.5)+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="threshold"], color="#7DB0DD", size=1.5)+
+  xlim(-1, 1)
+
+ggsave('EZ_clust_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
+```
