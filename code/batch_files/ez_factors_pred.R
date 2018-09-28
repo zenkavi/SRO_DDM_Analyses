@@ -11,10 +11,12 @@ ez_factors = c("threshold","non_decision","drift_rate"  )
 out = data.frame(dv=NA, iv=NA, Rsquared=NA, RsquaredSD=NA)
 
 for(i in demog_factors){
-  for(j in ez_vars){
+  for(j in ez_factors){
     
-    x = ez_oca_scores[,c("Age", "Sex", j)]
+    x = ez_pca_scores[,c("Age", "Sex", j)]
     y = demog_fa_scores[,i]
+    
+    print(paste0('Running CV for y= ', i, ' and x= ', j))
     
     model = train(x,y,
                   method="lm",

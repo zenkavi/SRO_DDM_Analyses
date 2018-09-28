@@ -16,6 +16,8 @@ for(i in demog_factors){
     x = ez_measures[,c("Age", "Sex", j)]
     y = demog_fa_scores[,i]
     
+    print(paste0('Running CV for y= ', i, ' and x= ', j))
+    
     model = train(x,y,
                   method="lm",
                   trControl = trainControl(method="cv", number=10),
