@@ -30,7 +30,7 @@ p1 = boot_df %>%
   scale_y_continuous(breaks = seq(-1,1,0.5),
                      limits = c(-0.5,1))
 
-ggsave('Boot_ddm_plot.jpeg', device = "jpeg", plot=p1, path = "../output/figures/", width = 38, height = 8, units = "in", limitsize = FALSE, dpi = 300)
+ggsave('Boot_ddm_plot.jpeg', device = "jpeg", plot=p1, path = "../output/figures/", width = 42, height = 8, units = "in", limitsize = FALSE, dpi = 300)
 
 ```
 
@@ -57,10 +57,10 @@ rel_df_sample_size_summary %>%
   ylab("Mean reliability 100 \n  samples of size n")+
   xlab("Sample size")+
   ylim(-1,1)+
-  theme(axis.text = element_text(size=36),
-        axis.title= element_text(size=32))
+  theme(axis.text = element_text(size=30),
+        axis.title= element_text(size=28))
 
-ggsave('Sample_size.jpeg', device = "jpeg", path = "../output/figures/", width = 14, height = 5, units = "in", limitsize = FALSE, dpi = 300)
+ggsave('Sample_size.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 5, units = "in", limitsize = FALSE, dpi = 300)
 ```
 
 ```{r}

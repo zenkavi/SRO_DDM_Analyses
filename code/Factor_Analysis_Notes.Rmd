@@ -979,8 +979,3 @@ par(op)
 [PCA Essentials](http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/)
 [Difference between PCA and EFA](http://www2.sas.com/proceedings/sugi30/203-30.pdf)
 [K-means clustering hands-on tutorial](https://www.datacamp.com/community/tutorials/k-means-clustering-r)
-
-Notes:
-
-Change facet labels for reliability figure for non-contrast
-Remove prediction
