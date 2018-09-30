@@ -984,6 +984,10 @@ Factor analysis
 
 ## To Do
 
+Trial numbers
+Prediction
+Fitstats
+
 Prof. Domingue recommended readings:
 file:///Users/zeynepenkavi/Downloads/10.1007%252Fs11336-006-1478-z.pdf
 A HIERARCHICAL FRAMEWORK FOR MODELING SPEED AND ACCURACY

@@ -16,7 +16,7 @@ p1 = boot_df %>%
   mutate(rt_acc = as.character(rt_acc)) %>%
   ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_boxplot()+
-  facet_wrap(~factor(overall_difference, levels = c("non-contrast", "contrast", "condition"), labels = c("Non-contrast", "Contrast", "Condition")))+
+  facet_wrap(~factor(overall_difference, levels = c("non-contrast", "contrast", "condition"), labels = c("Overall (All trials)", "Contrast (Difference between subsets)", "Condition (Subsets of trials)")))+
   ylab("ICC")+
   xlab("")+
   theme(legend.title = element_blank(),
