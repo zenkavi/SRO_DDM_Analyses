@@ -640,7 +640,7 @@ fviz_eig(ez_pca, addlabels = TRUE)
 data.frame(ez_pca$var$coord) %>%
   mutate(dv = row.names(.)) %>%
   select(dv, everything())%>%
-  arrange(-Dim.2)
+  arrange(-Dim.3)
 ```
 
 Hierarchical clustering of PCA loadings of EZ vars
@@ -687,51 +687,72 @@ table(ez_groups_3)
 aggregate(ez_var_low_dim,list(ez_groups_3),median)
 ```
 
-## PCA on HDDM vars (3 factors)
+Plot T-1 PCA in 3D space
 
 ```{r}
-hddm_vars = grep("hddm", names(clean_test_data_std), value=T)
-
-hddm_pca <- PCA(clean_test_data_std %>% select(hddm_vars), ncp=3, graph = FALSE, scale.unit = FALSE)
-
-fviz_eig(hddm_pca, addlabels = TRUE)
-```
-
-Hierarchical clustering of PCA loadings of HDDM vars
-
-```{r}
-hddm_var_low_dim = hddm_pca$var$coord
-
-dend = hddm_var_low_dim %>%
-  dist %>%
-  hclust %>%
-  as.dendrogram
-
 rt_acc_cols <- rainbow_hcl(3)
-overall_diff_cols <- rainbow_hcl(3)
 
-tmp = data.frame(dv = dend %>% labels) %>%
+tmp = data.frame(ez_var_low_dim) %>%
+  mutate(dv = row.names(.)) %>%
   mutate(dv2 = dv,
          dv = gsub(".ReflogTr", "", dv),
          dv = gsub(".logTr", "", dv)) %>%
   left_join(measure_labels[,c("dv", "rt_acc", "overall_difference")], by="dv") %>%
-  mutate(rt_acc_cols = ifelse(rt_acc == "drift rate", rt_acc_cols[1], ifelse(rt_acc == "non-decision", rt_acc_cols[2], ifelse(rt_acc == "threshold", rt_acc_cols[3], NA))),
-         overall_diff_cols = ifelse(overall_difference == "non-contrast", overall_diff_cols[1], ifelse(overall_difference == "contrast", overall_diff_cols[2], ifelse(overall_difference == "condition", overall_diff_cols[3], NA)))) %>%
+  mutate(rt_acc_cols = ifelse(rt_acc == "drift rate", rt_acc_cols[1], ifelse(rt_acc == "non-decision", rt_acc_cols[2], ifelse(rt_acc == "threshold", rt_acc_cols[3], NA)))) %>%
   select(-dv) %>%
   rename(dv = dv2)
-
-dend2 <- dend %>% 
-  set("leaves_pch", 19) %>% 
-  set("leaves_cex", 1) %>% 
-  set("leaves_col", tmp$rt_acc_cols)%>% 
-  # color_labels(col = rt_acc_cols) 
-  #color_labels(col = tmp$overall_diff_cols) 
-# %>%
-   set("labels", rep(NA,90))
-plot(dend2, axes=FALSE)
 ```
 
-Correlation of the factor scores between these two lower dimensional spaces doesn't seem like a good idea because while the EZ clusters map somewhat on the parameters the hddm clusters have two distinct drift rate clusters and a mixed thresh/non-decision cluster. This is partially because there are more non-decision times and thresholds from the EZ estimations because we didn't allow all parameters to vary for the hddm's.
+
+Static 3D
+
+`plot3D` package
+
+```{r}
+scatter3D(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, pch = 19, bty='g', 
+          col.var = as.integer(factor(tmp$rt_acc)), 
+          col = rt_acc_cols,
+          colkey = list(side=1, #addlines=T,
+                        at = c(-1,0,1),
+                        length = 0.5, width = 0.5),
+          theta = 90, phi = 145)
+
+scatter3D(iris$Sepal.Length, iris$Petal.Length, iris$Sepal.Width, bty = "g", pch = 18, 
+          col.var = as.integer(iris$Species), 
+          col = c("#1B9E77", "#D95F02", "#7570B3"),
+          pch = 18, ticktype = "detailed",
+          colkey = list(#at = c(2, 3, 4), 
+                        side = 1, 
+          addlines = TRUE 
+          #length = 0.5, width = 0.5
+          #labels = c("setosa", "versicolor", "virginica")
+          ) )
+```
+
+Rotatable plots
+
+`car` package
+
+```{r}
+scatter3d(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, pch = 19, 
+          col = rt_acc_cols 
+          #col = tmp$rt_acc_cols,
+          #colkey = list(at = c(1,2,3), side = 1,
+                        #addlines = TRUE, length = 0.5, width = 0.5,
+                        #labels = c("a", "b", "c")),
+          )
+```
+
+
+`rgl` package
+
+```{r}
+plot3d(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, size=12,
+       xlab = "threshold",
+       ylab = "non-decision",
+       zlab = "drift rate",
+       col = tmp$rt_acc_cols)
+```
 
 Are Lower dimensional factor scores are better individual difference factors? - compare their reliability
 
@@ -864,6 +885,52 @@ rel_df_dvs %>%
   group_by(rt_acc) %>%
   summarise(median_icc = median(icc))
 ```
+
+## PCA on HDDM vars (3 factors)
+
+```{r}
+hddm_vars = grep("hddm", names(clean_test_data_std), value=T)
+
+hddm_pca <- PCA(clean_test_data_std %>% select(hddm_vars), ncp=3, graph = FALSE, scale.unit = FALSE)
+
+fviz_eig(hddm_pca, addlabels = TRUE)
+```
+
+Hierarchical clustering of PCA loadings of HDDM vars
+
+```{r}
+hddm_var_low_dim = hddm_pca$var$coord
+
+dend = hddm_var_low_dim %>%
+  dist %>%
+  hclust %>%
+  as.dendrogram
+
+rt_acc_cols <- rainbow_hcl(3)
+overall_diff_cols <- rainbow_hcl(3)
+
+tmp = data.frame(dv = dend %>% labels) %>%
+  mutate(dv2 = dv,
+         dv = gsub(".ReflogTr", "", dv),
+         dv = gsub(".logTr", "", dv)) %>%
+  left_join(measure_labels[,c("dv", "rt_acc", "overall_difference")], by="dv") %>%
+  mutate(rt_acc_cols = ifelse(rt_acc == "drift rate", rt_acc_cols[1], ifelse(rt_acc == "non-decision", rt_acc_cols[2], ifelse(rt_acc == "threshold", rt_acc_cols[3], NA))),
+         overall_diff_cols = ifelse(overall_difference == "non-contrast", overall_diff_cols[1], ifelse(overall_difference == "contrast", overall_diff_cols[2], ifelse(overall_difference == "condition", overall_diff_cols[3], NA)))) %>%
+  select(-dv) %>%
+  rename(dv = dv2)
+
+dend2 <- dend %>% 
+  set("leaves_pch", 19) %>% 
+  set("leaves_cex", 1) %>% 
+  set("leaves_col", tmp$rt_acc_cols)%>% 
+  # color_labels(col = rt_acc_cols) 
+  #color_labels(col = tmp$overall_diff_cols) 
+# %>%
+   set("labels", rep(NA,90))
+plot(dend2, axes=FALSE)
+```
+
+Correlation of the factor scores between these two lower dimensional spaces doesn't seem like a good idea because while the EZ clusters map somewhat on the parameters the hddm clusters have two distinct drift rate clusters and a mixed thresh/non-decision cluster. This is partially because there are more non-decision times and thresholds from the EZ estimations because we didn't allow all parameters to vary for the hddm's.
 
 ## Prediction
 
