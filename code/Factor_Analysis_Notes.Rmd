@@ -690,8 +690,6 @@ aggregate(ez_var_low_dim,list(ez_groups_3),median)
 Plot T-1 PCA in 3D space
 
 ```{r}
-rt_acc_cols <- rainbow_hcl(3)
-
 tmp = data.frame(ez_var_low_dim) %>%
   mutate(dv = row.names(.)) %>%
   mutate(dv2 = dv,
@@ -708,41 +706,48 @@ Static 3D
 
 `plot3D` package
 
-```{r}
-scatter3D(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, pch = 19, bty='g', 
-          col.var = as.integer(factor(tmp$rt_acc)), 
-          col = rt_acc_cols,
-          colkey = list(side=1, #addlines=T,
-                        at = c(-1,0,1),
-                        length = 0.5, width = 0.5),
-          theta = 90, phi = 145)
+Coloring doesn't seem to work right
 
-scatter3D(iris$Sepal.Length, iris$Petal.Length, iris$Sepal.Width, bty = "g", pch = 18, 
-          col.var = as.integer(iris$Species), 
-          col = c("#1B9E77", "#D95F02", "#7570B3"),
-          pch = 18, ticktype = "detailed",
-          colkey = list(#at = c(2, 3, 4), 
-                        side = 1, 
-          addlines = TRUE 
-          #length = 0.5, width = 0.5
-          #labels = c("setosa", "versicolor", "virginica")
-          ) )
+```{r}
+scatter3D(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, pch = 19, 
+          col.var = as.integer(factor(tmp$rt_acc)), 
+          #col = tmp$rt_acc_cols,
+          colkey = list(plot = FALSE),
+          phi = 15, theta = 0)
 ```
 
 Rotatable plots
 
-`car` package
+`plotly` package
 
 ```{r}
-scatter3d(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, pch = 19, 
-          col = rt_acc_cols 
-          #col = tmp$rt_acc_cols,
-          #colkey = list(at = c(1,2,3), side = 1,
-                        #addlines = TRUE, length = 0.5, width = 0.5,
-                        #labels = c("a", "b", "c")),
-          )
+a = list(title = "", tickfont = list(size=20))
+
+plot_ly(tmp, x = ~Dim.1, y = ~Dim.2, z = ~Dim.3, color = ~rt_acc, text = ~dv, colors = c('#4AC6B7', '#965F8A', '#C61951')) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = a,
+                      yaxis = a,
+                      zaxis = a))
 ```
 
+```{r}
+ez_retest_pca <- PCA(clean_retest_data_std %>% select(ez_vars), ncp=3, graph = FALSE, scale.unit = FALSE)
+
+tmp2 = data.frame(ez_retest_pca$var$coord) %>%
+  mutate(dv = row.names(.)) %>%
+  mutate(dv2 = dv,
+         dv = gsub(".ReflogTr", "", dv),
+         dv = gsub(".logTr", "", dv)) %>%
+  left_join(measure_labels[,c("dv", "rt_acc", "overall_difference")], by="dv") %>%
+  select(-dv) %>%
+  rename(dv = dv2)
+
+plot_ly(tmp2, x = ~Dim.1, y = ~Dim.2, z = ~Dim.3, color = ~rt_acc, text = ~dv, colors = c('#4AC6B7', '#965F8A', '#C61951')) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = a,
+                      yaxis = a,
+                      zaxis = a))
+```
 
 `rgl` package
 
@@ -752,7 +757,18 @@ plot3d(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, size=12,
        ylab = "non-decision",
        zlab = "drift rate",
        col = tmp$rt_acc_cols)
+
+identify3d(x=-0.5, y=0.3, z=)
 ```
+
+`car` package
+
+```{r}
+scatter3d(tmp$Dim.1, tmp$Dim.2, tmp$Dim.3, pch = 19, 
+          col = rt_acc_cols)
+```
+
+### Interdimension reliability comparison
 
 Are Lower dimensional factor scores are better individual difference factors? - compare their reliability
 
@@ -776,8 +792,6 @@ data.frame(predict_ez_retest$coord) %>%
 Calculate reliabilities of the factor scores
 
 ```{r}
-
-
 clean_test_data_std$sub_id = test_data$sub_id
 
 test_data = clean_test_data_std[clean_test_data_std$sub_id %in% retest_data$sub_id,]

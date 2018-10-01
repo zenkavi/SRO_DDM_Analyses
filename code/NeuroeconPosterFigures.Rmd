@@ -159,3 +159,15 @@ rbind(tmp1,tmp2) %>%
 
 ggsave('fvsm_pred.jpeg', device = "jpeg", path = "../output/figures/", width = 14, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
+
+```{r}
+clean_test_data_std %>%
+  select(adaptive_n_back.EZ_drift, adaptive_n_back.EZ_non_decision, adaptive_n_back.EZ_thresh, attention_network_task.EZ_drift, attention_network_task.EZ_non_decision, attention_network_task.EZ_thresh) %>%
+  gather(dv, value) %>%
+  left_join(measure_labels[,c("dv", "rt_acc", "task_group")], by="dv") %>%
+  ggplot(aes(value, fill=rt_acc, color=NULL, group=task_group))+
+  geom_density(alpha=0.6)+
+  facet_wrap(~rt_acc+task_group, nrow=1)+
+  scale_fill_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))+
+  theme(legend.position="none")
+```
