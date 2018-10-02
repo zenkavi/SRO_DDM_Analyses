@@ -68,7 +68,7 @@ flat_difference %>%
   mutate(par = factor(par, levels = c("drift", "non_decision", "thresh"), labels = c("Drift Rate", "Non-decision", "Threshold")),
          time = factor(time, levels = c("test", "retest"), labels = c("Test", "Retest"))) %>%
   ggplot(aes(hierarchical, flat))+
-  geom_point(aes(color = par, shape = par, alpha=time), size=4)+
+  geom_point(aes(color = par, shape = time), size=4)+
   geom_abline(aes(intercept=0, slope=1), color="black", linetype="dashed")+
   xlim(-5,5)+
   ylim(-5,5)+
@@ -76,14 +76,15 @@ flat_difference %>%
         legend.title = element_blank(),
         axis.text = element_text(size=16),
         axis.title= element_text(size=22),
-        legend.text = element_text(size=16),
+        legend.text = element_text(size=16)
         #legend.spacing.x = unit(0.4, "cm"),
         #legend.key.size = unit(4, "cm"),
         # legend.box = "vertical",
-        legend.box.margin = margin(.2, .2, .2, .2))+
-  scale_alpha_discrete(range = c(0.4, 0.8))+
+        #legend.box.margin = margin(.2, .2, .2, .2)
+        )+  
   xlab("Hierarchical Estimate")+
-  ylab("Non-hierarchical Estimate")
+  ylab("Non-hierarchical Estimate")+
+  scale_color_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))
 
 ggsave('Flat_vs_hier_est.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
@@ -100,7 +101,8 @@ rel_df_flat %>%
         legend.title = element_blank(),
         axis.text = element_text(size=16),
         axis.title= element_text(size=22),
-        legend.text = element_text(size=16))
+        legend.text = element_text(size=16))+
+  scale_color_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))
 
 ggsave('Flat_vs_hier_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
