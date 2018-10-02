@@ -835,7 +835,25 @@ rel_df_dvs = rel_df
 rel_df_dvs
 ```
 
-Reliability of factor scores
+Reliability between PCA from T1 and T2
+
+```{r}
+tmp1 = data.frame(ez_pca$ind$coord) %>%
+  mutate(sub_id = clean_test_data$sub_id) %>%
+  rename(drift_rate = Dim.3, non_decision = Dim.2, threshold = Dim.1)
+
+tmp2 = data.frame(ez_retest_pca$ind$coord) %>%
+  mutate(sub_id = retest_data$sub_id) %>%
+  rename(drift_rate = Dim.3, non_decision = Dim.2, threshold = Dim.1)
+
+rel_df_factors = data_frame(drift_rate = get_retest_stats("drift_rate",t1_df = tmp1, t2_df = tmp2, metric="icc")$icc,
+           non_decision = get_retest_stats("non_decision",t1_df = tmp1, t2_df = tmp2, metric="icc")$icc,
+           threshold = get_retest_stats("threshold",t1_df = tmp1, t2_df = tmp2, metric="icc")$icc) %>%
+  gather(dim_name, icc)
+```
+
+
+Reliability of predicted factor scores in T2 using T1 PCA
 
 ```{r}
 test_data = data.frame(ez_pca$ind$coord) %>% 
@@ -887,9 +905,10 @@ rel_df_dvs %>%
   theme(legend.title = element_blank(),
         legend.position = "bottom")+
   xlab("Retest reliability")+
-  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="drift_rate"], color="#E495A5", size=1.5)+
-  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="non-decision"], color="#86B875", size=1.5)+
-  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="threshold"], color="#7DB0DD", size=1.5)+
+  scale_fill_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="drift_rate"], color="#4AC6B7", size=1.5)+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="non_decision"], color="#965F8A", size=1.5)+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="threshold"], color="#C61951", size=1.5)+
   xlim(-1, 1)
 ```
 
