@@ -84,7 +84,7 @@ flat_difference %>%
         )+  
   xlab("Hierarchical Estimate")+
   ylab("Non-hierarchical Estimate")+
-  scale_color_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))
+  scale_color_manual(values=c('#1b9e77', '#d95f02', '#7570b3'))
 
 ggsave('Flat_vs_hier_est.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
@@ -102,7 +102,7 @@ rel_df_flat %>%
         axis.text = element_text(size=16),
         axis.title= element_text(size=22),
         legend.text = element_text(size=16))+
-  scale_color_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))
+  scale_color_manual(values=c('#1b9e77', '#d95f02', '#7570b3'))
 
 ggsave('Flat_vs_hier_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 7, height = 6, units = "in", limitsize = FALSE, dpi = 300)
 ```
@@ -118,13 +118,13 @@ rel_df_dvs %>%
         axis.title= element_text(size=22),
         legend.text = element_text(size=16))+
   xlab("Retest reliability")+
-  scale_fill_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))+
-  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="drift_rate"], color="#4AC6B7", size=1.5)+
-  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="non_decision"], color="#965F8A", size=1.5)+
-  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="threshold"], color="#C61951", size=1.5)+
-  xlim(-1, 1)
+  scale_fill_manual(values=c('#1b9e77', '#d95f02', '#7570b3'))+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="drift_rate"], color="#1b9e77", size=1.5)+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="non_decision"], color="#d95f02", size=1.5)+
+  geom_vline(xintercept=rel_df_factors$icc[rel_df_factors$dim_name=="threshold"], color="#7570b3", size=1.5)+
+  xlim(-0.6, 1)
 
-ggsave('EZ_clust_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 6.69, height = 4.36, units = "in", limitsize = FALSE, dpi = 300)
+ggsave('EZ_clust_rel.jpeg', device = "jpeg", path = "../output/figures/", width = 6.69, height = 5.5, units = "in", limitsize = FALSE, dpi = 300)
 ```
 
 ```{r}
@@ -164,41 +164,38 @@ ggsave('fvsm_pred.jpeg', device = "jpeg", path = "../output/figures/", width = 1
 ```
 
 ```{r}
-clean_test_data_std %>%
-  select(adaptive_n_back.EZ_drift, adaptive_n_back.EZ_non_decision, adaptive_n_back.EZ_thresh, attention_network_task.EZ_drift, attention_network_task.EZ_non_decision, attention_network_task.EZ_thresh) %>%
-  gather(dv, value) %>%
-  left_join(measure_labels[,c("dv", "rt_acc", "task_group")], by="dv") %>%
-  mutate(task_group = ifelse(task_group=="adaptive_n_back", "Task 1", "Task 2"),
-         facet_var = paste(rt_acc, task_group)) %>%
-  ggplot(aes(value, fill=rt_acc, group=task_group))+
-  geom_density(alpha=0.6, color=NA)+
-  facet_wrap(~facet_var, nrow=1)+
-  scale_fill_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))+
-  theme(legend.position="none")+
-  xlab("")+
-  ylab("")+
-  theme(axis.text = element_blank(),
-        strip.text = element_blank())
+match_t1_t2("dot_pattern_expectancy.BX.BY_EZ_drift", t1_df = clean_test_data_std, t2_df = clean_retest_data_std, format = "wide") %>%
+  ggplot(aes(`1`,`2`))+
+  geom_point(color="#1b9e77", size=2)+
+  xlab("Time 1")+
+  ylab("Time 2")+
+  geom_abline(aes(slope=1, intercept=0), linetype="dashed")+
+  theme(axis.text.y = element_text(size=16),
+        axis.text.x = element_text(size=16),
+        axis.title= element_text(size=22))
 
-ggsave('t1_ddm_eg.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 2, units = "in", limitsize = FALSE, dpi = 300)
+ggsave('measure_icc_eg.jpeg', device = "jpeg", path = "../output/figures/", width = 4, height = 5, units = "in", limitsize = FALSE, dpi = 300)
 ```
 
-```{r}
-clean_retest_data_std %>%
-  select(adaptive_n_back.EZ_drift, adaptive_n_back.EZ_non_decision, adaptive_n_back.EZ_thresh, attention_network_task.EZ_drift, attention_network_task.EZ_non_decision, attention_network_task.EZ_thresh) %>%
-  gather(dv, value) %>%
-  left_join(measure_labels[,c("dv", "rt_acc", "task_group")], by="dv") %>%
-  mutate(task_group = ifelse(task_group=="adaptive_n_back", "Task 1", "Task 2"),
-         facet_var = paste(rt_acc, task_group)) %>%
-  ggplot(aes(value, fill=rt_acc, group=task_group))+
-  geom_density(alpha=0.6, color=NA)+
-  facet_wrap(~facet_var, nrow=1)+
-  scale_fill_manual(values=c('#4AC6B7', '#965F8A', '#C61951'))+
-  theme(legend.position="none")+
-  xlab("")+
-  ylab("")+
-  theme(axis.text = element_blank(),
-        strip.text = element_blank())
 
-ggsave('t2_ddm_eg.jpeg', device = "jpeg", path = "../output/figures/", width = 10, height = 2, units = "in", limitsize = FALSE, dpi = 300)
+```{r}
+tmp1 = data.frame(ez_pca$ind$coord) %>%
+  mutate(sub_id = clean_test_data$sub_id) %>%
+  rename(drift_rate = Dim.3, non_decision = Dim.2, threshold = Dim.1)
+
+tmp2 = data.frame(ez_retest_pca$ind$coord) %>%
+  mutate(sub_id = retest_data$sub_id) %>%
+  rename(drift_rate = Dim.3, non_decision = Dim.2, threshold = Dim.1)
+
+match_t1_t2("drift_rate", t1_df = tmp1, t2_df = tmp2, format = "wide") %>%
+  ggplot(aes(`1`,`2`))+
+  geom_point(color="#1b9e77", size=2)+
+  xlab("Time 1")+
+  ylab("Time 2")+
+  geom_abline(aes(slope=1, intercept=0), linetype="dashed")+
+  theme(axis.text.y = element_text(size=16),
+        axis.text.x = element_text(size=16),
+        axis.title= element_text(size=22))
+
+ggsave('drift_pc_icc_eg.jpeg', device = "jpeg", path = "../output/figures/", width = 4, height = 5, units = "in", limitsize = FALSE, dpi = 300)
 ```
