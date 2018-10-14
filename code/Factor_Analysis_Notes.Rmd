@@ -998,7 +998,8 @@ data.frame(demog_fa$loadings[]) %>%
          Lifetime_Smoking=ML6,
          Binge_Drinking=ML7,
          Unsafe_Drinking=ML8,
-         Income=ML9)
+         Income=ML9) %>%
+  arrange(-Daily_Smoking)
 ```
 
 ```{r}

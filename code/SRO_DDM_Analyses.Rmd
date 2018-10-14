@@ -980,20 +980,11 @@ Factor analysis
 -- Are these clusters more reliable than using either the raw or the DDM measures alone?
 
 ## Prediction
+
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
 
 ## To Do
 
-Trial numbers
+Trial numbers for HDDM
 Prediction
 Fitstats
-
-Prof. Domingue recommended readings:
-file:///Users/zeynepenkavi/Downloads/10.1007%252Fs11336-006-1478-z.pdf
-A HIERARCHICAL FRAMEWORK FOR MODELING SPEED AND ACCURACY
-ON TEST ITEMS
-
-file:///Users/zeynepenkavi/Downloads/v66i04.pdf
-Fitting Diffusion Item Response Theory Models for
-Responses and Response Times Using the R
-Package diffIRT
