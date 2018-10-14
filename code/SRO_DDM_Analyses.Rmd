@@ -209,6 +209,7 @@ refit_boot_df = process_boot_df(refit_boot_df)
 ## T1 HDDM parameters
 
 Before going on with the rest of the report first decide on whether there are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
+
 ### Parameter stability
 
 Differences in distributions: using scaled differences
@@ -400,7 +401,7 @@ Raw measures do not significantly differ from ddm parameters in their reliabilit
 summary(mer3)
 ```
 
-## Best measure for each task
+### Best measure for each task
 
 What is the best measure of individual difference for any measure that has both raw and DDM parameters? 
 
@@ -413,7 +414,7 @@ rel_df %>%
   select(task_group, everything())
 ```
 
-## Variance breakdown measure types
+### Variance breakdown measure types
 
 Converting variance estimates for each measure to percentage of all variance for comparability.
 
@@ -880,6 +881,12 @@ with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, pair
 
 ```{r}
 rm(flat_difference, rel_df_flat, retest_flat_difference, retest_hddm_flat, retest_hddm_hier, test_flat_difference,  test_hddm_flat, test_hddm_hier)
+```
+
+### Fit to data
+
+```{r}
+
 ```
 
 ## Clustering
