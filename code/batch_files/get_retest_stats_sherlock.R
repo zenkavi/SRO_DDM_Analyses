@@ -28,9 +28,8 @@ get_retest_stats = function(dv_var, t1_df = test_data, t2_df = retest_data, merg
   }
   
   if('icc' %in% metric | 'var_breakdown' %in% metric){
-    df = df %>% select(-dv, -sub_id)
     #Look in to differences between ICC calculations using lmer
-    icc = ICC(df, lmer=FALSE)
+    icc = ICC(df %>% select(-dv, -sub_id), lmer=FALSE)
     
     if('icc' %in% metric){
       out$icc = icc$results['Average_fixed_raters', 'ICC']
@@ -46,7 +45,7 @@ get_retest_stats = function(dv_var, t1_df = test_data, t2_df = retest_data, merg
   
   if('partial_eta' %in% metric | 'sem' %in% metric){
     
-    mod = summary(aov(score~Error(sub_id)+time, df))
+    mod = summary(aov(score~Error(sub_id)+time, df %>% gather(time, score, -dv, -sub_id)))
     
     if('partial_eta' %in% metric){
       ss_time = as.data.frame(unlist(mod$`Error: Within`))['Sum Sq1',]

@@ -119,7 +119,7 @@ for(i in 1:length(numeric_cols)){
   
   cur_dv = numeric_cols[i]
   
-  tmp = get_retest_stats(cur_dv, metric = c('icc', 'pearson', 'var_breakdown'))
+  tmp = get_retest_stats(cur_dv, metric = metrics)
   
   if(nrow(tmp) == 0){
     tmp[1,]=NA
