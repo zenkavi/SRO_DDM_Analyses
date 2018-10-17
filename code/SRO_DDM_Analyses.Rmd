@@ -102,7 +102,13 @@ hddm_rels = hddm_rels %>%
 summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
 ```
 
+### TODO: Parameter fit
+
 You should compare model fits using either sample. That would tell you which estimates explain observed data better though given the lack of difference in parameter estimates I don't expect these to differ either.
+
+```{r}
+
+```
 
 Conclusion: Going to use parameter estimates from refits to retest sample only for t1 data in the rest of this report because I think they are more comparable to the parameter estimates from t2.
 
