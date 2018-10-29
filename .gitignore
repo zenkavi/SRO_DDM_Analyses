@@ -8,3 +8,5 @@ output/workspaces/*
 code/batch_files/.out
 code/batch_files/.err
 output/batch_output
+*.out
+*.err
