@@ -50,7 +50,6 @@ Raw measures vs DDM parameter reliability
 
 Sample size effects on reliability
 ========================================================
-type: customslide
 
 <span class="emphasized">Pay attention to this!</span>
 More text

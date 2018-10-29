@@ -54,7 +54,6 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 
 Sample size effects on reliability
 ========================================================
-type: customslide
 
 <span class="emphasized">Pay attention to this!</span>
 More text

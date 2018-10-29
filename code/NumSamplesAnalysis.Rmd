@@ -1,0 +1,24 @@
+---
+title: 'Effects of number of samples from the posterior predictive in calculating fit statistics for HDDM parameters'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/SRO_DDM_Analyses_Workspace.R')
+```
+
+*Leading question:* Are HDDMs estimated from n=552 better fits to individual subject data compared to the same models fit on same subjects' data but with n=150 (i.e. only the subjects who have completed the battery twice)? To answer this we sample from the posterior predictive from each model and calculate fit statistics (e.g. regressing the predicted response times on the actual response times to calculate variance explained). By default we used 500 as the number of `samples` argument in the `post_pred_gen` function. The models using n=552 are, however, very large and for some tasks using this number can take up to a month (!) to calculate the fit statistics. Therefore we examined how the changing the input to this argument changed the fit statistics for two tasks.
+
+*Current problem:* Does the $R^2$ increase as the `samples` argument input increases?
+
+*Approach:* Calculate fit statistics for the choice reaction time and local global letter tasks using 10, 25, 50, 100, 250, 500 as inputs for the `samples` argument.
+
+```{r}
+
+```
+
+
+*Answer:*
