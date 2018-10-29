@@ -12,6 +12,7 @@ input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/num
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/sem.R')
 
 library(tidyverse)
+library(lme4)
 
 theme_set(theme_bw())
 ```
@@ -39,49 +40,61 @@ for(f in list.files(input_path)){
 }
 ```
 
+Adjusted $R^2$ of regressing predicted log RT's on true log RT's
 
 ```{r}
 fitstat_samples %>%
   group_by(task_name, num_samples) %>%
   summarise(m_log_rsq_adj = mean(log_rsq_adj),
             sem_log_rsq_adj = sem(log_rsq_adj)) %>%
-  ggplot(aes(as.factor(num_samples), m_log_rsq_adj))+
+  ggplot(aes(as.factor(num_samples), m_log_rsq_adj, color=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_log_rsq_adj-sem_log_rsq_adj, ymax = m_log_rsq_adj+sem_log_rsq_adj))+
-  facet_wrap(~task_name, scale='free')
+  geom_errorbar(aes(ymin = m_log_rsq_adj-sem_log_rsq_adj, ymax = m_log_rsq_adj+sem_log_rsq_adj))
 ```
+
+$R^2$ of regressing predicted log RT's on true log RT's
 
 ```{r}
 fitstat_samples %>%
   group_by(task_name, num_samples) %>%
   summarise(m_log_rsq = mean(log_rsq),
             sem_log_rsq = sem(log_rsq)) %>%
-  ggplot(aes(as.factor(num_samples), m_log_rsq))+
+  ggplot(aes(as.factor(num_samples), m_log_rsq, color=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_log_rsq-sem_log_rsq, ymax = m_log_rsq+sem_log_rsq))+
-  facet_wrap(~task_name, scale='free')
+  geom_errorbar(aes(ymin = m_log_rsq-sem_log_rsq, ymax = m_log_rsq+sem_log_rsq))
 ```
 
-```{r}
-fitstat_samples %>%
-  group_by(task_name, num_samples) %>%
-  summarise(m_rsq = mean(rsq),
-            sem_rsq = sem(rsq)) %>%
-  ggplot(aes(as.factor(num_samples), m_rsq))+
-  geom_point()+
-  geom_errorbar(aes(ymin = m_rsq-sem_rsq, ymax = m_rsq+sem_rsq))+
-  facet_wrap(~task_name, scale='free')
-```
+Adjusted $R^2$ of regressing predicted RT's on true RT's
 
 ```{r}
 fitstat_samples %>%
   group_by(task_name, num_samples) %>%
   summarise(m_rsq_adj = mean(rsq_adj),
             sem_rsq_adj = sem(rsq_adj)) %>%
-  ggplot(aes(as.factor(num_samples), m_rsq_adj))+
+  ggplot(aes(as.factor(num_samples), m_rsq_adj, col=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_rsq_adj-sem_rsq_adj, ymax = m_rsq_adj+sem_rsq_adj))+
-  facet_wrap(~task_name, scale='free')
+  geom_errorbar(aes(ymin = m_rsq_adj-sem_rsq_adj, ymax = m_rsq_adj+sem_rsq_adj))
+```
+
+$R^2$ of regressing predicted RT's on true RT's
+
+```{r}
+fitstat_samples %>%
+  group_by(task_name, num_samples) %>%
+  summarise(m_rsq = mean(rsq),
+            sem_rsq = sem(rsq)) %>%
+  ggplot(aes(as.factor(num_samples), m_rsq, col=task_name))+
+  geom_point()+
+  geom_errorbar(aes(ymin = m_rsq-sem_rsq, ymax = m_rsq+sem_rsq))
+```
+
+```{r}
+summary(lmer(rsq ~ task_name*num_samples +(1|subj_id), fitstat_samples))
 ```
 
 *Answer:*
+- Models are pretty bad fits for both tasks.  
+- If you zoom in it appears like the pattern of fit dependency on the `samples` argument varies by task such that: For local global letter there doesn't seem to be a major change and for choice reaction time fits get worse and less variable with more `samples`.  
+- This is not visible when you look at both together and check statistically.  
+- The only effect is that local global has better fits than choice reaction time.
+
