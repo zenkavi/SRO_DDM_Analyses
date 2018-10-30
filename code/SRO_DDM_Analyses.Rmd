@@ -30,10 +30,12 @@ fig_name = 'HDDM_par_diff.jpeg'
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
-
 Does the distribution of scaled difference scores (between using n=150 or n=552) have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
 
 ```{r}
+if(!exists('hddm_pars')){
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_pars_data.R')
+}
 summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
 # Same result
 # summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
@@ -52,17 +54,23 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 Do hddm parameters differ in their reliability depending on whether they are derived from n=150 or n=552? No.
 
 ```{r}
+if(!exists('hddm_rels')){
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_rels_data.R')
+}
+
 hddm_rels = hddm_rels %>%
   gather(sample, value, -dv, -rt_acc)
 
 summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
 ```
 
-### TODO: Parameter fit
+### Parameter fit
 
 You should compare model fits using either sample. That would tell you which estimates explain observed data better though given the lack of difference in parameter estimates I don't expect these to differ either.
 
 Refit vs t1 hierarchical model fit comparison
+
+NOTE: In calculating the fit statistics for the full sample hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
 
 ```{r}
 
