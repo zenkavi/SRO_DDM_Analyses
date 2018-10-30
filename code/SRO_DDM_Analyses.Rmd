@@ -67,30 +67,10 @@ summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
 
 Are there differences in reliability depending which sample the HDDM parameters are estimated from? No.
 
-```{r}
-hddm_rels_fullfit = rel_df_fullfit %>%
-  filter(dv %in% unique(refit_boot_df$dv)) %>%
-  select(dv, icc)
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_rel_150vs552.jpeg'
 
-hddm_rels_refit = rel_df_refit %>%
-  filter(dv %in% unique(refit_boot_df$dv)) %>%
-  select(dv, icc) 
-
-hddm_rels = hddm_rels_fullfit %>%
-  left_join(hddm_rels_refit, by = "dv") %>%
-  rename(fullfit = icc.x, refit = icc.y) %>%
-  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv") %>%
-  filter(rt_acc %in% c("rt", "accuracy") == FALSE)
-
-rm(hddm_rels_fullfit, hddm_rels_refit)
-
-hddm_rels %>%
-  ggplot(aes(fullfit, refit, col=rt_acc))+
-  geom_point()+
-  geom_abline(slope=1, intercept = 0)+
-  xlab("Reliability of HDDM params using n=552")+
-  ylab("Reliability of HDDM params using n=150")+
-  theme(legend.title = element_blank())
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 Do hddm parameters differ in their reliability depending on whether they are derived from n=150 or n=552? No.
@@ -105,6 +85,8 @@ summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
 ### TODO: Parameter fit
 
 You should compare model fits using either sample. That would tell you which estimates explain observed data better though given the lack of difference in parameter estimates I don't expect these to differ either.
+
+Refit vs t1 hierarchical model fit comparison
 
 ```{r}
 

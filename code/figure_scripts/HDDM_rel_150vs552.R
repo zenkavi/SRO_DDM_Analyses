@@ -1,0 +1,31 @@
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
+
+if(!exists('rel_df_fullfit') | !exists('rel_df_refit')){
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_subject_data.R')
+}
+
+hddm_rels_fullfit = rel_df_fullfit %>%
+  filter(dv %in% unique(refit_boot_df$dv)) %>%
+  select(dv, icc)
+
+hddm_rels_refit = rel_df_refit %>%
+  filter(dv %in% unique(refit_boot_df$dv)) %>%
+  select(dv, icc) 
+
+hddm_rels = hddm_rels_fullfit %>%
+  left_join(hddm_rels_refit, by = "dv") %>%
+  rename(fullfit = icc.x, refit = icc.y) %>%
+  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv") %>%
+  filter(rt_acc %in% c("rt", "accuracy") == FALSE)
+
+rm(hddm_rels_fullfit, hddm_rels_refit)
+
+hddm_rels %>%
+  ggplot(aes(fullfit, refit, col=rt_acc))+
+  geom_point()+
+  geom_abline(slope=1, intercept = 0)+
+  xlab("Reliability of HDDM params using n=552")+
+  ylab("Reliability of HDDM params using n=150")+
+  theme(legend.title = element_blank())
+
+ggsave(paste0('HDDM_rel_150vs552.', out_device), device = out_device, path = fig_path, width = 5, height = 3.5, units = "in")
