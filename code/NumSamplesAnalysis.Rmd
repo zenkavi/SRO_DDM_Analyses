@@ -7,7 +7,7 @@ toc_float: yes
 ---
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
-input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/num_samples_tests/'
+input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/hddm_fitstat/num_samples_tests/'
 
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/sem.R')
 

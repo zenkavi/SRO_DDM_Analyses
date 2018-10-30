@@ -12,9 +12,13 @@ retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulati
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 
+input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
+
 source(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'))
 
 source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
 
 source(paste0(ddm_workspace_scripts,'ddm_boot_rel_data.R'))
+
+source(paste0(ddm_workspace_scripts,'ddm_fitstat_data.R'))
 

@@ -24,36 +24,12 @@ Before going on with the rest of the report first decide on whether there are si
 
 Differences in distributions: using scaled differences
 
-```{r}
-hddm_pars_fullfit = test_data_hddm_fullfit %>%
-  select(sub_id, unique(refit_boot_df$dv)) %>%
-  mutate(hddm_sample = "fullfit")
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_par_diff.jpeg'
 
-hddm_pars_refit = test_data_hddm_refit %>%
-  select(sub_id, unique(refit_boot_df$dv)) %>%
-  mutate(hddm_sample = "refit")
-
-hddm_pars = rbind(hddm_pars_fullfit, hddm_pars_refit)
-rm(hddm_pars_fullfit, hddm_pars_refit)
-
-hddm_pars = hddm_pars %>%
-  gather(dv, value, -sub_id, -hddm_sample) %>%
-  spread(hddm_sample, value) %>%
-  mutate(diff = fullfit - refit) %>%
-  group_by(dv) %>%
-  mutate(scaled_diff = scale(diff)) %>%
-  select(sub_id, dv, scaled_diff) %>%
-  left_join(measure_labels[,c("dv", "rt_acc")], by = "dv") %>%
-  filter(rt_acc %in% c("rt", "accuracy") == FALSE) %>%
-  na.omit()
-
-hddm_pars %>%
-  ggplot(aes(scaled_diff))+
-  geom_density(aes(fill = dv), alpha = 0.2, color = NA)+
-  geom_density(fill = "black", alpha = 1, color=NA)+
-  theme(legend.position = "none")+
-  xlab("Scaled difference of HDDM parameter estimate (full - refit)")
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
+
 
 Does the distribution of scaled difference scores (between using n=150 or n=552) have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
 
