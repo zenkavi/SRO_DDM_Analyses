@@ -49,7 +49,9 @@ fitstat_samples %>%
             sem_log_rsq_adj = sem(log_rsq_adj)) %>%
   ggplot(aes(as.factor(num_samples), m_log_rsq_adj, color=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_log_rsq_adj-sem_log_rsq_adj, ymax = m_log_rsq_adj+sem_log_rsq_adj))
+  geom_errorbar(aes(ymin = m_log_rsq_adj-sem_log_rsq_adj, ymax = m_log_rsq_adj+sem_log_rsq_adj), width=0)+
+  geom_line(aes(col=task_name, group=task_name))+
+  theme(legend.title=element_blank())
 ```
 
 $R^2$ of regressing predicted log RT's on true log RT's
@@ -61,7 +63,9 @@ fitstat_samples %>%
             sem_log_rsq = sem(log_rsq)) %>%
   ggplot(aes(as.factor(num_samples), m_log_rsq, color=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_log_rsq-sem_log_rsq, ymax = m_log_rsq+sem_log_rsq))
+  geom_errorbar(aes(ymin = m_log_rsq-sem_log_rsq, ymax = m_log_rsq+sem_log_rsq), width=0)+
+  geom_line(aes(col=task_name, group=task_name))+
+  theme(legend.title=element_blank())
 ```
 
 Adjusted $R^2$ of regressing predicted RT's on true RT's
@@ -73,7 +77,9 @@ fitstat_samples %>%
             sem_rsq_adj = sem(rsq_adj)) %>%
   ggplot(aes(as.factor(num_samples), m_rsq_adj, col=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_rsq_adj-sem_rsq_adj, ymax = m_rsq_adj+sem_rsq_adj))
+  geom_errorbar(aes(ymin = m_rsq_adj-sem_rsq_adj, ymax = m_rsq_adj+sem_rsq_adj), width=0)+
+  geom_line(aes(col=task_name, group=task_name))+
+  theme(legend.title=element_blank())
 ```
 
 $R^2$ of regressing predicted RT's on true RT's
@@ -85,7 +91,9 @@ fitstat_samples %>%
             sem_rsq = sem(rsq)) %>%
   ggplot(aes(as.factor(num_samples), m_rsq, col=task_name))+
   geom_point()+
-  geom_errorbar(aes(ymin = m_rsq-sem_rsq, ymax = m_rsq+sem_rsq))
+  geom_errorbar(aes(ymin = m_rsq-sem_rsq, ymax = m_rsq+sem_rsq), width = 0)+
+  geom_line(aes(col=task_name, group=task_name))+
+  theme(legend.title=element_blank())
 ```
 
 ```{r}
