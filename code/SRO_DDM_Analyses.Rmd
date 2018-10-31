@@ -270,7 +270,7 @@ But even 150 is a large sample size for psychological studies, especially forced
 >dot_pattern_expectancy.BY_errors  
 
 ```{r}
-source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_reldf_sample_size.R/')
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_reldf_sample_size.R')
 ```
 
 Does the mean reliability change with sample size?
@@ -548,8 +548,33 @@ rm(flat_difference, rel_df_flat, retest_flat_difference, retest_hddm_flat, retes
 
 ### Parameter fit
 
-```{r}
+Do the fit statistics differ by whether the model was hierarchical or not? No.
 
+```{r}
+t1_hierarchical_fitstats = t1_hierarchical_fitstats %>%
+  filter(subj_id %in% retest_hierarchical_fitstats$subj_id)
+
+tmp = rbind(retest_hierarchical_fitstats, retest_flat_fitstats, t1_hierarchical_fitstats, t1_flat_fitstats) %>%
+  separate(sample, c("time", "proc"), sep="_") %>%
+  select(log_rsq_adj, time, proc, subj_id, task_name) %>%
+  spread(proc, log_rsq_adj) 
+
+tmp %>%
+  ggplot(aes(hierarchical, flat))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept=0), color="red")+
+  facet_wrap(~time)
+```
+
+```{r}
+with(tmp %>% filter(time == "t1"), cor.test(flat, hierarchical))
+with(tmp %>% filter(time == "retest"), cor.test(flat, hierarchical))
+```
+
+
+```{r}
+with(tmp %>% filter(time == "t1"), t.test(flat, hierarchical, paired=TRUE))
+with(tmp %>% filter(time == "retest"), t.test(flat, hierarchical, paired=TRUE))
 ```
 
 ## Clustering
@@ -563,7 +588,7 @@ For this we correlate each DDM measure with:
 1. raw measures within task  
 2. other ddm measures across tasks  
 
-```{r}
+```{r eval=FALSE, echo=FALSE}
 #Standardize datasets
 test_data_std = test_data %>% mutate_if(is.numeric, scale)
 test_data_std = test_data_std %>% select(-sub_id)
@@ -633,11 +658,11 @@ all_data_cor %>%
 
 (Absolute) correlations between raw and ddm measures within a task are higher than those between ddm measures across tasks.
 
-```{r}
+```{r  eval=FALSE, echo=FALSE}
 all_data_cor_med
 ```
 
-```{r}
+```{r  eval=FALSE, echo=FALSE}
 rm(all_data_cor, all_data_cor_med, retest_data_cor, retest_data_cor_med, test_data_cor, test_data_cor_med)
 ```
 
@@ -655,6 +680,6 @@ Factor analysis
 
 ## To Do
 
-Trial numbers for HDDM
-Prediction
-Fitstats
+- Alternate DDMs  
+- Time and accuracy costs vs DDMs (Hedge et al, 2018, Psych Bull)  
+- Trial by trial variability as individual difference measres (Rouder and Haaf, psyArXiv)  
