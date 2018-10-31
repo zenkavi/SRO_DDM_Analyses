@@ -69,7 +69,7 @@ Do HDDM parameter estimates fit participant data better if the model prior is in
 
 Here we compare model fits between the same model using a prior using n=552 vs n=150.
 
-NOTE: In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
+*Note:* In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
 
 ```{r message=FALSE}
 refit_fitstats %>%
@@ -180,56 +180,16 @@ rel_df %>%
 
 ### Variance breakdown measure types
 
-Converting variance estimates for each measure to percentage of all variance for comparability.
+```{r}
+fig_name = 'ddmvsraw_varsubs.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
 
 ```{r}
-rel_df = rel_df %>%
-  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
-         var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
-         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
+fig_name = 'ddmvsraw_varresid.jpeg'
 
-boot_df = boot_df %>%
-  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
-         var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
-         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
-```
-
-```{r message=FALSE, warning=FALSE}
-rel_df %>%
-  group_by(rt_acc, overall_difference, raw_fit) %>%
-  summarise(mean_var_subs_pct = mean(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct),
-            sem_var_subs_pct = sem(var_subs_pct),
-            sem_var_ind_pct = sem(var_ind_pct),
-            sem_var_resid_pct = sem(var_resid_pct)) %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_subs_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
-  geom_point(position=position_dodge(width=0.75), size = 5)+
-  geom_errorbar(aes(ymin = mean_var_subs_pct - sem_var_subs_pct, ymax = mean_var_subs_pct + sem_var_subs_pct), position=position_dodge(width=0.75))+
-  facet_wrap(~overall_difference)+
-  ylab("% of between subjects variance")+
-  xlab("")+
-  theme(legend.title = element_blank(),
-        legend.position = 'bottom')
-```
-
-```{r message=FALSE, warning=FALSE}
-rel_df %>%
-  group_by(rt_acc, overall_difference, raw_fit) %>%
-  summarise(mean_var_subs_pct = mean(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct),
-            sem_var_subs_pct = sem(var_subs_pct),
-            sem_var_ind_pct = sem(var_ind_pct),
-            sem_var_resid_pct = sem(var_resid_pct)) %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_resid_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
-  geom_point(position=position_dodge(width=0.75), size = 5)+
-  geom_errorbar(aes(ymin = mean_var_resid_pct - sem_var_resid_pct, ymax = mean_var_resid_pct + sem_var_resid_pct), position=position_dodge(width=0.75))+
-  facet_wrap(~overall_difference)+
-  ylab("% of residual variance")+
-  xlab("")+
-  theme(legend.title = element_blank(),
-        legend.position = 'bottom')
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 Model testing if the percentage of between subjects variance of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
@@ -292,9 +252,9 @@ Differences in DDM parameter reliability for t1 data using either n=552 or n=150
 
 But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
 
-Note: Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[revisit this - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]*
+*Note:* Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[Should I revisit this? - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]*
 
-Note: Some variables do not have enough variance to calculate reliability for difference sample sizes. These variables are:  
+*Note:* Some variables do not have enough variance to calculate reliability for difference sample sizes. These variables are:  
 >stroop.post_error_slowing  
 >simon.std_rt_error  
 >shape_matching.post_error_slowing  
@@ -310,38 +270,7 @@ Note: Some variables do not have enough variance to calculate reliability for di
 >dot_pattern_expectancy.BY_errors  
 
 ```{r}
-rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.gz')))
-
-#Check if all vars are there
-# numeric_cols[which(numeric_cols %in% unique(rel_df_sample_size$dv) == FALSE)]
-
-rel_df_sample_size = rel_df_sample_size %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc","ddm_raw")], by = "dv") %>%
-  mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
-         var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
-         var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
-
-rel_df_sample_size_summary = rel_df_sample_size %>% 
-  group_by(dv, sample_size, ddm_raw, overall_difference) %>%
-  summarise(mean_icc = mean(icc),
-            sem_icc = sem(icc), 
-            mean_var_subs_pct = mean(var_subs_pct),
-            sem_var_subs_pct = sem(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct),
-            sem_var_ind_pct = sem(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct),
-            sem_var_resid_pct = sem(var_resid_pct))
-
-tmp = rel_df_sample_size %>% 
-  group_by(sample_size) %>%
-  summarise(mean_icc = mean(icc,na.rm=T),
-            sem_icc = sem(icc), 
-            mean_var_subs_pct = mean(var_subs_pct,na.rm=T),
-            sem_var_subs_pct = sem(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct, na.rm=T),
-            sem_var_ind_pct = sem(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct,na.rm=T),
-            sem_var_resid_pct = sem(var_resid_pct))
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_reldf_sample_size.R/')
 ```
 
 Does the mean reliability change with sample size?
@@ -349,16 +278,9 @@ Does the mean reliability change with sample size?
 Yes. The larger the sample size the more reliable is a given measure on average. The largest increase in reliability is when shifting from 25 to 50 subjects. This is important because many studies using these measures have sample sizes <50 per group.
 
 ```{r}
-rel_df_sample_size_summary %>%
-  na.omit() %>%
-  ggplot(aes(factor(sample_size), mean_icc))+
-  geom_line(aes(group = dv), alpha = 0.1)+
-  geom_line(data = tmp,aes(factor(sample_size),mean_icc, group=1), color="purple", size=1)+
-  geom_point(data = tmp,aes(factor(sample_size),mean_icc), color="purple", size=2)+
-  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc), color="purple", width = 0.1)+
-  ylab("Mean reliability of 100 samples of size n")+
-  xlab("Sample size")+
-  ylim(-1,1)
+fig_name = 'rel_by_samplesize.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 When <15 subjects are used to calculate the measures they are significantly less reliable.
@@ -500,7 +422,7 @@ rel_df_sample_size_summary %>%
 summary(lmer(var_resid_pct ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
 ```
 
-Conclusion: Larger samples are better for reliability but not necessarily always for the same reasons; for some variables this is due to increasing between subjects variance while for others it's due to decreasing residual variance (?).
+*Conclusion:* Larger samples are better for reliability but not necessarily always for the same reasons; for some variables this is due to increasing between subjects variance while for others it's due to decreasing residual variance (?).
 
 ```{r}
 rm(rel_df_sample_size, rel_df_sample_size_summary)
@@ -508,7 +430,9 @@ rm(rel_df_sample_size, rel_df_sample_size_summary)
 
 ## Hierarchical estimation consequences
 
-- Is the H in HDDM important? (h vs flat)
+The H in HDDM estimates stands for 'hierarchical' denoting the fact that the distribution of the whole sample is incorportated in the priors for the model parameters. This is different than e.g. EZ-diffusion parameters that would be the same for a given subject's data regardless of the rest of the sample. One can ask whether this H indeed has a measurable impact.
+
+HDDM and EZ parameter estimates might differ due to other difference in the estimation process as well. Therefore to evaluate whether the 'H' leads to meaningful changes in parameters we compare the same models fit on the same data using either the whole sample for the hierarchical structure or only the single subject's data. These latter estimates are referred to as 'flat' estimates.
 
 ```{r}
 retest_hddm_flat = read.csv(paste0(retest_data_path,'retest_hddm_flat.csv'))
@@ -519,7 +443,7 @@ test_hddm_flat = read.csv(paste0(retest_data_path,'/t1_data/t1_hddm_flat.csv'))
 
 test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
 
-#numeric_cols = get_numeric_cols()
+# numeric_cols = get_numeric_cols()
 
 # Check if all the variables are there (no for now)
 # sum(names(retest_hddm_flat) %in% numeric_cols) == length(names(retest_hddm_flat))
@@ -529,11 +453,13 @@ test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
 # names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
 ```
 
-### Change in parameter value
+### Parameter estimate
 
-Standardized differences? Raw difference
-Plot raw difference for retest vs test for each of 3 parameters
-Percent change - using hierarchical as baseline: what percent does the flat parameter change compared to the hierarchical
+Plot percent change in raw parameters for retest and t1 for each of 3 parameters (using hierarchical as baseline: what percent does the flat parameter change compared to the hierarchical)
+
+For both time points the thresholds and non-decision times are very similary regardless of whether they are estimated heirarchically or without the hierarchy (difference peaking at 0). 
+
+This is also true for the majority of the drift rates. There are, however, almost as many drift rates that change completely when estimated without the hierarchy.  
 
 ```{r}
 #Should not be necessary later
@@ -572,13 +498,16 @@ flat_difference %>%
 ```
 
 Is the average percentage change different than 0? No.
-[RUN MODEL TO COMPARE TO 0. NOT TO BASELINE PARAMETER]
+
+This model uses the distribution of percentage difference in parameter estimates for drift rates as the baseline. A more appropriate model would test whether all three distributions are different than 0. The conclusion should not change: The intercept suggests that the mean of the drift rate difference distribution is at 0 and this is not different than the distributions for either of the other parameters and either time point.
 
 ```{r}
 summary(lmer(diff_pct ~ time*par+(1|dv), flat_difference %>% mutate(pars = factor(par, levels = c("thresh", "drift", "non_decision")))))
 ```
 
 Do people change in the same way? Mostly.
+
+Plotting the raw parameter estimate that is estimated hierarchically against the estimate that is estimated without the hierarchy. Red lines are the 45-degree line. The fact that many points cluster around this line and that there are systematic deviances from it for any parameter at either time point suggests that the hierarchical and flat estimates are mostly the same.
 
 ```{r}
 flat_difference %>%
@@ -588,43 +517,13 @@ flat_difference %>%
   facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par)
 ```
 
-### Change in parameter reliability
+### Parameter reliability
+
+Plotting the reliability estimates for flat parameters against the reliability of hierarchical estimates. Red lines are 45-degree lines. While there are some changes in reliability nothing appears very large (or consequential in pushing the reliability to any acceptable level depending on the estimation method) or systematic.
 
 ```{r}
-test_data_150 = test_data
-retest_data_150 = retest_data
+rel_df_flat = make_rel_df(t1_df = test_hddm_flat, t2_df = retest_hddm_flat, metrics = c('icc', 'pearson', 'var_breakdown'))
 
-test_data = test_hddm_flat
-retest_data = retest_hddm_flat
-```
-
-```{r}
-rel_df_cols = c('icc', 'var_subs', 'var_ind', 'var_resid', 'dv')
-
-rel_df_flat = as.data.frame(matrix(ncol = length(rel_df_cols)))
-
-names(rel_df_flat) = rel_df_cols
-
-numeric_cols = get_numeric_cols()
-
-for(i in 1:length(numeric_cols)){
-  
-  dv = numeric_cols[i]
-  tmp = get_retest_stats(dv, metric = c('icc', 'var_breakdown'))
-  tmp$dv = dv
-  rel_df_flat = rbind(rel_df_flat, tmp)
-}
-
-rel_df_flat = rel_df_flat[-which(is.na(rel_df_flat$dv)),]
-```
-
-```{r}
-test_data = test_data_150
-retest_data = retest_data_150
-rm(test_data_150, retest_data_150)
-```
-
-```{r}
 rel_df_flat = rel_df_flat %>%
   left_join(rel_df[,c("dv", "icc", "rt_acc", "overall_difference")], by = "dv") 
 
@@ -647,7 +546,7 @@ with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, pair
 rm(flat_difference, rel_df_flat, retest_flat_difference, retest_hddm_flat, retest_hddm_hier, test_flat_difference,  test_hddm_flat, test_hddm_hier)
 ```
 
-### Fit to data
+### Parameter fit
 
 ```{r}
 
