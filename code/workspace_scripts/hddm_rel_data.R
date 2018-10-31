@@ -1,5 +1,5 @@
 if(!exists('rel_df_fullfit') | !exists('rel_df_refit')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_subject_data.R')
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_point_rel_data.R')
 }
 
 hddm_rels_fullfit = rel_df_fullfit %>%

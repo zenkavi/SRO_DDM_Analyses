@@ -65,11 +65,11 @@ summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
 
 ### Parameter fit
 
-You should compare model fits using either sample. That would tell you which estimates explain observed data better though given the lack of difference in parameter estimates I don't expect these to differ either.
+Do HDDM parameter estimates fit participant data better if the model prior is informed by a larger sample? To assess model fit we sampled from the posterior predictive for each subject and regressed the predicted RT's on actual RT's (using both raw RT's as well as log-transformed RT's). Our measure of fit is the (adjusted) $R^2$ from these regressions for each participant.
 
-Refit vs t1 hierarchical model fit comparison
+Here we compare model fits between the same model using a prior using n=552 vs n=150.
 
-NOTE: In calculating the fit statistics for the full sample hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
+NOTE: In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
 
 ```{r message=FALSE}
 refit_fitstats %>%
@@ -82,6 +82,8 @@ refit_fitstats %>%
   geom_abline(slope = 1, intercept=0)
 ```
 
+The fit statistics (looking here at the adjusted $R^2$s using log-transformed RT's) for the same models using n=552 and n=150 for the priors are highly correlated.
+
 ```{r}
 tmp = refit_fitstats %>%
   left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name"))
@@ -89,16 +91,19 @@ tmp = refit_fitstats %>%
 with(tmp, cor.test(log_rsq_adj.x, log_rsq_adj.y))
 ```
 
+And they do not systematically differ from each other.
 
 ```{r}
 with(tmp, t.test(log_rsq_adj.x, log_rsq_adj.y, paired=T))
 ```
 
-Conclusion: Going to use parameter estimates from refits to retest sample only for t1 data in the rest of this report because I think they are more comparable to the parameter estimates from t2.
+*Conclusion:* Parameter estimates from refits to retest sample only for t1 data do not differ in any detectable way from estimates using the full t1 sample. They are also in principle more comparable to the parameter estimates from t2 and therefore used in the rest of this report.
 
-Clean up
 
-```{r}
+```{r echo=FALSE}
+#Workspace clean up
+rm(tmp)
+
 rm(hddm_pars, hddm_rels)
 
 boot_df = fullfit_boot_df %>%
@@ -119,61 +124,20 @@ rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 ## DDM vs raw reliability overall
 
-Data wrangling df's containing point estimate reliabilities and bootstrapped reliabilities
-
-```{r}
-rel_df = rel_df %>%
-  select(dv, icc, var_subs, var_ind, var_resid) %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv")
-
-boot_df = boot_df %>%
-  select(dv, icc, var_subs, var_ind, var_resid) %>%
-  left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv")
-```
-
 Plot reliability point estimates comparing DDM measures to raw measures faceting for contrast measures.
 
 ```{r}
-rel_df %>%
-  mutate(rt_acc = as.character(rt_acc)) %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
-  geom_boxplot()+
-  facet_wrap(~overall_difference)+
-  ylab("ICC")+
-  xlab("")+
-  theme(legend.title = element_blank(),
-        legend.position = 'bottom')#+
-  # guides(fill = guide_legend(ncol = 2, byrow=F))
+fig_name = 'ddmvsraw_point.jpeg'
 
-#ADD FIX_DDM_LEGEND
-#fix_ddm_legend(ddm_point_plot)
-
-#rm(mylegend, ddm_point_plot)
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 Plot averaged bootstrapped reliability estimates per measure comparing DDM measures to raw measures faceting for contrast measures.
 
 ```{r}
-boot_df %>%
-  group_by(dv) %>%
-  summarise(mean_icc = mean(icc),
-            rt_acc = unique(rt_acc),
-            overall_difference = unique(overall_difference),
-            raw_fit = unique(raw_fit)) %>%
-  mutate(rt_acc = as.character(rt_acc)) %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_icc, fill=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
-  geom_boxplot()+
-  facet_wrap(~overall_difference)+
-  ylab("ICC")+
-  xlab("")+
-  theme(legend.title = element_blank(),
-        legend.position = 'bottom')#+
-  # guides(fill = guide_legend(ncol = 2, byrow=F))
+fig_name = 'ddmvsraw_boot.jpeg'
 
-#ADD FIX_DDM_LEGEND
-#fix_ddm_legend(ddm_boot_plot)
-
-#rm(mylegend, ddm_boot_plot)
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 Model testing if the reliability of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
