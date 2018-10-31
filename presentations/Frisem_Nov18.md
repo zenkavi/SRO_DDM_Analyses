@@ -8,8 +8,8 @@ css: custom.css
 Background
 ========================================================
 
-Individual difference analyses  
-Examples using esp HDDM pars
+- What do we mean by individual difference analyses  
+- Example papers using HDDM parameters
 
 Dataset
 ========================================================
@@ -26,7 +26,7 @@ Add images for each bullet point in this column
 Data cleaning and variable selection
 ========================================================
 
-- Basic cleaning
+- Basic cleaning for each task
 - 14 Tasks 
 
 Types of variables
@@ -43,6 +43,12 @@ Types of variables
 ***
 Add images for each bullet point in this column
 
+Sample selection for HDDM
+========================================================
+
+- 
+- Refit vs. t1
+
 Raw measures vs DDM parameter reliability
 ========================================================
 
@@ -57,8 +63,20 @@ More text
 Consequences of hierarchical parameter estimation
 ========================================================
 
+Flat vs. hierarchical
+
 Clustering
 ========================================================
 
+Do ddm parameters capture similar cognitive processes across tasks?
+
+- Are the correlations between ddm parameters across tasks higher than correlations between ddm parameters and other variables from a given task?
+- Can you recover a 3 factor structure that is separate than the raw measures using the ddm measures?
+- Are these lower dimensional projections more reliable?
+
 Prediction
 ========================================================
+
+- Cross-validated $R^2$ predicting demographic factors using  
+-- Each individual measure  
+-- Lower dimensional projections  
