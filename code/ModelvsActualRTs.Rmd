@@ -7,13 +7,76 @@ toc_float: yes
 ---
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
-input_path = ''
-
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/sem.R')
 
 library(tidyverse)
-library(lme4)
 library(ggplot2)
+library(lme4)
 
 theme_set(theme_bw())
 ```
+
+All subjects predicted vs actual collapsing across samples
+
+```{r}
+tmp = read.csv('/Users/zeynepenkavi/Downloads/choice_reaction_time_refit_hierarchical_ppc_data_10.csv')
+
+tmp %>%
+  ggplot(aes(rt, rt_sampled, col=node))+
+  geom_smooth(method="lm", se = FALSE)+
+  geom_abline(slope=1, intercept=1, color="black")+
+  theme(legend.position = "none")
+```
+
+One subject predicted vs actual showing both all samples and trend across all samples in red
+
+```{r}
+tmp %>%
+  mutate(node = as.character(node)) %>%
+  filter(node =='(wfpt.0)') %>%
+  ggplot()+
+  geom_smooth(aes(rt, rt_sampled, col=factor(sample)),method='lm', alpha=0.1)+
+  geom_smooth(aes(rt, rt_sampled), method='lm', alpha=0.1, color="red", linetype= "dashed", size=2)+
+  # geom_point()+
+  geom_abline(intercept=0, slope = 1, color="black")+
+  theme(legend.position = "none")
+```
+
+Are other overall stats better?
+
+Mean rt's and sem's look very similar!
+Does the model optimize over the moments of the RT distribution but not the trial by trial variability?
+
+
+```{r}
+tmp %>% 
+  group_by(node, sample) %>%
+  summarise(mean_rt = mean(rt),
+            mean_rt_sampled = mean(rt_sampled), 
+            sem_rt = sem(rt),
+            sem_rt_sampled = sem(rt_sampled))
+```
+
+```{r}
+tmp %>%
+  mutate(rt_diff = rt_sampled - rt) %>%
+  ggplot(aes(rt_diff, col=node))+
+  geom_density()+
+  # facet_wrap(~sample)+
+  theme(legend.position = "none")
+```
+
+```{r}
+tmp %>%
+  group_by(node) %>%
+  summarise(cor = cor(rt_sampled, rt))
+```
+
+```{r}
+summary(lmer(rt_sampled ~ rt + (1|node) +(1|sample), tmp))
+```
+
+DDM's are joint models of RTs and accuracy.
+At each bound (correct vs incorrect) there is a distribution of RTs.
+The drift rate is a summary statistic that should allow some trace to hit either bound closest to the mean of the RT distribution.
+But where does this take in to account the trial-by-trial variability?
