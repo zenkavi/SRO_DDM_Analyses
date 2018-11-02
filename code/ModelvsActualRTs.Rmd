@@ -12,6 +12,7 @@ source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_
 library(tidyverse)
 library(ggplot2)
 library(lme4)
+library(entropy)
 
 theme_set(theme_bw())
 ```
@@ -76,7 +77,14 @@ tmp %>%
 summary(lmer(rt_sampled ~ rt + (1|node) +(1|sample), tmp))
 ```
 
-DDM's are joint models of RTs and accuracy.
-At each bound (correct vs incorrect) there is a distribution of RTs.
-The drift rate is a summary statistic that should allow some trace to hit either bound closest to the mean of the RT distribution.
-But where does this take in to account the trial-by-trial variability?
+```{r}
+tmp2 = tmp %>%
+  filter(node =='(wfpt.0)' & sample == 0)
+
+
+tmp %>%
+  filter(node =='(wfpt.0)') %>%
+  group_by(sample) %>%
+  do(KL.plugin(rt, rt_sampled))
+
+```
