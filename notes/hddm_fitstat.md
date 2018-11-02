@@ -29,8 +29,8 @@
 
 # Plan:
 
-Generate post_pred_gen data using kabuki vs. own debug to remember the additions you made  
-Use kabuki.analyze.post_pred_gen data to understand what the grouping in kabuki.analyze.post_pred_stats refers to  
+- Generate post_pred_gen data using kabuki vs. own debug to remember the additions you made  - kabuki.analyze.post_pred_gen doesn't seem to append data correctly for concatenated parallel models.
+- Use kabuki.analyze.post_pred_gen data to understand what the grouping in kabuki.analyze.post_pred_stats refers to  
 
 
 Read Ratcliff & Childers for comparison of DDMs and examples of individual difference analyses  
