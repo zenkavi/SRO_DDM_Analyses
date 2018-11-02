@@ -9,7 +9,7 @@ Background
 ========================================================
 
 - What do we mean by individual difference analyses  
-- Example papers using HDDM parameters
+- Example papers using HDDM parameters (see [here second paragraph](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4517692/)) for multiple examples
 
 Dataset
 ========================================================
@@ -28,6 +28,7 @@ Data cleaning and variable selection
 
 - Basic cleaning for each task
 - 14 Tasks 
+-- Number of trials in each task
 
 Types of variables
 ========================================================

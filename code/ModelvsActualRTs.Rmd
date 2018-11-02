@@ -1,0 +1,19 @@
+---
+title: 'Comparison of RTs sampled from HDDM posterior predictives to actual RTs'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+input_path = ''
+
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/sem.R')
+
+library(tidyverse)
+library(lme4)
+library(ggplot2)
+
+theme_set(theme_bw())
+```

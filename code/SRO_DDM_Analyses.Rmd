@@ -680,6 +680,8 @@ Factor analysis
 
 ## To Do
 
+
+- PLOT PRED AND ACTUALS RTS
 - Alternate DDMs  
 - Time and accuracy costs vs DDMs (Hedge et al, 2018, Psych Bull)  
 - Trial by trial variability as individual difference measres (Rouder and Haaf, psyArXiv)  
