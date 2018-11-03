@@ -8,17 +8,16 @@
 
 # Structure of stimulated data
 
-**kabuki.analyze.post_pred_gen**
-
-```
-
-```
-
 **post_pred_gen_debug**
 
 ```
 
 ```
+*Note: Order of output is NOT sequential (i.e. trial 1, trial 2 etc.)*
+index level 0: node - subject
+index level 1: sample - number of sampled parameter from its posterior predictive
+rt_sampled: rt's calculated using the sampled parameters
+rt: actual rt's
 
 # Goal
 
