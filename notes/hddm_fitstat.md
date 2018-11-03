@@ -29,9 +29,10 @@
 
 # Plan:
 
-- Generate post_pred_gen data using kabuki vs. own debug to remember the additions you made  - kabuki.analyze.post_pred_gen doesn't seem to append data correctly for concatenated parallel models.
-- Use kabuki.analyze.post_pred_gen data to understand what the grouping in kabuki.analyze.post_pred_stats refers to  
-- Dashboard for predicted vs actual RTs for each task
+Choose from:
+- Figure out how to increase memory in R?
+- Fix calculate_hddm_fitstat.py and rerun?
+- Change samples to 50 in run_hddm_fitstat_{SAMPLE} for new ppc datasets and then run calculate_hddm_kl.R?
 
 Read Ratcliff & Childers for comparison of DDMs and examples of individual difference analyses  
 Read Wagenmakers et al for EZ predictions  

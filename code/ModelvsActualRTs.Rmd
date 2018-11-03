@@ -83,8 +83,15 @@ tmp2 = tmp %>%
 
 
 tmp %>%
-  filter(node =='(wfpt.0)') %>%
-  group_by(sample) %>%
-  do(KL.plugin(rt, rt_sampled))
+  group_by(node, sample) %>%
+  do(data.frame(KL.plugin(.$rt, .$rt_sampled)))
 
+tmp %>%
+  filter(node =='(wfpt.10)') %>%
+  mutate(rt = ifelse(rt<0, 0.00000000001, rt),
+         rt_sampled = ifelse(rt_sampled<0, 0.00000000001, rt_sampled)) %>%
+  group_by(sample) %>%
+  do(data.frame(kl = KL.plugin(.$rt, .$rt_sampled)))
 ```
+
+
