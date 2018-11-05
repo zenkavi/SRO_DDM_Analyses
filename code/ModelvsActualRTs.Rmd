@@ -6,6 +6,14 @@ toc: yes
 toc_float: yes
 ---
 
+# How to and how NOT to evaluate DDM model fits
+
+DDMs model response time (RT) distributions.   
+
+Like any model, fitted paramters can be used to predict values that can be compared to the actual data.  
+
+Here I explore a pitfall I stumbled in when trying to evaluate such models. I made this error because I assumed that data generated using the parameters would follow the order the RTs appear in the true data. That is, I assumed the generated data would be sequential as well. If you're familiar with sequential choice models (eg. reinforcement learning models) you might be similarly confused.
+
 ```{r, message=FALSE, warning=FALSE, include=FALSE}
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/sem.R')
 
@@ -17,11 +25,21 @@ library(entropy)
 theme_set(theme_bw())
 ```
 
-All subjects predicted vs actual collapsing across samples
+Here we'll look at predicted versus actual data generated for the choice reaction time sampling parameters 10 times from the posterior predictive distributions for all subjects.
+
+The columns we are interested in the data are `node` which denotes subjects, `rt_sampled` which are the predicted RTs from the model, `rt` which are the actual RTs and `sample` which is the number of the sample drawn from the posterior predictive of each parameter.   
 
 ```{r}
 tmp = read.csv('/Users/zeynepenkavi/Downloads/choice_reaction_time_refit_hierarchical_ppc_data_10.csv')
 
+tmp
+```
+
+Assuming the predicted data in `rt_sampled` follows the same sequential order as the actual data in `rt` good model fits would appear as high correlations between these two columns.  
+
+But when we plot the data without reordering either of these distributions it appears there is barely any correlation for any subject (denoted in different colors)!
+
+```{r}
 tmp %>%
   ggplot(aes(rt, rt_sampled, col=node))+
   geom_smooth(method="lm", se = FALSE)+
@@ -29,7 +47,9 @@ tmp %>%
   theme(legend.position = "none")
 ```
 
-One subject predicted vs actual showing both all samples and trend across all samples in red
+So are the model fits actually horrenduous or is there something else going on?
+
+Looking at a single subject's predicted vs actual showing data for each sample and trend across all samples in red it does not seem like the problem is in the aggregation of distributions generated from different samples from the posterior predictive (ie. it could have been the case that some samples do a great job and some do a terrible job and they cancel each other out).
 
 ```{r}
 tmp %>%
@@ -43,55 +63,66 @@ tmp %>%
   theme(legend.position = "none")
 ```
 
-Are other overall stats better?
-
-Mean rt's and sem's look very similar!
-Does the model optimize over the moments of the RT distribution but not the trial by trial variability?
-
+What if we look at other statistics from the two distributions? Eg. wre other primary tendencies better matching?
 
 ```{r}
 tmp %>% 
-  group_by(node, sample) %>%
+  group_by(node) %>%
   summarise(mean_rt = mean(rt),
             mean_rt_sampled = mean(rt_sampled), 
             sem_rt = sem(rt),
             sem_rt_sampled = sem(rt_sampled))
 ```
 
+Mean rt's and sem's look very similar!  
+This raises the question: Does the model optimize over the moments of the RT distribution but not the trial by trial variability?
+Basically! Remember that the model is trying to capture the overall RT distribution it does not know/care about how the RTs changes with respect to the trial number.  
+
+So how should you evaluate model fit?
+- You could either reorder the RT distributions and use the above linear relationship logic
+- You could look at the amount of information lost the predicted RT distribution compared to the actual RT distribution. This can be captured with KL-divergence.
+
 ```{r}
 tmp %>%
-  mutate(rt_diff = rt_sampled - rt) %>%
-  ggplot(aes(rt_diff, col=node))+
-  geom_density()+
-  # facet_wrap(~sample)+
+  mutate(rt = ifelse(rt<0, 0.00000000001, rt),
+         rt_sampled = ifelse(rt_sampled<0, 0.00000000001, rt_sampled)) %>%
+  group_by(node, sample) %>%
+  do(data.frame(kl = KL.plugin(.$rt, .$rt_sampled))) %>%
+  ungroup() %>%
+  group_by(node) %>%
+  summarise(mean_kl = mean(kl),
+         sem_kl = sem(kl))
+```
+
+To visualize: You compare the information loss in the orange distribution trying to capture the blue distribution.
+
+```{r}
+tmp %>%
+  filter(node == '(wfpt.0)')%>%
+  ggplot()+
+  geom_density(aes(rt), fill = "blue", alpha=.6, col="white")+
+  geom_density(aes(rt_sampled), fill='orange', alpha=.6, col="white")+
   theme(legend.position = "none")
 ```
 
-```{r}
-tmp %>%
-  group_by(node) %>%
-  summarise(cor = cor(rt_sampled, rt))
-```
+Alternatively if you wanted to use the regression logic you must reorder the data:
 
 ```{r}
-summary(lmer(rt_sampled ~ rt + (1|node) +(1|sample), tmp))
-```
-
-```{r}
-tmp2 = tmp %>%
-  filter(node =='(wfpt.0)' & sample == 0)
-
-
-tmp %>%
+tmp$rt = (tmp %>%
+  select(node, sample, rt) %>%
   group_by(node, sample) %>%
-  do(data.frame(KL.plugin(.$rt, .$rt_sampled)))
+  arrange(node,sample,-rt))$rt
+
+tmp$rt_sampled = (tmp %>%
+  select(node, sample, rt_sampled) %>%
+  group_by(node, sample) %>%
+  arrange(node,sample,-rt_sampled))$rt_sampled
 
 tmp %>%
-  filter(node =='(wfpt.10)') %>%
-  mutate(rt = ifelse(rt<0, 0.00000000001, rt),
-         rt_sampled = ifelse(rt_sampled<0, 0.00000000001, rt_sampled)) %>%
-  group_by(sample) %>%
-  do(data.frame(kl = KL.plugin(.$rt, .$rt_sampled)))
+  ggplot(aes(rt, rt_sampled, col=node))+
+  geom_smooth(method="lm", se = FALSE)+
+  geom_abline(slope=1, intercept=1, color="black")+
+  theme(legend.position = "none")
 ```
 
-
+Now everything looks much better!
