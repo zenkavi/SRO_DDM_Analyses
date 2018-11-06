@@ -65,7 +65,7 @@ summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
 
 ### Parameter fit
 
-Do HDDM parameter estimates fit participant data better if the model prior is informed by a larger sample? To assess model fit we sampled from the posterior predictive for each subject and regressed the predicted RT's on actual RT's (using both raw RT's as well as log-transformed RT's). Our measure of fit is the (adjusted) $R^2$ from these regressions for each participant.
+Do HDDM parameter estimates fit participant data better if the model prior is informed by a larger sample? To assess model fit we sampled parameters from the posterior predictive and generated predicted data (RT distributions) for each subject. Our measure of fit is the KL divergence of the predicted RT distributions from the actual RT distributions from these regressions for each participant.
 
 Here we compare model fits between the same model using a prior using n=552 vs n=150.
 
@@ -73,28 +73,45 @@ Here we compare model fits between the same model using a prior using n=552 vs n
 
 ```{r message=FALSE}
 refit_fitstats %>%
-  left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name")) %>%
-  ggplot(aes(log_rsq_adj.x, log_rsq_adj.y))+
-  geom_point(aes(color=task_name))+
-  xlab("Adjusted r-sq for n=150")+
-  ylab("Adjusted r-sq for n=552")+
+  # left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name")) %>%
+  left_join(t1_hierarchical_fitstats, by = c("node", "task_name")) %>%
+  ggplot(aes(mean_kl.x, mean_kl.y))+
+  # geom_point(aes(color=task_name))+
+  geom_smooth(method="lm",aes(color=task_name))+
+  xlab("Mean KL for n=150")+
+  ylab("Mean KL for n=552")+
   theme(legend.position = "none")+
   geom_abline(slope = 1, intercept=0)
 ```
 
-The fit statistics (looking here at the adjusted $R^2$s using log-transformed RT's) for the same models using n=552 and n=150 for the priors are highly correlated.
+The fit statistics for the same models using n=552 and n=150 for the priors are **barely** correlated and if anything the mean kl's for n=552 are slightly higher than the mean kl's for n=150 (accounting for differences between tasks).
 
 ```{r}
 tmp = refit_fitstats %>%
-  left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name"))
+  # left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name"))
+  left_join(t1_hierarchical_fitstats, by = c("node", "task_name"))
 
-with(tmp, cor.test(log_rsq_adj.x, log_rsq_adj.y))
+#node/sub_id would have been the random slopes if you had fit_stats for each samples instead of the per subject summarized data
+m = lmer(mean_kl.x ~ mean_kl.y+(1|task_name), tmp)
+summary(m)
 ```
 
-And they do not systematically differ from each other.
+There aren't systematic differences between the kl's using n=552 or n=150 that generalizes across all tasks. In the two cases that there are systematic diferences the n=150 models are better fits.
 
 ```{r}
-with(tmp, t.test(log_rsq_adj.x, log_rsq_adj.y, paired=T))
+compare_kls = function(data){
+  m = lm(mean_kl.x ~ mean_kl.y, data)
+  
+  out = data.frame(kl_coef = coef(summary(m))['mean_kl.y', "Estimate"],
+                   kl_tval = coef(summary(m))['mean_kl.y', "t value"])
+  return(out)
+}
+
+tmp %>%
+  filter(task_name != "motor_selective_stop_signal") %>%
+  group_by(task_name) %>%
+  do(compare_kls(.)) %>%
+  mutate(better_fit = ifelse(kl_tval>2, '150', ifelse(kl_tval<(-2), '552', 'no diff')))
 ```
 
 *Conclusion:* Parameter estimates from refits to retest sample only for t1 data do not differ in any detectable way from estimates using the full t1 sample. They are also in principle more comparable to the parameter estimates from t2 and therefore used in the rest of this report.

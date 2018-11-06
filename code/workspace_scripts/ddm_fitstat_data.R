@@ -18,10 +18,10 @@ process_fitstats = function(samples=c('t1_hierarchical', 't1_flat', 'refit_hiera
   return(fitstats)
   }
 
-t1_flat_fitstats = process_fitstats(sample=c("t1_flat"))
+#t1_flat_fitstats = process_fitstats(sample=c("t1_flat"))
 t1_hierarchical_fitstats = process_fitstats(sample=c("t1_hierarchical"))
 
-retest_flat_fitstats = process_fitstats(sample=c("retest_flat"))
+#retest_flat_fitstats = process_fitstats(sample=c("retest_flat"))
 retest_hierarchical_fitstats = process_fitstats(sample=c("retest_hierarchical"))
 
 refit_fitstats = process_fitstats(sample=c("refit"))
