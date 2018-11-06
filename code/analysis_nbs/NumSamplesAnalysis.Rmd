@@ -1,0 +1,63 @@
+---
+title: 'Effects of number of samples from the posterior predictive in calculating fit statistics for HDDM parameters'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/hddm_fitstat/num_samples_tests/'
+
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/sem.R')
+
+library(tidyverse)
+library(lme4)
+
+theme_set(theme_bw())
+```
+
+*Leading question:* Are HDDMs estimated from n=552 better fits to individual subject data compared to the same models fit on same subjects' data but with n=150 (i.e. only the subjects who have completed the battery twice)? To answer this we sample from the posterior predictive from each model and calculate fit statistics (e.g. regressing the predicted response times on the actual response times to calculate variance explained). By default we used 500 as the number of `samples` argument in the `post_pred_gen` function. The models using n=552 are, however, very large and for some tasks using this number can take up to a month (!) to calculate the fit statistics. Therefore we examined how the changing the input to this argument changed the fit statistics for two tasks.  
+
+*Current problem:* Does the KL divergence increase as the `samples` argument input increases?  
+
+*Approach:* Calculate KL divergence for all tasks using 10, 25, 50, 100, 250 as inputs for the `samples` argument.  
+
+```{r message=FALSE, warning=FALSE}
+fitstat_samples = data.frame()
+
+for(f in list.files(input_path)){
+  tmp = read.csv(paste0(input_path, f), row.names=NULL)
+  #Extract number of samples
+  num_samples = as.numeric(gsub('.*_([0-9]+).*','\\1',f))
+  tmp$num_samples = ifelse(is.na(num_samples), 500, num_samples)
+  tmp$task_name = gsub( "_refit.*$", "", f)
+  fitstat_samples = rbind(fitstat_samples, tmp)
+}
+```
+
+Mean KL of predictive RT's compared to empirical RT's
+
+```{r}
+fitstat_samples %>%
+  group_by(task_name, num_samples) %>%
+  summarise(sem_kl = sem(mean_kl),
+            mean_kl = mean(mean_kl)) %>%
+  ggplot(aes(as.factor(num_samples), mean_kl, color=task_name))+
+  geom_point()+
+  geom_errorbar(aes(ymin = mean_kl-sem_kl, ymax = mean_kl+sem_kl), width=0)+
+  geom_line(aes(col=task_name, group=task_name))+
+  theme(legend.title=element_blank())
+```
+
+Linear model checking for an effect of number of samples:
+
+```{r}
+summary(lmer(mean_kl ~ task_name*num_samples +(1|node), fitstat_samples))
+```
+
+*Answer:*
+- Models are pretty good fits for most tasks.  
+- There are some differences between goodness of fit between tasks.
+- There isn't a difference in fit depending on number of samples from the posterior predictive.
+
