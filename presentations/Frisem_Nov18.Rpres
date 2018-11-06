@@ -30,6 +30,21 @@ Data cleaning and variable selection
 - 14 Tasks 
 -- Number of trials in each task
 
+"adaptive_n_back" ~ 400             
+"attention_network_task" ~ 140     
+"choice_reaction_time" ~ 150        
+"directed_forgetting" ~ 70       
+"dot_pattern_expectancy" ~ 156      
+"local_global_letter" ~ 95
+"motor_selective_stop_signal" ~ 180 
+"recent_probes" ~ 71
+"shape_matching" ~ 277          
+"simon" ~ 100       
+"stim_selective_stop_signal" ~ 240
+"stop_signal" ~ 600
+"stroop" ~ 95           
+cued response switching "threebytwo" ~ 433
+
 Types of variables
 ========================================================
 
