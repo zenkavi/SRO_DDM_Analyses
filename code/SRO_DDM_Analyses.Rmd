@@ -20,7 +20,7 @@ unique(measure_labels$task_group)
 
 Before going on with the rest of the report first decide on whether there are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
 
-### Parameter stability
+### Parameter value
 
 Differences in distributions: using scaled differences
 
@@ -71,39 +71,67 @@ Here we compare model fits between the same model using a prior using n=552 vs n
 
 *Note:* In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
 
-```{r message=FALSE}
-refit_fitstats %>%
-  # left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name")) %>%
-  left_join(t1_hierarchical_fitstats, by = c("node", "task_name")) %>%
-  ggplot(aes(mean_kl.x, mean_kl.y))+
-  # geom_point(aes(color=task_name))+
-  geom_smooth(method="lm",aes(color=task_name))+
-  xlab("Mean KL for n=150")+
-  ylab("Mean KL for n=552")+
-  theme(legend.position = "none")+
-  geom_abline(slope = 1, intercept=0)
-```
-
-The fit statistics for the same models using n=552 and n=150 for the priors are **barely** correlated and if anything the mean kl's for n=552 are slightly higher than the mean kl's for n=150 (accounting for differences between tasks).
 
 ```{r}
 tmp = refit_fitstats %>%
-  # left_join(t1_hierarchical_fitstats, by = c("subj_id", "task_name"))
-  left_join(t1_hierarchical_fitstats, by = c("node", "task_name"))
+  select(m_log_rsq_adj, subj_id, task_name, sample) %>%
+  left_join(t1_hierarchical_fitstats %>% select(m_log_rsq_adj, subj_id, task_name, sample), by = c("subj_id", "task_name")) 
 
-#node/sub_id would have been the random slopes if you had fit_stats for each samples instead of the per subject summarized data
-m = lmer(mean_kl.x ~ mean_kl.y+(1|task_name), tmp)
+tmp %>%
+  ggplot(aes(m_log_rsq_adj.x, m_log_rsq_adj.y, col=task_name))+
+  geom_smooth(method="lm")+
+  geom_abline(slope=1, intercept=0, linetype="dashed")+
+  theme(legend.position = "none")+
+  xlab(expression(paste("Adjusted ", R^{2}, " n=150")))+
+  ylab(expression(paste("Adjusted ", R^{2}, " n=552")))
+```
+
+```{r}
+m = lmer(m_log_rsq_adj.x ~ m_log_rsq_adj.y+(1|task_name), tmp)
 summary(m)
 ```
 
-There aren't systematic differences between the kl's using n=552 or n=150 that generalizes across all tasks. In the two cases that there are systematic diferences the n=150 models are better fits.
+```{r}
+compare_rsqs = function(data){
+  m = lm(m_log_rsq_adj.x ~ m_log_rsq_adj.y, data)
+  
+  out = data.frame(rsq_coef = coef(summary(m))['m_log_rsq_adj.y', "Estimate"],
+                   rsq_tval = coef(summary(m))['m_log_rsq_adj.y', "t value"])
+  return(out)
+}
+
+tmp %>%
+  filter(task_name != "motor_selective_stop_signal") %>%
+  group_by(task_name) %>%
+  do(compare_rsqs(.)) %>%
+  mutate(better_fit = ifelse(rsq_tval>2, '552', ifelse(rsq_tval<(-2), '150', 'no diff')))
+```
+
+```{r}
+tmp = refit_fitstats %>%
+  select(m_kl, subj_id, task_name, sample) %>%
+  left_join(t1_hierarchical_fitstats %>% select(m_kl, subj_id, task_name, sample), by = c("subj_id", "task_name")) 
+
+tmp %>%
+  ggplot(aes(m_kl.x, m_kl.y, col=task_name))+
+  geom_smooth(method="lm")+
+  geom_abline(slope=1, intercept=0, linetype="dashed")+
+  theme(legend.position = "none")+
+  xlab("Mean KL for n=150")+
+  ylab("Mean KL for n=552")
+```
+
+```{r}
+m = lmer(m_kl.x ~ m_kl.y+(1|task_name), tmp)
+summary(m)
+```
 
 ```{r}
 compare_kls = function(data){
-  m = lm(mean_kl.x ~ mean_kl.y, data)
+  m = lm(m_kl.x ~ m_kl.y, data)
   
-  out = data.frame(kl_coef = coef(summary(m))['mean_kl.y', "Estimate"],
-                   kl_tval = coef(summary(m))['mean_kl.y', "t value"])
+  out = data.frame(kl_coef = coef(summary(m))['m_kl.y', "Estimate"],
+                   kl_tval = coef(summary(m))['m_kl.y', "t value"])
   return(out)
 }
 
@@ -470,7 +498,7 @@ test_hddm_flat = test_hddm_flat %>% rename(sub_id = subj_id)
 # names(test_hddm_flat)[which(names(test_hddm_flat) %in% numeric_cols == FALSE)]
 ```
 
-### Parameter estimate
+### Parameter value
 
 Plot percent change in raw parameters for retest and t1 for each of 3 parameters (using hierarchical as baseline: what percent does the flat parameter change compared to the hierarchical)
 
