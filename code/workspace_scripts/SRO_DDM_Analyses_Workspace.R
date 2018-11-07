@@ -22,5 +22,5 @@ source(paste0(ddm_workspace_scripts,'ddm_boot_rel_data.R'))
 
 source(paste0(ddm_workspace_scripts,'ddm_point_rel_data.R'))
 
-source(paste0(ddm_workspace_scripts,'ddm_fitstat_data.R'))
+source(paste0(ddm_workspace_scripts,'hddm_fitstat_data.R'))
 

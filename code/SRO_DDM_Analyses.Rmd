@@ -25,7 +25,7 @@ Before going on with the rest of the report first decide on whether there are si
 Differences in distributions: using scaled differences
 
 ```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_par_diff.jpeg'
+fig_name = 'HDDM_par_150vs552.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
@@ -71,79 +71,25 @@ Here we compare model fits between the same model using a prior using n=552 vs n
 
 *Note:* In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
 
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_fitstats_150vs552_T.jpeg'
 
-```{r}
-tmp = refit_fitstats %>%
-  select(m_log_rsq_adj, subj_id, task_name, sample) %>%
-  left_join(t1_hierarchical_fitstats %>% select(m_log_rsq_adj, subj_id, task_name, sample), by = c("subj_id", "task_name")) 
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
 
-tmp %>%
-  ggplot(aes(m_log_rsq_adj.x, m_log_rsq_adj.y, col=task_name))+
-  geom_smooth(method="lm")+
-  geom_abline(slope=1, intercept=0, linetype="dashed")+
-  theme(legend.position = "none")+
-  xlab(expression(paste("Adjusted ", R^{2}, " n=150")))+
-  ylab(expression(paste("Adjusted ", R^{2}, " n=552")))
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_fitstats_150vs552.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 ```{r}
-m = lmer(m_log_rsq_adj.x ~ m_log_rsq_adj.y+(1|task_name), tmp)
-summary(m)
+tmp = rbind(refit_fitstats, t1_hierarchical_fitstats) 
+
+summary(lm(log(m_kl) ~ sample*task_name, tmp %>% filter(task_name != "motor_selective_stop_signal")))
 ```
 
-```{r}
-compare_rsqs = function(data){
-  m = lm(m_log_rsq_adj.x ~ m_log_rsq_adj.y, data)
-  
-  out = data.frame(rsq_coef = coef(summary(m))['m_log_rsq_adj.y', "Estimate"],
-                   rsq_tval = coef(summary(m))['m_log_rsq_adj.y', "t value"])
-  return(out)
-}
-
-tmp %>%
-  filter(task_name != "motor_selective_stop_signal") %>%
-  group_by(task_name) %>%
-  do(compare_rsqs(.)) %>%
-  mutate(better_fit = ifelse(rsq_tval>2, '552', ifelse(rsq_tval<(-2), '150', 'no diff')))
-```
-
-```{r}
-tmp = refit_fitstats %>%
-  select(m_kl, subj_id, task_name, sample) %>%
-  left_join(t1_hierarchical_fitstats %>% select(m_kl, subj_id, task_name, sample), by = c("subj_id", "task_name")) 
-
-tmp %>%
-  ggplot(aes(m_kl.x, m_kl.y, col=task_name))+
-  geom_smooth(method="lm")+
-  geom_abline(slope=1, intercept=0, linetype="dashed")+
-  theme(legend.position = "none")+
-  xlab("Mean KL for n=150")+
-  ylab("Mean KL for n=552")
-```
-
-```{r}
-m = lmer(m_kl.x ~ m_kl.y+(1|task_name), tmp)
-summary(m)
-```
-
-```{r}
-compare_kls = function(data){
-  m = lm(m_kl.x ~ m_kl.y, data)
-  
-  out = data.frame(kl_coef = coef(summary(m))['m_kl.y', "Estimate"],
-                   kl_tval = coef(summary(m))['m_kl.y', "t value"])
-  return(out)
-}
-
-tmp %>%
-  filter(task_name != "motor_selective_stop_signal") %>%
-  group_by(task_name) %>%
-  do(compare_kls(.)) %>%
-  mutate(better_fit = ifelse(kl_tval>2, '150', ifelse(kl_tval<(-2), '552', 'no diff')))
-```
-
-*Conclusion:* Parameter estimates from refits to retest sample only for t1 data do not differ in any detectable way from estimates using the full t1 sample. They are also in principle more comparable to the parameter estimates from t2 and therefore used in the rest of this report.
-
+*Conclusion:* The fits for tasks differ from each other but the fits using either the full t1 sample (522) or just the retest sample do not differ from each other. For the sake of comparability I chose the refit parameters for the rest of the analyses.
 
 ```{r echo=FALSE}
 #Workspace clean up
