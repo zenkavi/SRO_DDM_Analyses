@@ -21,3 +21,34 @@ What is 'non-hierarchical HDDM (Wiecki, Sofer, & Frank, 2013),'?
 
 'We used the package to fit the data from each subject individually in the same way as for the other methods.' - ie flat estimates
 'For the first two simulation studies, we examined separate fits to individual subjects. We also compared parameters recovered from the hierarchical method with those recovered from the chi-square method. '
+
+'The model does make predictions about RT distributions, the same predictions as the standard model and so it is easily possible to evaluate how well EZ fits RT distributions' - EZ fitstats are possible!
+
+Re EZ parameters: van Ravenzwaaij and Oberauer (2009) 'found that EZ and DMAT were better at recovering parameter values
+and that EZ was the preferred method when the goal was to recover individual differences in parameter values.'
+
+Learning effects: 'For both experiments, we examined practice effects by grouping the trials into earlier versus
+later blocks.'
+
+*Results:*
+
+'In general, for this subject population (undergraduates) and this task, there is little difference in the parameter values
+estimated from the first few trials and those estimated from the whole session.'
+
+see p 16 for the conclusion that non-decision times and tresholds can be used to determine if one subject differs from the rest of the group while drift rates are NOT good for this. On the other hand to compare two groups to each other all parameters are good.
+
+Fatigue and practice effects: 'These results show that there are no dramatic differences between model parameters estimated from the last few blocks of trials and the first few blocks of trials.'
+
+On using variability statistics as ID variables: Not a good idea for parameter estimates 'Generally, differences in the across-trial variability parameters between individuals or between populations cannot be determined without quite large numbers of observations.'
+
+Goodness of fit statistic: chi-sq 'Chi-square goodness of fit values are often used to assess how well diffusion models (and other two-choice models) fit data.'
+
+Parameters differ in their usefulness for classification: 'This means that these parameters [boundary separation and non-decision times] are in the range that might be useful for classifying individuals. [...] However, for drift rates, the classification would be much more difficult. Few of the conditions had drift rates that would separate the population with deficits from the
+undergraduate population [...] However, it may be possible to use multivariate methods to improve classification with combinations of several parameters (e.g., drift rates, boundary separation, and nondecision time) and, if subjects were tested on
+multiple tasks, combinations of measures across tasks might also improve classification.'
+
+Parameter estimates do not change too much with fewer trials BUT DOES THAT NECESSARILY MEAN THAT ESTIMATES FROM FEWER TRIALS ARE GOOD FOR CORRELATING WITH OTHER MEASURES? 'If estimates of the model's parameters from small numbers of observations correlate
+positively with estimates from large numbers, then small numbers can still be used to examine individual differences such as whether model parameters are correlated with measures such as IQ, reading measures, depression scores, etc.'
+
+Trial number effects on consistency also depends on parameter type: 'The conclusion from these correlations is that consistency in parameter values is good from small to large numbers of observations for boundary separation and nondecision time but not
+drift rates.'
