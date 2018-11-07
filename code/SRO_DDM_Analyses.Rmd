@@ -25,7 +25,7 @@ Before going on with the rest of the report first decide on whether there are si
 Differences in distributions: using scaled differences
 
 ```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_par_150vs552.jpeg'
+fig_name = 'HDDM_par_150vs522.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
@@ -46,7 +46,7 @@ summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
 Are there differences in reliability depending which sample the HDDM parameters are estimated from? No.
 
 ```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_rel_150vs552.jpeg'
+fig_name = 'HDDM_rel_150vs522.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
@@ -72,13 +72,13 @@ Here we compare model fits between the same model using a prior using n=552 vs n
 *Note:* In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
 
 ```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_fitstats_150vs552_T.jpeg'
+fig_name = 'HDDM_fitstats_150vs522_t.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 ```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_fitstats_150vs552.jpeg'
+fig_name = 'HDDM_fitstats_150vs522.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
