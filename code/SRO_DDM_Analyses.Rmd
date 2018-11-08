@@ -239,11 +239,11 @@ rm(mer3)
 
 ## Sample size effects on reliability
 
-Differences in DDM parameter reliability for t1 data using either n=552 or n=150 were reported above under [T1 HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/SRO_DDM_Analyses.nb.html#t1_hddm_parameters). No meaningful differences exist between these two sample sizes.
+Differences in HDDM parameter reliability for t1 data using either n=552 or n=150 were reported above under [T1 HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/SRO_DDM_Analyses.nb.html#t1_hddm_parameters). No meaningful differences were found between these two sample sizes.
 
 But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
 
-*Note:* Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[Should I revisit this? - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more]*
+*Note:* Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[Should I revisit this? - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more. If this were the case then wouldn't we expect the comparison of non-hierarchical vs hierarchical estimates to be the largest? If there is no difference then we don't have to worry about it?]*
 
 *Note:* Some variables do not have enough variance to calculate reliability for difference sample sizes. These variables are:  
 >stroop.post_error_slowing  
@@ -289,37 +289,6 @@ with(rel_df_sample_size_summary, pairwise.t.test(mean_icc, sample_size, p.adjust
 Does the change in reliabiliity with sample size vary by variable type?
 
 The changes do not differ by raw vs. ddm measures. It does differ by whether the measure is a contrast measure: For contrast measures all increases in reliability with sample size are larger than the increases for non-contrast measures. This implies that larger sample sizes are even more crucial for studies using contrast measures as trait-level measures.
-
-```{r}
-tmp = rel_df_sample_size %>% 
-  group_by(sample_size, ddm_raw, overall_difference) %>%
-  summarise(mean_icc = mean(icc, na.rm=T),
-            sem_icc = sem(icc), 
-            mean_var_subs_pct = mean(var_subs_pct, na.rm=T),
-            sem_var_subs_pct = sem(var_subs_pct),
-            mean_var_ind_pct = mean(var_ind_pct, na.rm=T),
-            sem_var_ind_pct = sem(var_ind_pct),
-            mean_var_resid_pct = mean(var_resid_pct, na.rm=T),
-            sem_var_resid_pct = sem(var_resid_pct)) %>%
-  na.exclude()
-```
-
-```{r}
-rel_df_sample_size_summary %>%
-  filter(!is.na(overall_difference)) %>%
-  ggplot(aes(factor(sample_size), mean_icc))+
-  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
-  geom_line(data = tmp, aes(factor(sample_size),mean_icc, color=ddm_raw, group=ddm_raw))+
-  geom_point(data = tmp, aes(factor(sample_size),mean_icc, color=ddm_raw))+
-  geom_errorbar(data = tmp,aes(ymin=mean_icc-sem_icc, ymax = mean_icc+sem_icc, color=ddm_raw), width = 0.1)+
-  facet_wrap(~overall_difference)+
-  ylab("Mean reliability of 100 samples of size n")+
-  xlab("Sample size")+
-  theme(legend.title = element_blank(),
-        legend.position = "bottom")+
-  ylim(-1,1)
-```
-
 
 ```{r}
 summary(lmer(icc ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))

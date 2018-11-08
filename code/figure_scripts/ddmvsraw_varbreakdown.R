@@ -17,7 +17,7 @@ rel_df %>%
             sem_var_subs_pct = sem(var_subs_pct),
             sem_var_ind_pct = sem(var_ind_pct),
             sem_var_resid_pct = sem(var_resid_pct)) %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_subs_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
+  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_subs_pct, color=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_point(position=position_dodge(width=0.75), size = 5)+
   geom_errorbar(aes(ymin = mean_var_subs_pct - sem_var_subs_pct, ymax = mean_var_subs_pct + sem_var_subs_pct), position=position_dodge(width=0.75))+
   facet_wrap(~overall_difference)+
@@ -26,7 +26,7 @@ rel_df %>%
   theme(legend.title = element_blank(),
         legend.position = 'bottom')
 
-ggsave(paste0('ddmvsraw_varsubs.', out_device), device = out_device, path = fig_path, width = 7, height = 3.5, units = "in")
+ggsave(paste0('ddmvsraw_varsubs.', out_device), device = out_device, path = fig_path, width = 10, height = 3.5, units = "in")
 
 rel_df %>%
   group_by(rt_acc, overall_difference, raw_fit) %>%
@@ -36,7 +36,7 @@ rel_df %>%
             sem_var_subs_pct = sem(var_subs_pct),
             sem_var_ind_pct = sem(var_ind_pct),
             sem_var_resid_pct = sem(var_resid_pct)) %>%
-  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_resid_pct, shape=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
+  ggplot(aes(factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")), mean_var_resid_pct, color=factor(rt_acc, levels = c("rt","accuracy", "drift rate", "threshold", "non-decision"), labels=c("Response Time", "Accuracy","Drift Rate", "Threshold", "Non-decision"))))+
   geom_point(position=position_dodge(width=0.75), size = 5)+
   geom_errorbar(aes(ymin = mean_var_resid_pct - sem_var_resid_pct, ymax = mean_var_resid_pct + sem_var_resid_pct), position=position_dodge(width=0.75))+
   facet_wrap(~overall_difference)+
@@ -45,4 +45,4 @@ rel_df %>%
   theme(legend.title = element_blank(),
         legend.position = 'bottom')
 
-ggsave(paste0('ddmvsraw_varresid.', out_device), device = out_device, path = fig_path, width = 7, height = 3.5, units = "in")
+ggsave(paste0('ddmvsraw_varresid.', out_device), device = out_device, path = fig_path, width = 10, height = 3.5, units = "in")

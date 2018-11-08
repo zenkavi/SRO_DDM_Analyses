@@ -1,4 +1,4 @@
-if(!exists('input_path')){
+if(!exists('input_path') | input_path != "/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/"){
   input_path = "/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/"
 }
 
@@ -25,7 +25,7 @@ rel_df_sample_size_summary = rel_df_sample_size %>%
             sem_var_resid_pct = sem(var_resid_pct))
 
 tmp = rel_df_sample_size %>% 
-  group_by(sample_size) %>%
+  group_by(sample_size, overall_difference) %>%
   summarise(mean_icc = mean(icc,na.rm=T),
             sem_icc = sem(icc), 
             mean_var_subs_pct = mean(var_subs_pct,na.rm=T),
@@ -33,4 +33,5 @@ tmp = rel_df_sample_size %>%
             mean_var_ind_pct = mean(var_ind_pct, na.rm=T),
             sem_var_ind_pct = sem(var_ind_pct),
             mean_var_resid_pct = mean(var_resid_pct,na.rm=T),
-            sem_var_resid_pct = sem(var_resid_pct))
+            sem_var_resid_pct = sem(var_resid_pct)) %>%
+  na.omit()
