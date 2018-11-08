@@ -16,87 +16,10 @@ The tasks included in this report are:
 unique(measure_labels$task_group)
 ```
 
-## T1 HDDM parameters
-
-Before going on with the rest of the report first decide on whether there are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
-
-### Parameter value
-
-Differences in distributions: using scaled differences
-
-```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_par_150vs522.jpeg'
-
-knitr::include_graphics(paste0(fig_path, fig_name))
-```
-
-Does the distribution of scaled difference scores (between using n=150 or n=552) have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
-
-```{r}
-if(!exists('hddm_pars')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_pars_data.R')
-}
-summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
-# Same result
-# summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
-```
-
-### Parameter reliability
-
-Are there differences in reliability depending which sample the HDDM parameters are estimated from? No.
-
-```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_rel_150vs522.jpeg'
-
-knitr::include_graphics(paste0(fig_path, fig_name))
-```
-
-Do hddm parameters differ in their reliability depending on whether they are derived from n=150 or n=552? No.
-
-```{r}
-if(!exists('hddm_rels')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_rel_data.R')}
-
-hddm_rels = hddm_rels %>%
-  gather(sample, value, -dv, -rt_acc)
-
-summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
-```
-
-### Parameter fit
-
-Do HDDM parameter estimates fit participant data better if the model prior is informed by a larger sample? To assess model fit we sampled parameters from the posterior predictive and generated predicted data (RT distributions) for each subject. Our measure of fit is the KL divergence of the predicted RT distributions from the actual RT distributions from these regressions for each participant.
-
-Here we compare model fits between the same model using a prior using n=552 vs n=150.
-
-*Note:* In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
-
-```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_fitstats_150vs522_t.jpeg'
-
-knitr::include_graphics(paste0(fig_path, fig_name))
-```
-
-```{r echo=FALSE, out.width='100%'}
-fig_name = 'HDDM_fitstats_150vs522.jpeg'
-
-knitr::include_graphics(paste0(fig_path, fig_name))
-```
-
-```{r}
-tmp = rbind(refit_fitstats, t1_hierarchical_fitstats) 
-
-summary(lm(log(m_kl) ~ sample*task_name, tmp %>% filter(task_name != "motor_selective_stop_signal")))
-```
-
-*Conclusion:* The fits for tasks differ from each other but the fits using either the full t1 sample (522) or just the retest sample do not differ from each other. For the sake of comparability I chose the refit parameters for the rest of the analyses.
+*NOTE:* We found that HDDM parameters for T1 data do not differ in any detectable way depending on whether they are fit using the full T1 sample (n=522) or only for the subset who completed the T2 battery as well (n=150). Therefore the T1 HDDM parameters in this report are based on fits from n=150. Details of these analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/HDDM150vs522.nb.html).
 
 ```{r echo=FALSE}
 #Workspace clean up
-rm(tmp)
-
-rm(hddm_pars, hddm_rels)
-
 boot_df = fullfit_boot_df %>%
   filter(dv %in% unique(refit_boot_df$dv) == FALSE)
 
@@ -239,7 +162,7 @@ rm(mer3)
 
 ## Sample size effects on reliability
 
-Differences in HDDM parameter reliability for t1 data using either n=552 or n=150 were reported above under [T1 HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/SRO_DDM_Analyses.nb.html#t1_hddm_parameters). No meaningful differences were found between these two sample sizes.
+Differences in HDDM parameter reliability for t1 data using either n=552 or n=150 were in a separate report on [T1 HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/HDDM150vs522.nb.html). No meaningful differences were found between these two sample sizes.
 
 But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
 
@@ -549,24 +472,21 @@ tmp
 summary(lmer(m_kl ~ time*proc+(1|task_name),tmp))
 ```
 
-## Clustering
+```{r echo=FALSE}
+rm(refit_fitstats, retest_flat_fitstats, retest_hierarchical_fitstats, t1_flat_fitstats, t1_hierarchical_fitstats, tmp)
+```
+
+## Dimensionality reduction
 
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
 (If the former they would be less useful than if the latter.)  
 
 This could be analyzed with factor analysis but there are more variables than observations so as a first pass we'll explore correlations.    
 
-For this we correlate each DDM measure with:    
-1. raw measures within task  
-2. other ddm measures across tasks  
-
 ```{r eval=FALSE, echo=FALSE}
-#Standardize datasets
+#Standardize dataset
 test_data_std = test_data %>% mutate_if(is.numeric, scale)
 test_data_std = test_data_std %>% select(-sub_id)
-
-retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
-retest_data_std = retest_data_std %>% select(-sub_id)
 
 #Get correlation table for test data and melt into long form
 test_data_cor = data.frame(cor(test_data_std, use="pairwise.complete.obs"))
@@ -581,18 +501,23 @@ test_data_cor = test_data_cor %>%
   rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
   rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
-  #task-task: if the measures are from the same task and one of them is a ddm measure while the other is raw
-  #ddm-ddm: if the measures are NOT from the same task and they are both ddm measures
-  mutate(task_task = ifelse((task_group_1 == task_group_2) & ((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") | (ddm_raw_1 == "raw" & ddm_raw_2 == "ddm")), "task-task", ifelse((task_group_1 != task_group_2) & (ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm"), "ddm-ddm",NA)), 
+  mutate(task_task = ifelse(task_group_1 == task_group_2,"same task", "different tasks"),
+         ddm_ddm = ifelse(ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm", "ddm-ddm",ifelse(ddm_raw_1 == "raw" & ddm_raw_2 == "raw", "raw-raw", ifelse((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") |(ddm_raw_1 == "raw" & ddm_raw_2 == "ddm"), "ddm-raw", NA))),
          time="test")
 
 #summarise by relationship between correlated variables for plotting
 test_data_cor_med = test_data_cor %>%
   na.exclude() %>%
-  group_by(task_task) %>%
+  group_by(task_task, ddm_ddm) %>%
   summarise(median_abs_cor = median(abs(value)),
             mean_abs_cor = mean(abs(value)),
             time="test")
+```
+
+```{r}
+#Standardize dataset
+retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
+retest_data_std = retest_data_std %>% select(-sub_id)
 
 #Get same correlation table for retest data
 retest_data_cor = data.frame(cor(retest_data_std, use="pairwise.complete.obs"))
@@ -606,26 +531,31 @@ retest_data_cor = retest_data_cor %>%
   rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
   rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
-  mutate(task_task = ifelse((task_group_1 == task_group_2) & ((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") | (ddm_raw_1 == "raw" & ddm_raw_2 == "ddm")), "task-task", ifelse((task_group_1 != task_group_2) & (ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm"), "ddm-ddm",NA)),
+  mutate(task_task = ifelse(task_group_1 == task_group_2,"same task", "different tasks"),
+         ddm_ddm = ifelse(ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm", "ddm-ddm",ifelse(ddm_raw_1 == "raw" & ddm_raw_2 == "raw", "raw-raw", ifelse((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") |(ddm_raw_1 == "raw" & ddm_raw_2 == "ddm"), "ddm-raw", NA))),
          time="retest")
 
 retest_data_cor_med = retest_data_cor %>%
   na.exclude() %>%
-  group_by(task_task) %>%
+  group_by(task_task, ddm_ddm) %>%
   summarise(median_abs_cor = median(abs(value)),
             mean_abs_cor = mean(abs(value)), 
             time = "retest")
+```
 
+```{r}
 all_data_cor = rbind(test_data_cor, retest_data_cor)
 all_data_cor_med = rbind(test_data_cor_med, retest_data_cor_med)
 
 all_data_cor %>%
   na.exclude() %>%
-  ggplot(aes(abs(value)))+
-  geom_histogram()+
-  geom_vline(data=all_data_cor_med, aes(xintercept=median_abs_cor), color="red", linetype = "dashed")+
-  facet_grid(time~task_task)+
-  xlab("Absolute correlation")
+  ggplot(aes(abs(value), fill=time))+
+  geom_histogram(position = "identity", alpha=0.5)+
+  geom_vline(data=all_data_cor_med, aes(xintercept=median_abs_cor, color=time), linetype = "dashed")+
+  facet_grid(task_task~ddm_ddm, scales = 'free_y')+
+  xlab("Absolute correlation")+
+  theme(legend.position = "bottom",
+        legend.title = element_blank())
 ```
 
 (Absolute) correlations between raw and ddm measures within a task are higher than those between ddm measures across tasks.
@@ -652,8 +582,6 @@ Factor analysis
 
 ## To Do
 
-
-- PLOT PRED AND ACTUALS RTS
 - Alternate DDMs  
 - Time and accuracy costs vs DDMs (Hedge et al, 2018, Psych Bull)  
 - Trial by trial variability as individual difference measres (Rouder and Haaf, psyArXiv)  

@@ -1,0 +1,87 @@
+---
+title: 'Changes in HDDM parameters depending on sample size used in informing the prior'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/SRO_DDM_Analyses_Workspace.R')
+```
+
+## T1 HDDM parameters
+
+*Leading question:* Are significant differences in the distributions of the HDDM parameter estimates and their reliabilities depending on whether they are fit on the full sample (n=552) or retest sample (n=150) for t1 data.  
+
+### Parameter value
+
+Differences in distributions: using scaled differences
+
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_par_150vs522.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+Does the distribution of scaled difference scores (between using n=150 or n=552) have a mean different than 0 allowing for random effects of parameter accounting for the different types of parameters? No.
+
+```{r}
+if(!exists('hddm_pars')){
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_pars_data.R')
+}
+summary(lmer(scaled_diff ~ rt_acc + (1|dv), hddm_pars))
+# Same result
+# summary(MCMCglmm(scaled_diff ~ rt_acc, random = ~ dv, data=hddm_pars))
+```
+
+### Parameter reliability
+
+Are there differences in reliability depending which sample the HDDM parameters are estimated from? No.
+
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_rel_150vs522.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+Do hddm parameters differ in their reliability depending on whether they are derived from n=150 or n=552? No.
+
+```{r}
+if(!exists('hddm_rels')){
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_rel_data.R')}
+
+hddm_rels = hddm_rels %>%
+  gather(sample, value, -dv, -rt_acc)
+
+summary(lmer(value ~ sample*rt_acc + (1|dv), hddm_rels))
+```
+
+### Parameter fit
+
+Do HDDM parameter estimates fit participant data better if the model prior is informed by a larger sample? To assess model fit we sampled parameters from the posterior predictive and generated predicted data (RT distributions) for each subject. Our measure of fit is the KL divergence of the predicted RT distributions from the actual RT distributions from these regressions for each participant.
+
+Here we compare model fits between the same model using a prior using n=552 vs n=150.
+
+*Note:* In calculating the fit statistics for the full sample (n=552) hierarchical models we used fewer samples from the posterior predictive due to computational constraints. We did, however, confirm that the number of samples from the posterior predictive did not have an effect on the fit statistics. Details of those analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html).
+
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_fitstats_150vs522_t.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+```{r echo=FALSE, out.width='100%'}
+fig_name = 'HDDM_fitstats_150vs522.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+```{r}
+tmp = rbind(refit_fitstats, t1_hierarchical_fitstats) 
+
+summary(lm(log(m_kl) ~ sample*task_name, tmp %>% filter(task_name != "motor_selective_stop_signal")))
+```
+
+*Conclusion:* The fits for tasks differ from each other but the fits using either the full t1 sample (522) or just the retest sample do not differ from each other. For the sake of comparability I chose the refit parameters for the rest of the analyses.
+
