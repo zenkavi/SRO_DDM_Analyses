@@ -468,11 +468,15 @@ test_flat_difference = test_flat_difference %>%
          par = ifelse(grepl("drift", dv), "drift", ifelse(grepl("thresh", dv), "thresh", ifelse(grepl("non_decision", dv), "non_decision", NA))))
 
 flat_difference = rbind(test_flat_difference, retest_flat_difference)
+```
 
+
+```{r}
 flat_difference %>%
   ggplot(aes(diff_pct))+
   geom_histogram()+
-  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par, scales="free")
+  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par, scales="free")+
+  xlab("Percent change")
 ```
 
 Is the average percentage change different than 0? No.
@@ -485,14 +489,12 @@ summary(lmer(diff_pct ~ time*par+(1|dv), flat_difference %>% mutate(pars = facto
 
 Do people change in the same way? Mostly.
 
-Plotting the raw parameter estimate that is estimated hierarchically against the estimate that is estimated without the hierarchy. Red lines are the 45-degree line. The fact that many points cluster around this line and that there are systematic deviances from it for any parameter at either time point suggests that the hierarchical and flat estimates are mostly the same.
+Plotting the raw parameter estimate that is estimated hierarchically against the estimate that is estimated without the hierarchy. Red lines are the 45-degree line. The fact that many points cluster around this line and that there are no systematic deviances from it for any parameter at either time point suggests that the hierarchical and flat estimates are mostly the same.
 
 ```{r}
-flat_difference %>%
-  ggplot(aes(hierarchical, flat))+
-  geom_point()+
-  geom_abline(aes(intercept=0, slope=1), color="red")+
-  facet_grid(factor(time, levels = c("test", "retest"),labels = c("test", "retest")) ~ par)
+fig_name = 'HDDM_par_flatvshier.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 ### Parameter reliability
@@ -504,14 +506,12 @@ rel_df_flat = make_rel_df(t1_df = test_hddm_flat, t2_df = retest_hddm_flat, metr
 
 rel_df_flat = rel_df_flat %>%
   left_join(rel_df[,c("dv", "icc", "rt_acc", "overall_difference")], by = "dv") 
+```
 
-rel_df_flat %>%
-  ggplot(aes(icc.y, icc.x))+
-  geom_point()+
-  geom_abline(aes(slope=1, intercept = 0), color="red")+
-  facet_wrap(~rt_acc)+
-  xlab("Hierarchical reliability")+
-  ylab("Flat reliability")
+```{r}
+fig_name = 'HDDM_rel_flatvshier.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 ```{r}
@@ -533,26 +533,20 @@ t1_hierarchical_fitstats = t1_hierarchical_fitstats %>%
   filter(subj_id %in% retest_hierarchical_fitstats$subj_id)
 
 tmp = rbind(retest_hierarchical_fitstats, retest_flat_fitstats, t1_hierarchical_fitstats, t1_flat_fitstats) %>%
-  separate(sample, c("time", "proc"), sep="_") %>%
-  select(log_rsq_adj, time, proc, subj_id, task_name) %>%
-  spread(proc, log_rsq_adj) 
-
-tmp %>%
-  ggplot(aes(hierarchical, flat))+
-  geom_point()+
-  geom_abline(aes(slope=1, intercept=0), color="red")+
-  facet_wrap(~time)
+  select(m_kl, subj_id, task_name, sample) %>%
+  separate(sample, c("time", "proc"), sep="_", remove=FALSE)
+  
 ```
 
 ```{r}
-with(tmp %>% filter(time == "t1"), cor.test(flat, hierarchical))
-with(tmp %>% filter(time == "retest"), cor.test(flat, hierarchical))
+fig_name = 'HDDM_fitstats_flatvshier.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
-
 ```{r}
-with(tmp %>% filter(time == "t1"), t.test(flat, hierarchical, paired=TRUE))
-with(tmp %>% filter(time == "retest"), t.test(flat, hierarchical, paired=TRUE))
+tmp
+summary(lmer(m_kl ~ time*proc+(1|task_name),tmp))
 ```
 
 ## Clustering
