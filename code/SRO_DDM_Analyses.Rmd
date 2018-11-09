@@ -471,6 +471,8 @@ rm(refit_fitstats, retest_flat_fitstats, retest_hierarchical_fitstats, t1_flat_f
 
 ## Dimensionality reduction
 
+### Correlations between variables of same/different type/task
+
 -- Do DDM parameters capture similar processes as the raw measures in a given task or do they capture processes that are more similar across tasks?
 (If the former they would be less useful than if the latter.)  
 
@@ -494,15 +496,20 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 all_data_cor_med
 ```
 
+Are the correlations between ddm parameters across tasks higher than correlations between ddm parameters and other variables from a given task?
+No. Correlations between variables of the same task are consistently higher.
+
+In some sense that is good. We haven't created all of these different tasks that putatively measure different things for nothing.
+
 ```{r}
-summary(lm(log(abs(value)) ~ ddm_ddm*task_task*time, all_data_cor))
+summary(lm(log(abs(value)) ~ ddm_ddm*task_task, all_data_cor))
 ```
 
 ```{r  eval=FALSE, echo=FALSE}
 rm(all_data_cor, all_data_cor_med)
 ```
 
-Factor analysis
+### Factor analysis
 
 ```{r}
 
