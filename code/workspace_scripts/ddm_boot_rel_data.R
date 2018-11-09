@@ -28,3 +28,7 @@ refit_boot_df = refit_boot_df %>%
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
          var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
 
+boot_df = fullfit_boot_df %>%
+  filter(dv %in% unique(refit_boot_df$dv) == FALSE)
+
+boot_df = rbind(boot_df, refit_boot_df)

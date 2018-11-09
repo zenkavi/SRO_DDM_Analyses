@@ -30,3 +30,4 @@ rel_df_refit = rel_df_refit %>%
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
          var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
 
+rel_df = rel_df_refit

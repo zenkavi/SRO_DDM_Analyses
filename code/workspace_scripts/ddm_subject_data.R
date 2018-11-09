@@ -60,3 +60,5 @@ test_data_hddm_refit = test_data_hddm_fullfit %>%
 test_data_hddm_refit = merge(test_data_hddm_refit, hddm_refits, by="sub_id")
 
 rm(hddm_refits, tmp)
+
+test_data = test_data_hddm_refit

@@ -2,7 +2,7 @@ source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_
 
 if(!exists('t1_hierarchical_fitstats') | !exists('retest_hierarchical_fitstats') | !exists('t1_flat_fitstats') | !exists('retest_flat_fitstats')){
   
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/workspace_scripts/hddm_fitstat_data.R')
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/hddm_fitstat_data.R')
   
   t1_hierarchical_fitstats = t1_hierarchical_fitstats %>%
     filter(subj_id %in% retest_hierarchical_fitstats$subj_id)
