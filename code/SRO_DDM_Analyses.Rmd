@@ -16,6 +16,8 @@ The tasks included in this report are:
 unique(measure_labels$task_group)
 ```
 
+Our analyses span `r nrow(measure_labels)` different measures.
+
 *NOTE:* We found that HDDM parameters for T1 data do not differ in any detectable way depending on whether they are fit using the full T1 sample (n=522) or only for the subset who completed the T2 battery as well (n=150). Therefore the T1 HDDM parameters in this report are based on fits from n=150. Details of these analyses can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/HDDM150vs522.nb.html).
 
 ```{r echo=FALSE}
@@ -511,15 +513,131 @@ rm(all_data_cor, all_data_cor_med)
 
 ### Factor analysis
 
+Can we recover a 3 factor structure for 
+-EZ and
+-HDDM variables that captures comparable processes across tasks?
+
+It's probably not great to use 
+1. untransformed (though scaled)  
+2. highly correlated 
+variables.  
+
+To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
+- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and   
+- dropping variables with r>0.85.
+
+Remove correlated variables within a task
+
+```{r}
+clean_test_data = remove_correlated_task_variables(test_data)
+```
+
+Remove outliers (>2.5 SD away)
+
+```{r}
+clean_test_data = cbind(sub_id = clean_test_data$sub_id, as.data.frame(apply(clean_test_data[, -which(names(clean_test_data) %in% c("sub_id"))], 2, remove_outliers)))
+```
+
+Transform skewed variables
+
+```{r}
+numeric_cols = get_numeric_cols()
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data) == T]
+clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
+```
+
+Drop subject identifier column, mean impute and drop cols with no variance
+
+```{r}
+clean_test_data_std = clean_test_data %>% mutate_if(is.numeric, scale)
+clean_test_data_std = clean_test_data_std %>% select(-sub_id)
+
+#mean imputation
+clean_test_data_std[is.na(clean_test_data_std)]=0
+
+#drop cols with no variance
+clean_test_data_std = clean_test_data_std %>%
+  select_if(function(col) sd(col) != 0)
+```
+
+Extract EZ and HDDM variables
+
+```{r}
+clean_test_data_ez = clean_test_data %>%
+  select(grep('EZ', names(clean_test_data_std), value=T))
+
+clean_test_data_hddm = clean_test_data %>%
+  select(grep('hddm', names(clean_test_data_std), value=T))
+```
+
+Factor analysis on T1 EZ data
+
+```{r}
+ez_fa = fa(clean_test_data_ez, 3, rotate='oblimin', fm='minres', n.obs=150, scores='tenBerge')
+```
+
+```{r}
+ez_loadings = as.data.frame(ez_fa$loadings[])
+
+ez_loadings[abs(ez_loadings)<0.3]=NA
+
+ez_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3) %>%
+  mutate(num_loading = 3-(is.na(MR1)+is.na(MR2)+is.na(MR3) ) )%>%
+  filter(num_loading!=0) %>%
+  arrange(-MR1, -MR2, -MR3) 
+```
+
+```{r}
+summary(ez_fa)
+```
+
+```{r}
+tmp = ez_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3) %>%
+  mutate(num_loading = 3-(is.na(MR1)+is.na(MR2)+is.na(MR3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-MR1, -MR2, -MR3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
+
+var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
+                           ifelse(grepl("thresh", tmp$dv), "#beaed4",
+                                        ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
+
+tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  theme(legend.position = "none",
+        axis.text.y = element_text(color = var_type))+
+  ylab("Absolute Loading")
+```
+
+### Reliability of lower dimensions
+
+-- Are these clusters more reliable than using either the raw or the DDM measures alone?
+
 ```{r}
 
 ```
 
--- Are these clusters more reliable than using either the raw or the DDM measures alone?
-
 ## Prediction
 
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
+
+```{r}
+
+```
 
 ## To Do
 

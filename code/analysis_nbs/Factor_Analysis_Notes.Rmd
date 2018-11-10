@@ -26,76 +26,16 @@ library(caret)
 op <- par(no.readonly = TRUE)
 ```
 
-### Load measure labels
-
-```{r}
-measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
-
-measure_labels = measure_labels %>% 
-  select(-measure_description) %>%
-  filter(ddm_task == 1) %>%
-  select(-ddm_task) %>%
-  filter(rt_acc != "other") %>%
-  mutate(dv = as.character(dv),
-         overall_difference = factor(overall_difference,levels = c("overall", "difference", "condition"), labels = c("non-contrast", "contrast", "condition")),
-         ddm_raw = ifelse(raw_fit == "raw", "raw", "ddm")) %>%
-  separate(dv, c("task_group", "var"), sep = "\\.", remove=FALSE, extra = "merge")
-```
-
-### Load time 1 data
-```{r}
-test_data <- read.csv(paste0(test_data_path,'variables_exhaustive.csv'))
-
-test_data_subs = as.character(test_data$X)
-
-test_data = test_data %>%
-  select(measure_labels$dv)
-
-test_data$sub_id = test_data_subs
-
-rm(test_data_subs)
-```
-
-### Load time 2 data 
-```{r}
-retest_data <- read.csv(paste0(retest_data_path,'variables_exhaustive.csv'))
-
-retest_data_subs = as.character(retest_data$X)
-
-retest_data = retest_data %>%
-  select(measure_labels$dv)
-
-retest_data$sub_id = retest_data_subs
-
-retest_data = retest_data[retest_data$sub_id %in% test_data$sub_id,]
-
-rm(retest_data_subs)
-```
-
-### Standardize data and (mean) impute
-
-```{r}
-#Standardize datasets
-test_data_std = test_data %>% mutate_if(is.numeric, scale)
-test_data_std = test_data_std %>% select(-sub_id)
-
-retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
-retest_data_std = retest_data_std %>% select(-sub_id)
-
-#mean imputation on standardized data
-test_data_std[is.na(test_data_std)]=0
-retest_data_std[is.na(retest_data_std)]=0
-```
-
 ### Clean data
 
 It's probably not great to use 
 1. untransformed (though scaled)  
 2. highly correlated 
-variables.
+variables.  
 
-To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)
- I'll apply the cleaning methods from the ontology pipeline - transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and dropping variables with r>0.85.
+To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
+- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and   
+- dropping variables with r>0.85.
 
 Remove correlated variables within a task
 
@@ -118,11 +58,6 @@ clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
 ```
 
 Drop subject identifier column, mean impute and drop cols with no variance
-
-```{r eval=FALSE}
-#Imputation with missForest package - SLOW
-test_data_std_miss <- missForest(as.matrix(test_data_std))
-```
 
 ```{r}
 clean_test_data_std = clean_test_data %>% mutate_if(is.numeric, scale)
@@ -304,9 +239,7 @@ data.frame(predict_retest$coord) %>%
   geom_abline(aes(slope=1, intercept=0))+
   facet_wrap(~key)+
   xlab("Factor score from test")+
-  ylab("Facot score from retest")
-
-
+  ylab("Factor score from retest")
 ```
 
 ##`stats` package functions
