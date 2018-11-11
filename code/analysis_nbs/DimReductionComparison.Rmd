@@ -1,0 +1,35 @@
+---
+title: 'Different approaches to dimensionality reduction of DDM variables'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/SRO_DDM_Analyses_Workspace.R')
+```
+
+Motivation for this separate notebook: PCA does an ok job parsing out the different DDM variable types but EFA doesn't. Initially I thought theoretically EFA would be more approrpriate since I am trying to capture 'latent variables' and didn't want to assume that the variables don't have any unique variance. I was particularly reluctant to do this since the same task correlations for all variable types were higher than correlations across tasks.
+
+My initial attempt to run EFA on EZ variables from test data gave some errors, the fit wasn't particularly good and the variable types did not really cluster separately. There was a cluster that included all the drift rates and another that included the majority of non-decision times. One could make an argument on using these clusters only as they capture separable processes but seems weak considering the bad fit of the model.
+
+My earlier efforts (pre Neuroecon) used PCA. These did a better job in clustering the different variable types. This isn't too surprising given that PCA will assume all variability within a measure is due to common variance. One could build an argument suggesting that PCA could/should be used in this case because even if the clusters are not necessarily reflecting common cognitive processes they method serves the purpose of reducing the dimensionality of rich data. This too seems weak if it's not going to add anything to our understanding of the cognitive processes and will remain a primarily stastistical exercise.
+
+All of this is obviously very post-hoc. How should I go about this decision?
+
+## PCA on EZ variables of test data
+
+## PCA on EZ variables of retest data
+
+## EFA on EZ variables of test data
+
+## EFA on EZ variables of retest data
+
+## PCA on HDDM variables of test data
+
+## PCA on HDDM variables of retest data
+
+## EFA on HDDM variables of test data
+
+## EFA on HDDM variables of retest data
