@@ -6,6 +6,32 @@ toc: yes
 toc_float: yes
 ---
 
+get_demographics function
+
+https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/selfregulation/utils/utils.py#L241
+
+output:
+
+```{r}
+
+```
+
+residualize_baseline function
+
+https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional_structure/utils.py#L479
+
+output:
+
+```{r}
+
+```
+
+Demographic Analysis class
+
+https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional_structure/results.py#L463
+
+output:
+
 ```{r}
 
 ```
