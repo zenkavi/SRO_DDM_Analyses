@@ -16,6 +16,9 @@ My initial attempt to run EFA on EZ variables from test data gave some errors, t
 
 My earlier efforts (pre Neuroecon) used PCA. These did a better job in clustering the different variable types. This isn't too surprising given that PCA will assume all variability within a measure is due to common variance. One could build an argument suggesting that PCA could/should be used in this case because even if the clusters are not necessarily reflecting common cognitive processes they method serves the purpose of reducing the dimensionality of rich data. This too seems weak if it's not going to add anything to our understanding of the cognitive processes and will remain a primarily stastistical exercise.
 
+More rencetly I am confused by other papers' use of PCA. E.g. the Econographics paper suggests:
+> To summarize these clusters, we make use of principal components analysis (PCA), a statistical technique that produces components—linear combinations of variables—that explain as much variation in the underlying behaviors as possible, as discussed in Section 3. These components highlight latent dimensions underlying the econographic variables.
+
 All of this is obviously very post-hoc. How should I go about this decision?
 
 ## PCA on EZ variables of test data

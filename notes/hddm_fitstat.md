@@ -10,28 +10,12 @@
 
 **post_pred_gen_debug**
 
-```
-
-```
 *Note: Order of output is NOT sequential (i.e. trial 1, trial 2 etc.)*
 index level 0: node - subject
 index level 1: sample - number of sampled parameter from its posterior predictive
 rt_sampled: rt's calculated using the sampled parameters
 rt: actual rt's
 
-# Goal
-
-- Generate predicted data using *post_pred_gen*  
-- Compare distribution of stimulated RT's to actual RT's  
-- Calculate: R^2 for regressing one over the other and KL divergence between these two distributions *for each subject*  
-- Plot predicted vs actual data for each subject in each task (possibly one figure per task with lines for each subject)
-
-# Plan:
-
-Choose from:
-- Figure out how to increase memory in R?
-- Fix calculate_hddm_fitstat.py and rerun?
-- Change samples to 50 in run_hddm_fitstat_{SAMPLE} for new ppc datasets and then run calculate_hddm_kl.R?
-
+# TODO:
 Read Ratcliff & Childers for comparison of DDMs and examples of individual difference analyses  
 Read Wagenmakers et al for EZ predictions  

@@ -374,6 +374,10 @@ fit_factanal <- factanal(clean_test_data_std, 5, rotate = "promax", n.obs = 0, s
 
 ##`psych` package functions
 
+Nice explanation of parallel analysis from the Econographics paper:
+
+> Once components are identified, the key question is, “How many are necessary to provide a good description of the underlying data?” Heuristically, we want to retain components only when the marginal explanatory power is high. In order to determine the number of components to retain we use an approach which captures this intuition: parallel analysis. Parallel analysis creates many random datasets with the same numbers of observations and variables as the original data. The average eigenvalues of the resulting correlation matrices are then computed. Components are kept as long as their associated eigenvalues are greater in the actual data than the average in the randomly generated data.
+
 ```{r eval=F}
 #To choose number of factors
 parallel <- fa.parallel(clean_test_data_std, fm = 'minres', fa = 'fa')
