@@ -1,4 +1,4 @@
-##Notes on: Rouder, J., & Haaf, J. M. (2018). A Psychometrics of Individual Differences in Experimental Tasks. PsyArXiv. August, 23.
+## Notes on: Rouder, J., & Haaf, J. M. (2018). A Psychometrics of Individual Differences in Experimental Tasks. PsyArXiv. August, 23.
 
 **TODO:**  
 
