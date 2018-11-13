@@ -6,31 +6,89 @@ toc: yes
 toc_float: yes
 ---
 
-get_demographics function
+## `get_demographics` function
 
 https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/selfregulation/utils/utils.py#L241
 
-output:
+- Arguments:
+  - dataset=None,
+  - cleanup=True,
+  - num_response_thresh=10,
+  - drop_categorical=True, verbose=False
+
+- Procedure:
+  - read in `demographic_health.csv`
+  - replace `WeightPounds<50` with NA
+  - replace `HeightInches<36` with NA
+  - replace `CaffienatedSodaCansPerDay<0` with NA
+  - replace `CaffieneOtherSourcesDayMG>2000` with NA
+  - create `BMI` column `BMI=demogdata['WeightPounds']*0.45 / (demogdata['HeightInches']*0.025)**2`
+  - drop categorical vars categorical_vars = ['HispanicLatino','Race',
+                        'DiseaseDiagnoses', 'DiseaseDiagnosesOther',
+                        'MotivationForParticipation', 'MotivationOther',
+                        'NeurologicalDiagnoses',
+                        'NeurologicalDiagnosesDescribe',
+                        'OtherDebtSources',
+                        'OtherDrugs', 'OtherRace', 'OtherTobaccoProducts',
+                        'PsychDiagnoses',
+                        'PsychDiagnosesOther']
+  - create `Obese` column `demogdata['BMI']>30)`
+  - only keep variables with fewer NaNs then num_response_thresh
+
+- Output:
+
 
 ```{r}
 
 ```
 
-residualize_baseline function
+## `residualize_baseline` function
 
 https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional_structure/utils.py#L479
 
-output:
+- Arguments:
+  - df
+  - baseline vars: ['Age', 'Sex']
+
+- Procedure:
+  - create df with baseline vars extracted from df
+  - remove baseline vars from df to create data df
+  - impute data df if there is missing data using `fancyimpute` `SimpleFill()`
+  - for each variable v in data df regress v ~ Age+Sex
+  - new v = v - predicted v using empirical Age+Sex
+
+- Output:
+  - data with columns that have the effect of Age and Sex residualized out
 
 ```{r}
 
 ```
 
-Demographic Analysis class
+## `Demographic Analysis` class
 
 https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional_structure/results.py#L463
 
-output:
+- Arguments:
+  - subclass of `EFA_Analysis` class
+  -  data, residualize=True, residualize_vars=['Age', 'Sex'], boot_iter=1000
+
+- Procedures:
+  - calls `residualize_baseline`
+  - (for change in retest data also calls `get_demographics` function)
+  - `Results` class calls the Demographic Analysis class for its DA attribute with data read is using `get_demographics`
+  - `EFA_Analysis` -->
+    - `run` -->
+      - `get_dimensionality` --> **`find_optimal_components`** --> `psychFA` looping through a range of factor numbers --> returns `best_c` (number of optimal components) and `metrics` df of fit statistic for each number of components
+      - `get_loadings` --> if no factor solution has been computed runs `psychFA` with the optimal number of components
+      - `computer_higher_order_factors` --> runs `find_optimal_components` and `psychFA` on the correlation matrix of subject level **`psychFA`** scores
+      - `get_factor_entropies`
+
+```{r eval=FALSE}
+psych::fa(data, n_components, rotate='oblimin', fm='ml', n_obs=0,
+                      scores='tenBerge')
+```
+
+- Output:
 
 ```{r}
 
