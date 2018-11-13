@@ -15,7 +15,3 @@ index level 0: node - subject
 index level 1: sample - number of sampled parameter from its posterior predictive
 rt_sampled: rt's calculated using the sampled parameters
 rt: actual rt's
-
-# TODO:
-Read Ratcliff & Childers for comparison of DDMs and examples of individual difference analyses  
-Read Wagenmakers et al for EZ predictions  

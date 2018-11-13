@@ -2,7 +2,7 @@
 
 **TODO:**  
 
-Can I compare flat vs hierarchical for each parameter and number of trials separately?
+Can I compare flat vs hierarchical for each parameter and number of trials separately? (Since this method is supposed to better for small number of trials?)
 
 **Exceprts**
 

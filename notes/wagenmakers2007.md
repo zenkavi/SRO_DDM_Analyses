@@ -5,6 +5,8 @@
 Run the 3 checks on all 14 tasks to see if EZ is appropriate for all.  
 Does EZ fit worse for tasks with putatively multiple cognitive processes?  
 Split half correlation on EZ for fitstats?
+The issue of contamination - fast guesses, slow responses?
+We applied these models somewhat blindly. Should we check how appropriate they are for these models by checking error rates etc. for each task?
 
 **Exceprts:**  
 

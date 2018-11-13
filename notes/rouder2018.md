@@ -2,7 +2,7 @@
 
 **TODO:**  
 
-Does our data support this?
+Does our data support 'importability', i.e. change in reliability statistic depending on sample size?
 Plot 'effect size' (for meaningful measures) and 'test-retest reliability' for randomly sampled samples of n.
 Is it because we don't have as many trials PER CONDITION?
 How is are test-retest correlations corrected for attenuation (Table 1 - https://github.com/PerceptionAndCognitionLab/ctx-reliability/blob/public/papers/submission/p.Rmd#L420)?
