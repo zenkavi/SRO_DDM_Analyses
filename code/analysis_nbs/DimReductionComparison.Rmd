@@ -6,11 +6,11 @@ toc: yes
 toc_float: yes
 ---
 
-Motivation for this separate notebook: PCA does an ok job parsing out the different DDM variable types but EFA doesn't. Initially I thought theoretically EFA would be more approrpriate since I am trying to capture 'latent variables' and didn't want to assume that the variables don't have any unique variance. I was particularly reluctant to do this since the same task correlations for all variable types were higher than correlations across tasks.
+Initially I thought theoretically EFA would be more approrpriate since I am trying to capture 'latent variables' and didn't want to assume that the variables don't have any unique variance. I was particularly reluctant to do this since the same task correlations for all variable types were higher than correlations across tasks.
 
 My initial attempt to run EFA on EZ variables from test data gave some errors, the fit wasn't particularly good and the variable types did not really cluster separately. There was a cluster that included all the drift rates and another that included the majority of non-decision times. One could make an argument on using these clusters only as they capture separable processes but seems weak considering the bad fit of the model.
 
-My earlier efforts (pre Neuroecon) used PCA. These did a better job in clustering the different variable types. This isn't too surprising given that PCA will assume all variability within a measure is due to common variance. One could build an argument suggesting that PCA could/should be used in this case because even if the clusters are not necessarily reflecting common cognitive processes they method serves the purpose of reducing the dimensionality of rich data. This too seems weak if it's not going to add anything to our understanding of the cognitive processes and will remain a primarily stastistical exercise.
+Pre Neuroecon I had used PCA. PCA assumes all variability within a measure is due to common variance. One could build an argument suggesting that PCA could/should be used in this case because even if the clusters are not necessarily reflecting common cognitive processes the method serves the purpose of reducing the dimensionality of rich data. This too seems weak if it's not going to add anything to our understanding of the cognitive processes and will remain a primarily stastistical exercise.
 
 More rencetly I am confused by other papers' use of PCA. E.g. the Econographics paper suggests:
 > To summarize these clusters, we make use of principal components analysis (PCA), a statistical technique that produces components—linear combinations of variables—that explain as much variation in the underlying behaviors as possible, as discussed in Section 3. These components highlight latent dimensions underlying the econographic variables.
@@ -38,6 +38,10 @@ rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 ```
+
+To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
+- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and   
+- dropping variables with r>0.85.
 
 ```{r}
 clean_test_data = remove_correlated_task_variables(test_data)
@@ -141,7 +145,7 @@ data.frame(ez_t1_pca_3$values) %>%
   arrange(-var_pct_diff)
 ```
 
-```{r}
+```{r fig.height=12}
 ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
 
 ez_t1_pca_3_loadings[abs(ez_t1_pca_3_loadings)<0.3]=NA
@@ -196,7 +200,7 @@ ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores
 anova(ez_t1_fa_3, ez_t1_fa_8)
 ```
 
-```{r}
+```{r fig.height=12}
 ez_t1_fa_3_loadings = as.data.frame(ez_t1_fa_3$loadings[])
 
 ez_t1_fa_3_loadings[abs(ez_t1_fa_3_loadings)<0.3]=NA
@@ -229,7 +233,7 @@ tmp%>%
   ylab("Absolute Loading")
 ```
 
-```{r}
+```{r fig.height=12}
 ez_t1_fa_8_loadings = as.data.frame(ez_t1_fa_8$loadings[])
 
 ez_t1_fa_8_loadings[abs(ez_t1_fa_8_loadings)<0.3]=NA

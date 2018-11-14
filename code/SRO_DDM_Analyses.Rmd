@@ -517,14 +517,7 @@ Can we recover a 3 factor structure for
 -EZ and
 -HDDM variables that captures comparable processes across tasks?
 
-It's probably not great to use 
-1. untransformed (though scaled)  
-2. highly correlated 
-variables.  
-
-To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
-- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and   
-- dropping variables with r>0.85.
+[Here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) is the notebook on my current confusion.
 
 ### Reliability of lower dimensions
 
