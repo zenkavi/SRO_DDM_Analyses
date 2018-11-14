@@ -103,30 +103,87 @@ res_clean_test_data_ez
 ## PCA on EZ variables of test data
 
 ```{r warning=FALSE, message=FALSE}
-pca_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, minc=2, maxc=20, model = "PCA")
+pca_ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, minc=2, maxc=20, model = "PCA")
 ```
 
 ```{r}
-pca_t1_comp_metrics %>% 
-  arrange(comp)
+pca_ez_t1_comp_metrics
+```
+
+```{r}
+ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
+```
+
+```{r}
+data.frame(ez_t1_pca_3$values) %>%
+  rename(eig = ez_t1_pca_3.values) %>%
+  arrange(-eig) %>%
+  mutate(var_pct = eig/sum(eig)*100,
+         pc = 1:n()) %>%
+  filter(pc<11)%>%
+  ggplot(aes(factor(pc), var_pct))+
+  geom_bar(stat="identity")+
+  ylab("Percentage of variance explained")+
+  xlab("Principal component")
+```
+
+```{r}
+data.frame(ez_t1_pca_3$values) %>%
+  rename(eig = ez_t1_pca_3.values) %>%
+  arrange(-eig) %>%
+  mutate(var_pct = eig/sum(eig)*100,
+         pc = 1:n(),
+         var_pct_shift = lead(var_pct),
+         var_pct_diff = var_pct - var_pct_shift) %>%
+  filter(pc<11) %>%
+  arrange(-var_pct_diff)
+```
+
+```{r}
+ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
+
+ez_t1_pca_3_loadings[abs(ez_t1_pca_3_loadings)<0.3]=NA
+
+tmp = ez_t1_pca_3_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, TC1, TC2, TC3) %>%
+  mutate(num_loading = 3-(is.na(TC1)+is.na(TC2)+is.na(TC3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-TC1, -TC2, -TC3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
+
+var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
+                  ifelse(grepl("thresh", tmp$dv), "#beaed4",
+                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
+tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  theme(legend.position = "none",
+        axis.text.y = element_text(color = var_type))+
+  ylab("Absolute Loading")
 ```
 
 ## EFA on EZ variables of test data
 
-```{r}
-dim(res_clean_test_data_ez)
-```
-
 ```{r warning=FALSE, message=FALSE}
-ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, fm = "minres", minc=2)
+efa_ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, fm = "minres", minc=2)
 ```
 
 ```{r}
-ez_t1_comp_metrics
+efa_ez_t1_comp_metrics
 ```
 
 ```{r}
-ez_t1_fa_8 = fa(res_clean_test_data_ez, ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
+ez_t1_fa_8 = fa(res_clean_test_data_ez, efa_ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
 ```
 
 ```{r}
