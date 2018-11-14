@@ -6,10 +6,6 @@ toc: yes
 toc_float: yes
 ---
 
-```{r, message=FALSE, warning=FALSE, include=FALSE}
-source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/SRO_DDM_Analyses_Workspace.R')
-```
-
 Motivation for this separate notebook: PCA does an ok job parsing out the different DDM variable types but EFA doesn't. Initially I thought theoretically EFA would be more approrpriate since I am trying to capture 'latent variables' and didn't want to assume that the variables don't have any unique variance. I was particularly reluctant to do this since the same task correlations for all variable types were higher than correlations across tasks.
 
 My initial attempt to run EFA on EZ variables from test data gave some errors, the fit wasn't particularly good and the variable types did not really cluster separately. There was a cluster that included all the drift rates and another that included the majority of non-decision times. One could make an argument on using these clusters only as they capture separable processes but seems weak considering the bad fit of the model.
@@ -21,11 +17,91 @@ More rencetly I am confused by other papers' use of PCA. E.g. the Econographics 
 
 All of this is obviously very post-hoc. How should I go about this decision?
 
+```{r}
+library(tidyverse)
+theme_set(theme_bw())
+options(scipen = 1, digits = 4)
+
+helper_func_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/'
+source(paste0(helper_func_path, 'get_numeric_cols.R'))
+source(paste0(helper_func_path, 'remove_outliers.R'))
+source(paste0(helper_func_path, 'remove_correlated_task_variables.R'))
+source(paste0(helper_func_path, 'transform_remove_skew.R'))
+source(paste0(helper_func_path, 'get_demographics.R'))
+source(paste0(helper_func_path, 'residualize_baseline.R'))
+source(paste0(helper_func_path, 'find_optimal_components.R'))
+
+ddm_workspace_scripts = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/'
+source(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'))
+source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
+rm(test_data_hddm_fullfit, test_data_hddm_refit)
+```
+
+```{r}
+clean_test_data = remove_correlated_task_variables(test_data)
+```
+
+Remove outliers (>2.5 SD away)
+
+```{r}
+clean_test_data = cbind(sub_id = clean_test_data$sub_id, as.data.frame(apply(clean_test_data[, -which(names(clean_test_data) %in% c("sub_id"))], 2, remove_outliers)))
+```
+
+Transform skewed variables
+
+```{r}
+numeric_cols = get_numeric_cols()
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data) == T]
+clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
+```
+
+Drop subject identifier column, mean impute and drop cols with no variance
+
+```{r}
+clean_test_data_std = clean_test_data %>% mutate_if(is.numeric, scale)
+clean_test_data_std = clean_test_data_std %>% select(-sub_id)
+
+#mean imputation
+clean_test_data_std[is.na(clean_test_data_std)]=0
+
+#drop cols with no variance
+clean_test_data_std = clean_test_data_std %>%
+  select_if(function(col) sd(col) != 0)
+```
+
+Extract EZ and HDDM variables
+
+```{r}
+clean_test_data_ez = clean_test_data %>%
+  select(grep('EZ', names(clean_test_data_std), value=T))
+
+clean_test_data_hddm = clean_test_data %>%
+  select(grep('hddm', names(clean_test_data_std), value=T))
+```
+
 ## PCA on EZ variables of test data
 
 ## PCA on EZ variables of retest data
 
 ## EFA on EZ variables of test data
+
+```{r}
+ez_t1_comp_metrics = find_optimal_components(clean_test_data_ez, fm = "minres", verbose = TRUE)
+
+
+
+fm="minres"
+data = clean_test_data_ez
+cur_c = 3
+out = psych::fa(data, 1, rotate='oblimin', fm=fm, scores='tenBerge')
+out$BIC
+
+tmp = get_demographics()
+
+find_optimal_components(data, minc=1, maxc=5, fm="minres", verbose = T)
+
+
+```
 
 ## EFA on EZ variables of retest data
 

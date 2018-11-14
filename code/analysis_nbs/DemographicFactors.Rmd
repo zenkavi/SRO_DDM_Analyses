@@ -161,7 +161,7 @@ psych::fa(data, n_components, rotate='oblimin', fm='ml', n_obs=0,
 
 
 ```{r}
-find_optimal_components = function(data, minc=1, maxc=50){
+find_optimal_components = function(data, minc=1, maxc=50, fm="ml"){
   
   require(tidyverse)
   
@@ -173,7 +173,7 @@ find_optimal_components = function(data, minc=1, maxc=50){
   best_c = 0
   
   for(cur_c in n_components){
-    out = psych::fa(data, cur_c, rotate='oblimin', fm='ml', scores='tenBerge')
+    out = psych::fa(data, cur_c, rotate='oblimin', fm=fm, scores='tenBerge')
     if(is.null(out$BIC)){
       curr_metric = NA
     }
