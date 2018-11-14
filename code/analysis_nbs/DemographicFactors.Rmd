@@ -107,7 +107,31 @@ https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional
   - data with columns that have the effect of Age and Sex residualized out
 
 ```{r}
+residualize_baseline = function(df, baseline_vars = c("Age", "Sex")){
+  require(tidyverse)
+  require(broom)
+  
+  X = df %>%
+    select(one_of(baseline_vars))
+  
+  Y = df %>%
+    select(-one_of(c("X", baseline_vars)))
+  
+  
+  for(v in names(Y)){
+    tmp = cbind(X, Y %>% select(v))
+    m = lm(as.formula(paste(v,' ~ .')), tmp)
+    tmp$v_pred = tmp[,v] - predict(m)
+    Y[,v] = tmp$v_pred
+  }
+  
+  return(Y)
+  
+}
+```
 
+```{r}
+res_demographics = residualize_baseline(demographics)
 ```
 
 ## `Demographic Analysis` class
@@ -134,8 +158,9 @@ psych::fa(data, n_components, rotate='oblimin', fm='ml', n_obs=0,
                       scores='tenBerge')
 ```
 
-- Output:
 
 ```{r}
-
+find_optimal_components = function(){
+  
+}
 ```
