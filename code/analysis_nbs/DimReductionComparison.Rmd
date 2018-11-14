@@ -35,6 +35,8 @@ ddm_workspace_scripts = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyse
 source(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'))
 source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
+
+fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 ```
 
 ```{r}
