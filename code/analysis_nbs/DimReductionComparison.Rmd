@@ -102,15 +102,107 @@ res_clean_test_data_ez
 
 ## PCA on EZ variables of test data
 
+```{r warning=FALSE, message=FALSE}
+pca_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, minc=2, maxc=20, model = "PCA")
+```
+
+```{r}
+pca_t1_comp_metrics %>% 
+  arrange(comp)
+```
+
 ## EFA on EZ variables of test data
 
 ```{r}
 dim(res_clean_test_data_ez)
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, fm = "minres", minc=2)
 ```
+
+```{r}
+ez_t1_comp_metrics
+```
+
+```{r}
+ez_t1_fa_8 = fa(res_clean_test_data_ez, ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
+```
+
+```{r}
+ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
+```
+
+```{r}
+anova(ez_t1_fa_3, ez_t1_fa_8)
+```
+
+```{r}
+ez_t1_fa_3_loadings = as.data.frame(ez_t1_fa_3$loadings[])
+
+ez_t1_fa_3_loadings[abs(ez_t1_fa_3_loadings)<0.3]=NA
+
+tmp = ez_t1_fa_3_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3) %>%
+  mutate(num_loading = 3-(is.na(MR1)+is.na(MR2)+is.na(MR3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-MR1, -MR2, -MR3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
+
+var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
+                  ifelse(grepl("thresh", tmp$dv), "#beaed4",
+                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
+tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  theme(legend.position = "none",
+        axis.text.y = element_text(color = var_type))+
+  ylab("Absolute Loading")
+```
+
+```{r}
+ez_t1_fa_8_loadings = as.data.frame(ez_t1_fa_8$loadings[])
+
+ez_t1_fa_8_loadings[abs(ez_t1_fa_8_loadings)<0.3]=NA
+
+tmp = ez_t1_fa_8_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3, MR4, MR5, MR6, MR7, MR8) %>%
+  mutate(num_loading = 8-(is.na(MR1)+is.na(MR2)+is.na(MR3)+is.na(MR4)+is.na(MR5)+is.na(MR6)+is.na(MR7)+is.na(MR8) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-MR1, -MR2, -MR3,-MR1, -MR5, -MR6,-MR7, -MR8) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
+
+var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
+                  ifelse(grepl("thresh", tmp$dv), "#beaed4",
+                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
+tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  theme(legend.position = "none",
+        axis.text.y = element_text(color = var_type))+
+  ylab("Absolute Loading")
+```
+
 
 ## PCA on HDDM variables of test data
 
