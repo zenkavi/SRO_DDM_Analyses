@@ -72,43 +72,54 @@ clean_test_data_std = clean_test_data_std %>%
 Extract EZ and HDDM variables
 
 ```{r}
-clean_test_data_ez = clean_test_data %>%
+clean_test_data_ez = clean_test_data_std %>%
   select(grep('EZ', names(clean_test_data_std), value=T))
 
-clean_test_data_hddm = clean_test_data %>%
+clean_test_data_hddm = clean_test_data_std %>%
   select(grep('hddm', names(clean_test_data_std), value=T))
+```
+
+Residualize Age and Sex effects 
+
+```{r}
+data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/'
+release = 'Complete_03-29-2018/'
+dataset = 'demographic_health.csv'
+
+demographics = get_demographics(dataset = paste0(data_path, release, dataset))
+
+demographics = demographics %>%
+  filter(X %in% clean_test_data$sub_id)
+```
+
+```{r}
+clean_test_data_ez = cbind(clean_test_data_ez, demographics[,c("Age", "Sex")])
+
+res_clean_test_data_ez = residualize_baseline(clean_test_data_ez)
+
+res_clean_test_data_ez
 ```
 
 ## PCA on EZ variables of test data
 
-## PCA on EZ variables of retest data
-
 ## EFA on EZ variables of test data
 
 ```{r}
-ez_t1_comp_metrics = find_optimal_components(clean_test_data_ez, fm = "minres", verbose = TRUE)
-
-
-
-fm="minres"
-data = clean_test_data_ez
-cur_c = 3
-out = psych::fa(data, 1, rotate='oblimin', fm=fm, scores='tenBerge')
-out$BIC
-
-tmp = get_demographics()
-
-find_optimal_components(data, minc=1, maxc=5, fm="minres", verbose = T)
-
-
+dim(res_clean_test_data_ez)
 ```
 
-## EFA on EZ variables of retest data
+```{r}
+ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, fm = "minres", minc=2)
+```
 
 ## PCA on HDDM variables of test data
 
-## PCA on HDDM variables of retest data
-
 ## EFA on HDDM variables of test data
+
+## PCA on EZ variables of retest data
+
+## EFA on EZ variables of retest data
+
+## PCA on HDDM variables of retest data
 
 ## EFA on HDDM variables of retest data
