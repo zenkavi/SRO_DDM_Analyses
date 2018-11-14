@@ -50,7 +50,8 @@ get_demographics = function(dataset=NA, cleanup=TRUE, num_response_thresh=10, dr
              CaffienatedSodaCansPerDay = ifelse(CaffienatedSodaCansPerDay < 0, NA, CaffienatedSodaCansPerDay),
              CaffieneOtherSourcesDayMG = ifelse(CaffieneOtherSourcesDayMG>2000, NA, CaffieneOtherSourcesDayMG),
              BMI = WeightPounds*0.45/(HeightInches*0.025)^2,
-             Obese = ifelse(BMI>30, 1, 0))
+             Obese = ifelse(BMI>30, 1, 0)) %>%
+      select(-WeightPounds, -HeightInches)
   }
   
   categorical_vars = c('HispanicLatino','Race',
@@ -160,7 +161,103 @@ psych::fa(data, n_components, rotate='oblimin', fm='ml', n_obs=0,
 
 
 ```{r}
-find_optimal_components = function(){
+find_optimal_components = function(data, minc=1, maxc=50){
   
+  require(tidyverse)
+  
+  steps_since_best = 0 # count steps since last best metric.
+  maxc = min(maxc, dim(data)[2])
+  n_components = seq(minc,maxc)
+  metrics = data.frame(comp=n_components, BIC = NA)
+  best_metric = NA
+  best_c = 0
+  
+  for(cur_c in n_components){
+    out = psych::fa(data, cur_c, rotate='oblimin', fm='ml', scores='tenBerge')
+    if(is.null(out$BIC)){
+      curr_metric = NA
+    }
+    else{
+      curr_metric = out$BIC
+    }
+    
+    metrics$BIC[which(metrics$comp == cur_c)] = curr_metric
+  }
+  
+  metrics = metrics %>% arrange(BIC)
+  
+  return(metrics)
 }
+```
+
+```{r warning=FALSE, message=FALSE}
+demog_comp_metrics = find_optimal_components(res_demographics)
+
+demog_comp_metrics
+```
+
+```{r}
+demog_fa = psych::fa(res_demographics, demog_comp_metrics$comp[1], rotate='oblimin', fm='ml', scores='tenBerge')
+```
+
+```{r}
+demog_fa_loadings = data.frame(demog_fa$loadings[]) %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv,everything()) %>%
+  rename(Daily_Smoking=ML1,
+       Lifetime_Smoking=ML2,
+       Problem_Drinking=ML3,
+       Mental_Health = ML4,
+       Drug_Use = ML5,
+       Obesity = ML6,
+       Binge_Drinking=ML7,
+       Unsafe_Drinking=ML8,
+       Income_LifeMilestones=ML9)
+
+demog_fa_loadings
+```
+
+```{r}
+demog_fa_scores = data.frame(demog_fa$scores[]) %>%
+  mutate(sub_id = demographics$X) %>%
+  select(sub_id,everything()) %>%
+  rename(Daily_Smoking=ML1,
+       Lifetime_Smoking=ML2,
+       Problem_Drinking=ML3,
+       Mental_Health = ML4,
+       Drug_Use = ML5,
+       Obesity = ML6,
+       Binge_Drinking=ML7,
+       Unsafe_Drinking=ML8,
+       Income_LifeMilestones=ML9)
+
+demog_fa_scores
+```
+
+
+```{r}
+ian_demog = read.csv('/Users/zeynepenkavi/Downloads/demo_factors.csv')
+ian_demog = ian_demog %>%
+  rename(sub_id = X,
+         Drug_Use = Drug.Use,
+         Mental_Health = Mental.Health,
+         Problem_Drinking = Problem.Drinking,
+         Daily_Smoking = Daily.Smoking,
+         Binge_Drinking = Binge.Drinking,
+         Lifetime_Smoking = Lifetime.Smoking,
+         Unsafe_Drinking = Unsafe.Drinking,
+         Income_LifeMilestones = Income...Life.Milestones) %>%
+  mutate(exec = 'ian')
+```
+
+```{r}
+demog_fa_scores %>%
+  mutate(exec = "me") %>%
+  rbind(.,ian_demog) %>%
+  gather(key, value, -sub_id, -exec) %>%
+  spread(exec, value) %>%
+  ggplot(aes(ian, me))+
+  geom_point()+
+  geom_abline(intercept=0, slope=1)+
+  facet_wrap(~key)
 ```
