@@ -523,20 +523,6 @@ Can we recover a 3 factor structure for
 
 -- Are these clusters more reliable than using either the raw or the DDM measures alone?
 
-```{r}
-
-```
-
 ## Prediction
 
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
-
-```{r}
-
-```
-
-## To Do
-
-- Alternate DDMs  
-- Time and accuracy costs vs DDMs (Hedge et al, 2018, Psych Bull)  
-- Trial by trial variability as individual difference measres (Rouder and Haaf, psyArXiv)  
