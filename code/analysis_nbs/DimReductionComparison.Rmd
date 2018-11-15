@@ -109,8 +109,7 @@ res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
 ### Eigen on cor matrix
 
 ```{r}
-# ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
-ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="none")
+ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
 ```
 
 ```{r}
@@ -143,30 +142,13 @@ ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
 
 ez_t1_pca_3_loadings[abs(ez_t1_pca_3_loadings)<0.3]=NA
 
-# tmp = ez_t1_pca_3_loadings %>%
-#   mutate(dv = row.names(.)) %>%
-#   select(dv, TC1, TC2, TC3) %>%
-#   mutate(num_loading = 3-(is.na(TC1)+is.na(TC2)+is.na(TC3) ) ) %>%
-#   filter(num_loading!=0) %>%
-#   select(-num_loading) %>%
-#   arrange(-TC1, -TC2, -TC3) %>%
-#   mutate(order_num = 1:n(),
-#          dv = reorder(dv, -order_num)) %>%
-#   select(-order_num) %>%
-#   gather(Factor, Loading, -dv) %>%
-#   na.exclude() %>%
-#   mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
-#          var_type = ifelse(grepl("drift", dv), "drif rate",
-#                   ifelse(grepl("thresh", dv), "threshold",
-#                          ifelse(grepl("non_dec", dv), "non-decision", NA))))
-
 tmp = ez_t1_pca_3_loadings %>%
   mutate(dv = row.names(.)) %>%
-  select(dv, PC1, PC2, PC3) %>%
-  mutate(num_loading = 3-(is.na(PC1)+is.na(PC2)+is.na(PC3) ) ) %>%
+  select(dv, TC1, TC2, TC3) %>%
+  mutate(num_loading = 3-(is.na(TC1)+is.na(TC2)+is.na(TC3) ) ) %>%
   filter(num_loading!=0) %>%
   select(-num_loading) %>%
-  arrange(-PC1, -PC2, -PC3) %>%
+  arrange(-TC1, -TC2, -TC3) %>%
   mutate(order_num = 1:n(),
          dv = reorder(dv, -order_num)) %>%
   select(-order_num) %>%
@@ -177,7 +159,6 @@ tmp = ez_t1_pca_3_loadings %>%
                   ifelse(grepl("thresh", dv), "threshold",
                          ifelse(grepl("non_dec", dv), "non-decision", NA))))
 
-        
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
   geom_bar(stat = "identity")+
@@ -200,24 +181,50 @@ p
 
 ```{r}
 ez_svd <- svd(res_clean_test_data_ez)
-```
-
-
-```{r}
-tmp = data.frame(ez_svd$v) %>%
-  mutate(dv = names(res_clean_test_data_ez)) %>%
-  select(dv, everything())
-
-max(tmp %>%
-  filter(dv == "shape_matching.EZ_drift") %>%
-  select(-dv))
+ncomp = 3
+df <- nrow(res_clean_test_data_ez) - 1
+ez_t1_svd_rawLoadings = ez_svd$v[,1:ncomp] %*% diag(ez_svd$d/sqrt(df), ncomp, ncomp)
+ez_t1_svd_rotatedLoadings <- GPArotation::oblimin(ez_t1_svd_rawLoadings)$loadings
 ```
 
 ```{r}
-ez_t1_pca_3_loadings %>%
-  mutate(dv = row.names(.))%>%
-  select(dv, everything())%>%
-  arrange(-TC1)
+ez_t1_svd_rotatedLoadings[abs(ez_t1_svd_rotatedLoadings)<0.3]=NA
+
+tmp = data.frame(ez_t1_svd_rotatedLoadings) %>%
+  mutate(dv = names(res_clean_test_data_ez),
+         X1 = -1*X1,
+         X3= -1*X3) %>%
+  select(dv, X1, X2, X3)%>%
+  mutate(num_loading = 3-(is.na(X1)+is.na(X2)+is.na(X3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-X1, -X2, -X3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  ylab("Absolute Loading")+
+  scale_fill_manual(values=cbbPalette)+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
+        legend.title=element_blank(),
+        axis.text.y = element_blank())
+
+ggsave('EZ_SVD_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+
+p
 ```
 
 ## EFA on EZ variables of test data

@@ -28,10 +28,10 @@ z.svd$d/sqrt(df) # variances of PCs
 z.svd$v # factor loadings
 
 pca.m2 <- princomp(~trunk + weight + length + headroom, data = auto %>% mutate_if(is.numeric, scale)) #very similar to pca.m1
-pca.m3 <- principal(auto %>% select(trunk,weight,length,headroom)%>% mutate_if(is.numeric, scale), 4, rotate = "none")
+pca.m3 <- principal(auto %>% select(trunk,weight,length,headroom)%>% mutate_if(is.numeric, scale), 4, rotate = "oblimin")
 
 #How to get princomp/prcomp/svd like factor loadings from psych::principal
-#Converting them to have unit length [NOTE THIS DOESN'T GET SIGNS]
+#Converting them to have unit length [NOTE THIS DOESN'T GET SIGNS - only scaling]
 data.frame(pca.m3$loadings[]^2) %>%
   mutate(PC1 = sqrt(PC1/colSums(pca.m3$loadings[]^2)[1]),
          PC2 = sqrt(PC2/colSums(pca.m3$loadings[]^2)[2]),
@@ -40,12 +40,19 @@ data.frame(pca.m3$loadings[]^2) %>%
 
 #How to get psych::principal like scores from prcomp
 ncomp = 4
-pca.m1$rotation[,1:ncomp] %*% diag(pca.m1$sdev, ncomp, ncomp)
+rawLoadings = pca.m1$rotation[,1:ncomp] %*% diag(pca.m1$sdev, ncomp, ncomp)
+rotatedLoadings <- GPArotation::oblimin(rawLoadings)$loadings
 
 #How to get psych::principal like scores from prcomp
 ncomp = 4
-pca.m1$rotation[,1:ncomp] %*% diag(pca.m1$sdev, ncomp, ncomp)
+rawLoadings = z.svd$v[,1:ncomp] %*% diag(z.svd$d/sqrt(df), ncomp, ncomp)
+rotatedLoadings <- GPArotation::oblimin(rawLoadings)$loadings
 
+###############
+###############
+###############
+#How to get rotated vs urotated loadings/scores
+#As found in https://stats.stackexchange.com/questions/59213/how-to-compute-varimax-rotated-principal-components-in-r/137003#137003
 irisX <- iris[,1:4]      # Iris data
 ncomp <- 2
 
