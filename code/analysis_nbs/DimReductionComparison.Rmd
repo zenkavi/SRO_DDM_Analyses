@@ -18,7 +18,7 @@ More rencetly I am confused by other papers' use of PCA. E.g. the Econographics 
 All of this is obviously very post-hoc. How should I go about this decision?
 
 ```{r}
-library(tidyverse)
+require(tidyverse)
 theme_set(theme_bw())
 options(scipen = 1, digits = 4)
 
@@ -44,46 +44,45 @@ To reduce the number of variables in a data-driven way (instead of just selectin
 - transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and   
 - dropping variables with r>0.85.
 
+Extract EZ variables
+
 ```{r}
-clean_test_data = remove_correlated_task_variables(test_data)
+test_data_ez = test_data %>%
+  select(grep('EZ', names(test_data), value=T))
+```
+
+Remove variables that are correlated >0.85
+
+```{r}
+clean_test_data_ez = remove_correlated_task_variables(test_data_ez)
 ```
 
 Remove outliers (>2.5 SD away)
 
 ```{r}
-clean_test_data = cbind(sub_id = clean_test_data$sub_id, as.data.frame(apply(clean_test_data[, -which(names(clean_test_data) %in% c("sub_id"))], 2, remove_outliers)))
+clean_test_data_ez = as.data.frame(apply(clean_test_data_ez, 2, remove_outliers))
 ```
 
 Transform skewed variables
 
 ```{r}
+#Nothing to transform
 numeric_cols = get_numeric_cols()
-numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data) == T]
-clean_test_data = transform_remove_skew(clean_test_data, numeric_cols)
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data_ez) == T]
+clean_test_data_ez = transform_remove_skew(clean_test_data_ez, numeric_cols)
 ```
 
 Drop subject identifier column, mean impute and drop cols with no variance
 
 ```{r}
-clean_test_data_std = clean_test_data %>% mutate_if(is.numeric, scale)
-clean_test_data_std = clean_test_data_std %>% select(-sub_id)
+clean_test_data_ez_std = clean_test_data_ez %>% mutate_if(is.numeric, scale)
 
 #mean imputation
-clean_test_data_std[is.na(clean_test_data_std)]=0
+clean_test_data_ez_std[is.na(clean_test_data_ez_std)]=0
 
 #drop cols with no variance
-clean_test_data_std = clean_test_data_std %>%
+clean_test_data_ez_std = clean_test_data_ez_std %>%
   select_if(function(col) sd(col) != 0)
-```
-
-Extract EZ and HDDM variables
-
-```{r}
-clean_test_data_ez = clean_test_data_std %>%
-  select(grep('EZ', names(clean_test_data_std), value=T))
-
-clean_test_data_hddm = clean_test_data_std %>%
-  select(grep('hddm', names(clean_test_data_std), value=T))
 ```
 
 Residualize Age and Sex effects 
@@ -96,29 +95,22 @@ dataset = 'demographic_health.csv'
 demographics = get_demographics(dataset = paste0(data_path, release, dataset))
 
 demographics = demographics %>%
-  filter(X %in% clean_test_data$sub_id)
+  filter(X %in% test_data$sub_id)
 ```
 
 ```{r}
-clean_test_data_ez = cbind(clean_test_data_ez, demographics[,c("Age", "Sex")])
+clean_test_data_ez_std = cbind(clean_test_data_ez_std, demographics[,c("Age", "Sex")])
 
-res_clean_test_data_ez = residualize_baseline(clean_test_data_ez)
-
-res_clean_test_data_ez
+res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
 ```
 
 ## PCA on EZ variables of test data
 
-```{r warning=FALSE, message=FALSE}
-pca_ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, minc=2, maxc=20, model = "PCA")
-```
+### Eigen on cor matrix
 
 ```{r}
-pca_ez_t1_comp_metrics
-```
-
-```{r}
-ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
+# ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
+ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="none")
 ```
 
 ```{r}
@@ -151,13 +143,30 @@ ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
 
 ez_t1_pca_3_loadings[abs(ez_t1_pca_3_loadings)<0.3]=NA
 
+# tmp = ez_t1_pca_3_loadings %>%
+#   mutate(dv = row.names(.)) %>%
+#   select(dv, TC1, TC2, TC3) %>%
+#   mutate(num_loading = 3-(is.na(TC1)+is.na(TC2)+is.na(TC3) ) ) %>%
+#   filter(num_loading!=0) %>%
+#   select(-num_loading) %>%
+#   arrange(-TC1, -TC2, -TC3) %>%
+#   mutate(order_num = 1:n(),
+#          dv = reorder(dv, -order_num)) %>%
+#   select(-order_num) %>%
+#   gather(Factor, Loading, -dv) %>%
+#   na.exclude() %>%
+#   mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+#          var_type = ifelse(grepl("drift", dv), "drif rate",
+#                   ifelse(grepl("thresh", dv), "threshold",
+#                          ifelse(grepl("non_dec", dv), "non-decision", NA))))
+
 tmp = ez_t1_pca_3_loadings %>%
   mutate(dv = row.names(.)) %>%
-  select(dv, TC1, TC2, TC3) %>%
-  mutate(num_loading = 3-(is.na(TC1)+is.na(TC2)+is.na(TC3) ) ) %>%
+  select(dv, PC1, PC2, PC3) %>%
+  mutate(num_loading = 3-(is.na(PC1)+is.na(PC2)+is.na(PC3) ) ) %>%
   filter(num_loading!=0) %>%
   select(-num_loading) %>%
-  arrange(-TC1, -TC2, -TC3) %>%
+  arrange(-PC1, -PC2, -PC3) %>%
   mutate(order_num = 1:n(),
          dv = reorder(dv, -order_num)) %>%
   select(-order_num) %>%
@@ -179,11 +188,36 @@ p = tmp%>%
   scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
-        legend.title=element_blank())
+        legend.title=element_blank(),
+        axis.text.y = element_blank())
 
 ggsave('EZ_PCA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
+```
+
+### SVD
+
+```{r}
+ez_svd <- svd(res_clean_test_data_ez)
+```
+
+
+```{r}
+tmp = data.frame(ez_svd$v) %>%
+  mutate(dv = names(res_clean_test_data_ez)) %>%
+  select(dv, everything())
+
+max(tmp %>%
+  filter(dv == "shape_matching.EZ_drift") %>%
+  select(-dv))
+```
+
+```{r}
+ez_t1_pca_3_loadings %>%
+  mutate(dv = row.names(.))%>%
+  select(dv, everything())%>%
+  arrange(-TC1)
 ```
 
 ## EFA on EZ variables of test data
@@ -231,7 +265,7 @@ tmp = ez_t1_fa_3_loadings %>%
                          ifelse(grepl("non_dec", dv), "non-decision", NA))))
 
      
-tmp%>%         
+p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
   geom_bar(stat = "identity")+
   facet_wrap(~Factor, nrow=1)+
@@ -242,14 +276,14 @@ tmp%>%
   scale_color_identity()+
   theme(legend.position = "bottom",
         legend.title=element_blank(),
-        axis.te)
+        axis.text.y = element_blank())
 
 ggsave('EZ_FA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
 ```
 
-```{r fig.height=12}
+```{r}
 ez_t1_fa_8_loadings = as.data.frame(ez_t1_fa_8$loadings[])
 
 ez_t1_fa_8_loadings[abs(ez_t1_fa_8_loadings)<0.3]=NA
@@ -266,20 +300,26 @@ tmp = ez_t1_fa_8_loadings %>%
   select(-order_num) %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
-  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
-
-var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
-                  ifelse(grepl("thresh", tmp$dv), "#beaed4",
-                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
-tmp%>%         
-  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
   geom_bar(stat = "identity")+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
-  theme(legend.position = "none",
-        axis.text.y = element_text(color = var_type))+
-  ylab("Absolute Loading")
+  ylab("Absolute Loading")+
+  scale_fill_manual(values=cbbPalette)+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
+        legend.title=element_blank(),
+        axis.text.y = element_blank())
+
+ggsave('EZ_FA_8.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+
+p
 ```
 
 

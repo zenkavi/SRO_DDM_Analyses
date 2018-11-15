@@ -14,3 +14,4 @@
 [Difference between PCA and EFA](https://community.jmp.com/t5/JMP-Blog/Principal-components-or-factor-analysis/ba-p/38347)
 **[Difference between PCA and EFA]**(https://stats.idre.ucla.edu/spss/seminars/efa-spss/)
 [K-means clustering hands-on tutorial](https://www.datacamp.com/community/tutorials/k-means-clustering-r)
+[Relationship between SVD and PCA](https://stats.stackexchange.com/questions/134282/relationship-between-svd-and-pca-how-to-use-svd-to-perform-pca)
