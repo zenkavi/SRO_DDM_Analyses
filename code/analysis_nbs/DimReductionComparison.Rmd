@@ -37,7 +37,7 @@ source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
-cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
 To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
@@ -163,23 +163,27 @@ tmp = ez_t1_pca_3_loadings %>%
   select(-order_num) %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
-  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")),
-         var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
-                  ifelse(grepl("thresh", tmp$dv), "#beaed4",
-                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA))))
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
 
         
-tmp%>%         
-  ggplot(aes(dv, abs(Loading), fill=var_type))+
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
   geom_bar(stat = "identity")+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
   ylab("Absolute Loading")+
   scale_fill_manual(values=cbbPalette)+
-  theme(legend.position = "none")
-        #axis.text.y = element_text(color = var_type))+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
+        legend.title=element_blank())
 
+ggsave('EZ_PCA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+
+p
 ```
 
 ## EFA on EZ variables of test data
@@ -204,7 +208,7 @@ ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores
 anova(ez_t1_fa_3, ez_t1_fa_8)
 ```
 
-```{r fig.height=12}
+```{r}
 ez_t1_fa_3_loadings = as.data.frame(ez_t1_fa_3$loadings[])
 
 ez_t1_fa_3_loadings[abs(ez_t1_fa_3_loadings)<0.3]=NA
@@ -221,20 +225,28 @@ tmp = ez_t1_fa_3_loadings %>%
   select(-order_num) %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
-  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
 
-var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
-                  ifelse(grepl("thresh", tmp$dv), "#beaed4",
-                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
+     
 tmp%>%         
-  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
   geom_bar(stat = "identity")+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
-  theme(legend.position = "none",
-        axis.text.y = element_text(color = var_type))+
-  ylab("Absolute Loading")
+  ylab("Absolute Loading")+
+  scale_fill_manual(values=cbbPalette)+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
+        legend.title=element_blank(),
+        axis.te)
+
+ggsave('EZ_FA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+
+p
 ```
 
 ```{r fig.height=12}
