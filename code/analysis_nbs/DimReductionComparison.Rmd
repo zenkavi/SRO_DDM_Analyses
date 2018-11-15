@@ -37,6 +37,7 @@ source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
 To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
@@ -145,7 +146,7 @@ data.frame(ez_t1_pca_3$values) %>%
   arrange(-var_pct_diff)
 ```
 
-```{r fig.height=12}
+```{r}
 ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
 
 ez_t1_pca_3_loadings[abs(ez_t1_pca_3_loadings)<0.3]=NA
@@ -162,20 +163,23 @@ tmp = ez_t1_pca_3_loadings %>%
   select(-order_num) %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
-  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")))
-
-var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
+  mutate(load_sign = factor(ifelse(Loading>0,"pos","neg")),
+         var_type = ifelse(grepl("drift", tmp$dv), "#7fc97f",
                   ifelse(grepl("thresh", tmp$dv), "#beaed4",
-                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA)))         
+                         ifelse(grepl("non_dec", tmp$dv), "#fdc086", NA))))
+
+        
 tmp%>%         
-  ggplot(aes(dv, abs(Loading), fill=load_sign))+
+  ggplot(aes(dv, abs(Loading), fill=var_type))+
   geom_bar(stat = "identity")+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
-  theme(legend.position = "none",
-        axis.text.y = element_text(color = var_type))+
-  ylab("Absolute Loading")
+  ylab("Absolute Loading")+
+  scale_fill_manual(values=cbbPalette)+
+  theme(legend.position = "none")
+        #axis.text.y = element_text(color = var_type))+
+
 ```
 
 ## EFA on EZ variables of test data
