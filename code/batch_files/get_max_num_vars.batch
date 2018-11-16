@@ -10,4 +10,4 @@
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=zenkavi@stanford.edu
 source activate SRO
-Rscript --vanilla get_max_num_vars.R /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/res_clean_test_data_ez.csv 88 210 /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/
+Rscript --vanilla get_max_num_vars.R /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/res_clean_test_data_ez.csv 88 210 1000 /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/
