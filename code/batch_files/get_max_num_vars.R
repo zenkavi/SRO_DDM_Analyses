@@ -11,9 +11,11 @@ out_path = args[4]
 
 out = data.frame(comb = NA, comb_det = NA)
 
+print('Begining outer loop of variable numbers...')
 for(cur_num_vars in c(min_num_vars:max_num_vars)){
-  
-  combos = combn(ncol(data), cur_num_vars)
+
+  print(paste0('Begining inner loop of variable combinations for num_vars: ', cur_num_vars))  
+  combos = combn(dim(data)[2], cur_num_vars)
   
   for(i in c(1:dim(combos)[2])){
     cur_comb = combos[,i]
