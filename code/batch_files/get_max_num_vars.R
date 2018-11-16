@@ -2,11 +2,12 @@
 args = commandArgs(trailingOnly=TRUE)
 
 #Usage:
-#Rscript --vanilla get_max_num_vars.R file_name min_num_vars max_num_vars
+#Rscript --vanilla get_max_num_vars.R file_name min_num_vars max_num_vars out_path
 
 data = read.csv(args[1])
-min_num_vars = args[2]
-max_num_vars = args[3]
+min_num_vars = as.numeric(args[2])
+max_num_vars = as.numeric(args[3])
+out_path = args[4]
 
 out = data.frame(comb = NA, comb_det = NA)
 
@@ -25,5 +26,5 @@ for(cur_num_vars in c(min_num_vars:max_num_vars)){
 
 out = out[-1,]
 
-write.csv()
+write.csv(out, paste0(out_path, 'max_num_vars.csv'), row.names = FALSE)
 
