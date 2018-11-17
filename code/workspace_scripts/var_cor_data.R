@@ -1,5 +1,5 @@
 if(!exists('rel_df')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/workspace_scripts/ddm_point_rel_data.R')
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_point_rel_data.R')
 }
 
 if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')){

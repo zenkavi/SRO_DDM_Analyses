@@ -6,17 +6,6 @@ toc: yes
 toc_float: yes
 ---
 
-Initially I thought theoretically EFA would be more approrpriate since I am trying to capture 'latent variables' and didn't want to assume that the variables don't have any unique variance. I was particularly reluctant to do this since the same task correlations for all variable types were higher than correlations across tasks.
-
-My initial attempt to run EFA on EZ variables from test data gave some errors, the fit wasn't particularly good and the variable types did not really cluster separately. There was a cluster that included all the drift rates and another that included the majority of non-decision times. One could make an argument on using these clusters only as they capture separable processes but seems weak considering the bad fit of the model.
-
-Pre Neuroecon I had used PCA. PCA assumes all variability within a measure is due to common variance. One could build an argument suggesting that PCA could/should be used in this case because even if the clusters are not necessarily reflecting common cognitive processes the method serves the purpose of reducing the dimensionality of rich data. This too seems weak if it's not going to add anything to our understanding of the cognitive processes and will remain a primarily stastistical exercise.
-
-More rencetly I am confused by other papers' use of PCA. E.g. the Econographics paper suggests:
-> To summarize these clusters, we make use of principal components analysis (PCA), a statistical technique that produces components—linear combinations of variables—that explain as much variation in the underlying behaviors as possible, as discussed in Section 3. These components highlight latent dimensions underlying the econographic variables.
-
-All of this is obviously very post-hoc. How should I go about this decision?
-
 ```{r}
 require(tidyverse)
 theme_set(theme_bw())
@@ -40,9 +29,9 @@ fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figu
 cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
-To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline: 
-- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and   
-- dropping variables with r>0.85.
+To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline:   
+- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and     
+- dropping variables with r>0.85.  
 
 Extract EZ variables
 
@@ -98,7 +87,7 @@ demographics = demographics %>%
   filter(X %in% test_data$sub_id)
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 clean_test_data_ez_std = cbind(clean_test_data_ez_std, demographics[,c("Age", "Sex")])
 
 res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
@@ -106,11 +95,53 @@ res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
 
 ## PCA on EZ variables of test data
 
+### Number of variables analysis
+
+In this dataset there are more variables than observations. 
+
+Given the large number of measures some can possible be represented as linear combinations as others.  
+
+This would result in 0 or negative values in the eigenvalues of the correlation matrix and would mean that the correlation matrix is not positive definite.  
+
+It is hard to detect such multiple dependencies. Given the number of possible combinations of variables from all possible variables it is also impossible to compute the exact largest combination of variables that has a positive definite correlation matrix.
+
+So instead I used a sampling approach. Below is a plot of the proportion of positive definite matrices out of 1000 samples of the given numbers of variables drawn from all variables.
+
+The plot shows that there is a steady decrease in the proportion of positive definite matrices the more variables are used. It sharply drops to 0 from chance at 160 variables.   
+
+```{r}
+max_num_vars_summary = read.csv('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/max_num_vars_summary.csv')
+
+p = max_num_vars_summary %>%
+  ggplot(aes(as.factor(cur_num_vars), prop_det_pos))+
+  geom_point()+
+  geom_line(group=1)+
+  xlab("Number of variables drawn")+
+  ylab("Proportion of positive definite correlation matrices")+
+  theme(axis.text.x = element_text(angle = 90))
+
+ggsave('max_num_vars.jpeg',plot=p, device = 'jpeg', path = fig_path, width =12, height = 4, units = "in")
+
+p
+```
+
+This means that any effort to reduce dimensionality using an eigenvalue decomposition will encounter problems. 
+
+For numerical efficiency and stability many PCA applications use singular value decomposition instead (e.g. see documentation for the `princomp` and `prcomp` functions in the `base` package).
+
+To be consistent with the dimensionality reduction methods used in the ontology paper I will use the `psych` package functions for PCA and EFA. These rely on an eigenvalue decomposition but have a built-in function to smooth over negative eigenvalues that prints a warning but continues to execute and yield a solution.
+
+But to confirm that the resulting factors are not problematic I will run an SVD and recover the same parameters as well.
+
 ### Eigen on cor matrix
+
+Eigenvalue decomposition on correlation matrix.
 
 ```{r}
 ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
 ```
+
+Scree plot of first 10 components
 
 ```{r}
 data.frame(ez_t1_pca_3$values) %>%
@@ -125,6 +156,8 @@ data.frame(ez_t1_pca_3$values) %>%
   xlab("Principal component")
 ```
 
+Difference in percentage of variance explained is below 1% after the 3 component.
+
 ```{r}
 data.frame(ez_t1_pca_3$values) %>%
   rename(eig = ez_t1_pca_3.values) %>%
@@ -132,10 +165,10 @@ data.frame(ez_t1_pca_3$values) %>%
   mutate(var_pct = eig/sum(eig)*100,
          pc = 1:n(),
          var_pct_shift = lead(var_pct),
-         var_pct_diff = var_pct - var_pct_shift) %>%
-  filter(pc<11) %>%
-  arrange(-var_pct_diff)
+         var_pct_diff = var_pct - var_pct_shift)
 ```
+
+Visualizing the first three coponents and coloring them by the parameter type.
 
 ```{r}
 ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
@@ -172,12 +205,14 @@ p = tmp%>%
         legend.title=element_blank(),
         axis.text.y = element_blank())
 
-ggsave('EZ_PCA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+ggsave('EZ_PCA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
 ```
 
 ### SVD
+
+Double checking the above factor solution using a singular value decomposition and oblimin rotation.
 
 ```{r}
 ez_svd <- svd(res_clean_test_data_ez)
@@ -222,32 +257,46 @@ p = tmp%>%
         legend.title=element_blank(),
         axis.text.y = element_blank())
 
-ggsave('EZ_SVD_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+ggsave('EZ_SVD_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
 ```
 
 ## EFA on EZ variables of test data
 
+How many factors should be extracted from the EFA? To answer this we run models extracting 2 to 50 components and rank them by BIC.
+
 ```{r warning=FALSE, message=FALSE}
 efa_ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, fm = "minres", minc=2)
 ```
+
+This suggests that a 16 component solution would be the best fitting model.
 
 ```{r}
 efa_ez_t1_comp_metrics
 ```
 
+Fit the model suggested by the BIC comparison.
+
 ```{r}
-ez_t1_fa_8 = fa(res_clean_test_data_ez, efa_ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
+ez_t1_fa_16 = fa(res_clean_test_data_ez, efa_ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
 ```
+
+Fit the 3 factor model that is of theoretical interest.
 
 ```{r}
 ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
 ```
 
+Differences in BIC's are difficult to interpret. 
+
+I tried to run a more formal model comparison between the 3 factor solution that we have theoretical reasons for and the 16 factor model that is selected based on BIC. Below is the result. I'm not quiet sure how to interpreted but it seems to suggest that the more complicated model is not significantly better.
+
 ```{r}
-anova(ez_t1_fa_3, ez_t1_fa_8)
+anova(ez_t1_fa_3, ez_t1_fa_16)
 ```
+
+So what would the 3 factor solution look like? Not surprisingly, very similar to the PC's.
 
 ```{r}
 ez_t1_fa_3_loadings = as.data.frame(ez_t1_fa_3$loadings[])
@@ -285,15 +334,17 @@ p = tmp%>%
         legend.title=element_blank(),
         axis.text.y = element_blank())
 
-ggsave('EZ_FA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+ggsave('EZ_FA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
 ```
 
-```{r}
-ez_t1_fa_8_loadings = as.data.frame(ez_t1_fa_8$loadings[])
+Are there notable differences in the 16 factor solution? (Looking at the first half of the model) The three parameter types seem to load on two factors each instead of one. These tend to reflect separations between tasks (e.g. one non-decision factor is just for the shape matching task while the other contains all the remaining ones). Since these differences are of less theoretical interest for this exercise I think choosing the three factor solution would be appropriate.
 
-ez_t1_fa_8_loadings[abs(ez_t1_fa_8_loadings)<0.3]=NA
+```{r}
+ez_t1_fa_16_loadings = as.data.frame(ez_t1_fa_16$loadings[])
+
+ez_t1_fa_16_loadings[abs(ez_t1_fa_16_loadings)<0.3]=NA
 
 tmp = ez_t1_fa_8_loadings %>%
   mutate(dv = row.names(.)) %>%
@@ -321,23 +372,289 @@ p = tmp%>%
   scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
+        legend.title=element_blank())
+        #axis.text.y = element_blank())
+
+ggsave('EZ_FA_T1_8.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+```
+
+```{r}
+knitr::include_graphics(paste0(fig_path, 'EZ_FA_T1_8.jpeg'))
+```
+
+Based on these results I ran 3 factor EFA's on the remaining data
+
+## EFA on HDDM variables of test data
+
+Extract EZ variables
+
+```{r}
+test_data_hddm = test_data %>%
+  select(grep('hddm', names(test_data), value=T))
+```
+
+Remove variables that are correlated >0.85
+
+```{r}
+clean_test_data_hddm = remove_correlated_task_variables(test_data_hddm)
+```
+
+Remove outliers (>2.5 SD away)
+
+```{r}
+clean_test_data_hddm = as.data.frame(apply(clean_test_data_hddm, 2, remove_outliers))
+```
+
+Transform skewed variables
+
+```{r}
+#Nothing to transform
+numeric_cols = get_numeric_cols()
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data_hddm) == T]
+clean_test_data_hddm = transform_remove_skew(clean_test_data_hddm, numeric_cols)
+```
+
+Drop subject identifier column, mean impute and drop cols with no variance
+
+```{r}
+clean_test_data_hddm_std = clean_test_data_hddm %>% mutate_if(is.numeric, scale)
+
+#mean imputation
+clean_test_data_hddm_std[is.na(clean_test_data_hddm_std)]=0
+
+#drop cols with no variance
+clean_test_data_hddm_std = clean_test_data_hddm_std %>%
+  select_if(function(col) sd(col) != 0)
+```
+
+Residualize Age and Sex effects 
+
+```{r warning=FALSE, message=FALSE}
+clean_test_data_hddm_std = cbind(clean_test_data_hddm_std, demographics[,c("Age", "Sex")])
+
+res_clean_test_data_hddm = residualize_baseline(clean_test_data_hddm_std)
+```
+
+Fit the 3 factor model that is of theoretical interest.
+
+```{r}
+hddm_t1_fa_3 = fa(res_clean_test_data_hddm, 3, rotate='oblimin', fm='minres', scores='tenBerge')
+```
+
+The three factor model does not work as well for HDDM's because of the 106 variables we have 75 are drift rates, 17 are threshold and 14 are non-decision times. This is because while all the parameters are fit separately for EZ only the drift rate parameter is allowed to vary by condition for the HDDM. So the model is mostly separating out drift rates from each other.
+
+```{r}
+hddm_t1_fa_3_loadings = as.data.frame(hddm_t1_fa_3$loadings[])
+
+hddm_t1_fa_3_loadings[abs(hddm_t1_fa_3_loadings)<0.3]=NA
+
+tmp = hddm_t1_fa_3_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3) %>%
+  mutate(num_loading = 3-(is.na(MR1)+is.na(MR2)+is.na(MR3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-MR1, -MR2, -MR3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+
+     
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  ylab("Absolute Loading")+
+  scale_fill_manual(values=cbbPalette)+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
         legend.title=element_blank(),
         axis.text.y = element_blank())
 
-ggsave('EZ_FA_8.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+ggsave('HDDM_T1_FA_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
 ```
 
+Does it fit better if I use just the main drift rates and not the condition ones?
 
-## PCA on HDDM variables of test data
+```{r}
+hddm_var_subset = c("adaptive_n_back.hddm_drift" , "attention_network_task.hddm_drift", "choice_reaction_time.hddm_drift", "directed_forgetting.hddm_drift", "dot_pattern_expectancy.hddm_drift" , "local_global_letter.hddm_drift", "motor_selective_stop_signal.hddm_drift",  "recent_probes.hddm_drift", "shape_matching.hddm_drift" , "simon.hddm_drift", "stim_selective_stop_signal.hddm_drift", "stop_signal.hddm_drift", "stroop.hddm_drift" , "threebytwo.hddm_drift", "adaptive_n_back.hddm_thresh", "attention_network_task.hddm_thresh", "choice_reaction_time.hddm_thresh", "directed_forgetting.hddm_thresh", "dot_pattern_expectancy.hddm_thresh.logTr", "local_global_letter.hddm_thresh", "motor_selective_stop_signal.hddm_thresh", "recent_probes.hddm_thresh", "shape_matching.hddm_thresh", "simon.hddm_thresh", "stim_selective_stop_signal.hddm_thresh.logTr", "stop_signal.hddm_thresh", "stop_signal.hddm_thresh_high", "stop_signal.hddm_thresh_low", "stop_signal.proactive_slowing_hddm_thresh", "stroop.hddm_thresh", "threebytwo.hddm_thresh", grep("non_dec", names(test_data_hddm), value = T))
 
-## EFA on HDDM variables of test data
+res_clean_test_data_hddm_subset = res_clean_test_data_hddm %>% select(hddm_var_subset)
+```
 
-## PCA on EZ variables of retest data
+```{r}
+hddm_t1_fa_3_subset = fa(res_clean_test_data_hddm_subset, 3, rotate='oblimin', fm='minres', scores='tenBerge')
+```
+
+Then it works better but still not doing a great job separating out thresholds from non-decision times.
+
+```{r}
+hddm_t1_fa_3_subset_loadings = as.data.frame(hddm_t1_fa_3_subset$loadings[])
+
+hddm_t1_fa_3_subset_loadings[abs(hddm_t1_fa_3_subset_loadings)<0.3]=NA
+
+tmp = hddm_t1_fa_3_subset_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3) %>%
+  mutate(num_loading = 3-(is.na(MR1)+is.na(MR2)+is.na(MR3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-MR1, -MR2, -MR3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+
+     
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  ylab("Absolute Loading")+
+  scale_fill_manual(values=cbbPalette)+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
+        legend.title=element_blank())
+        #axis.text.y = element_blank())
+
+ggsave('HDDM_T1_FA_3_subset.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+```
+```{r}
+knitr::include_graphics(paste0(fig_path, 'HDDM_T1_FA_3_subset.jpeg'))
+```
 
 ## EFA on EZ variables of retest data
 
-## PCA on HDDM variables of retest data
+Using the model from the test data to predict the retest data. Later will use factor scores from this to calculate reliability of reduced dimensions.
+
+```{r}
+retest_data_ez = retest_data %>%
+  select(grep('EZ', names(retest_data), value=T))
+```
+
+Remove variables that are correlated >0.85
+
+```{r}
+clean_retest_data_ez = remove_correlated_task_variables(retest_data_ez)
+```
+
+Remove outliers (>2.5 SD away)
+
+```{r}
+clean_retest_data_ez = as.data.frame(apply(clean_retest_data_ez, 2, remove_outliers))
+```
+
+Transform skewed variables
+
+```{r}
+#Nothing to transform
+numeric_cols = get_numeric_cols()
+numeric_cols = numeric_cols[numeric_cols %in% names(clean_retest_data_ez) == T]
+clean_retest_data_ez = transform_remove_skew(clean_retest_data_ez, numeric_cols)
+```
+
+Drop subject identifier column, mean impute and drop cols with no variance
+
+```{r}
+clean_retest_data_ez_std = clean_retest_data_ez %>% mutate_if(is.numeric, scale)
+
+#mean imputation
+clean_retest_data_ez_std[is.na(clean_retest_data_ez_std)]=0
+
+#drop cols with no variance
+clean_retest_data_ez_std = clean_retest_data_ez_std %>%
+  select_if(function(col) sd(col) != 0)
+```
+
+Residualize Age and Sex effects 
+
+```{r warning=FALSE, message=FALSE}
+clean_retest_data_ez_std = cbind(clean_retest_data_ez_std, demographics[,c("Age", "Sex")])
+
+res_clean_retest_data_ez = residualize_baseline(clean_retest_data_ez_std)
+```
+
+Predict retest data using the 3 factor EFA from test data.
+
+```{r}
+ez_t2_fa_3 = predict(ez_t1_fa_3, res_clean_retest_data_ez)
+```
 
 ## EFA on HDDM variables of retest data
+
+```{r}
+retest_data_hddm = retest_data %>%
+  select(grep('hddm', names(retest_data), value=T))
+```
+
+Remove variables that are correlated >0.85
+
+```{r}
+clean_retest_data_hddm = remove_correlated_task_variables(retest_data_hddm)
+```
+
+Remove outliers (>2.5 SD away)
+
+```{r}
+clean_retest_data_hddm = as.data.frame(apply(clean_retest_data_hddm, 2, remove_outliers))
+```
+
+Transform skewed variables as in T1
+
+```{r}
+clean_retest_data_hddm = clean_retest_data_hddm %>%
+  mutate(dot_pattern_expectancy.hddm_thresh.logTr = log(dot_pattern_expectancy.hddm_thresh),
+stim_selective_stop_signal.hddm_thresh.logTr = log(stim_selective_stop_signal.hddm_thresh)) %>%
+  select(-dot_pattern_expectancy.hddm_thresh,-stim_selective_stop_signal.hddm_thresh)
+```
+
+Drop subject identifier column, mean impute and drop cols with no variance
+
+```{r}
+clean_retest_data_hddm_std = clean_retest_data_hddm %>% mutate_if(is.numeric, scale)
+
+#mean imputation
+clean_retest_data_hddm_std[is.na(clean_retest_data_hddm_std)]=0
+
+#drop cols with no variance
+clean_retest_data_hddm_std = clean_retest_data_hddm_std %>%
+  select_if(function(col) sd(col) != 0)
+```
+
+Residualize Age and Sex effects 
+
+```{r warning=FALSE, message=FALSE}
+clean_retest_data_hddm_std = cbind(clean_retest_data_hddm_std, demographics[,c("Age", "Sex")])
+
+res_clean_retest_data_hddm = residualize_baseline(clean_retest_data_hddm_std)
+```
+
+Select only the vars that went in to the limited set of hddm variables
+
+```{r}
+res_clean_retest_data_hddm_subset = res_clean_retest_data_hddm %>%
+  select(hddm_var_subset)
+```
+
+Predict using the 3 factor EFA from T1
+
+```{r}
+hddm_t2_fa_3_subset = predict(hddm_t1_fa_3_subset, res_clean_retest_data_hddm_subset)
+```

@@ -517,7 +517,7 @@ Can we recover a 3 factor structure for
 -EZ and
 -HDDM variables that captures comparable processes across tasks?
 
-[Here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) is the notebook on my current confusion.
+[Here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) is where I explore this more extensively and decide to use a 3 factor solution for the EZ variables.
 
 ### Reliability of lower dimensions
 
