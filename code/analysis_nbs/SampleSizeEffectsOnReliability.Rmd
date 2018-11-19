@@ -1,0 +1,181 @@
+---
+title: 'Sample Size Effects on Reliability'
+output:
+github_document:
+toc: yes
+toc_float: yes
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(lme4)
+```
+
+## Sample size effects on reliability
+
+Differences in HDDM parameter reliability for t1 data using either n=552 or n=150 were in a separate report on [T1 HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/HDDM150vs522.nb.html). No meaningful differences were found between these two sample sizes.
+
+But even 150 is a large sample size for psychological studies, especially forced choice reaction time tasks that are included in this report. Here we look at how the reliability for raw and ddm measures change for sample sizes that are more common in studies using these tasks (25, 50, 75, 100, 125, 150)
+
+*Note:* Not refitting HDDM's for each of these sample sizes since a. there were no differences in parameter stability for n=150 vs 552 and b. a more comprehensive comparison using non-hierarchical estimates and model fit indices will follow. *[Should I revisit this? - 150 and 552 might be too large to lead to changes in parameter estimates but smaller samples that are more common in psych studies might sway estimates more. If this were the case then wouldn't we expect the comparison of non-hierarchical vs hierarchical estimates to be the largest? If there is no difference then we don't have to worry about it?]*
+
+*Note:* Some variables do not have enough variance to calculate reliability for difference sample sizes. These variables are:  
+>stroop.post_error_slowing  
+>simon.std_rt_error  
+>shape_matching.post_error_slowing  
+>directed_forgetting.post_error_slowing  
+>choice_reaction_time.post_error_slowing  
+>choice_reaction_time.std_rt_error  
+>dot_pattern_expectancy.post_error_slowing  
+>motor_selective_stop_signal.go_rt_std_error  
+>motor_selective_stop_signal.go_rt_error  
+>attention_network_task.post_error_slowing  
+>recent_probes.post_error_slowing  
+>simon.post_error_slowing  
+>dot_pattern_expectancy.BY_errors  
+
+```{r}
+source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_reldf_sample_size.R')
+```
+
+Does the mean reliability change with sample size?
+
+Yes. The larger the sample size the more reliable is a given measure on average. The largest increase in reliability is when shifting from 25 to 50 subjects. This is important because many studies using these measures have sample sizes <50 per group.
+
+```{r}
+fig_name = 'rel_by_samplesize.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+When <15 subjects are used to calculate the measures they are significantly less reliable.
+
+```{r}
+summary(lmer(icc ~ factor(sample_size) + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Are there differences between any other sample sizes? This ignores the differences between variables but there seems to be only differences between n=10 and all other larger sample size.
+
+```{r}
+with(rel_df_sample_size_summary, pairwise.t.test(mean_icc, sample_size, p.adjust.method = "bonferroni"))
+```
+
+Does the change in reliabiliity with sample size vary by variable type?
+
+No. The changes do not differ by raw vs. ddm measures or for contrast and condition measures compared to non-contrast measures. Contrast and condition measures are just less reliable overall.
+
+```{r}
+summary(lmer(icc ~ sample_size * ddm_raw + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+```{r}
+summary(lmer(icc ~ sample_size * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Does variability of reliability change with sample size?
+
+Trending but not significant. The SEMs are always pretty small.
+
+```{r}
+rel_df_sample_size_summary %>%
+  na.exclude() %>%
+  ggplot(aes(factor(sample_size), sem_icc))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  facet_wrap(~overall_difference)+
+  ylab("Standard error of mean of reliability \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")+
+  ylim(0,0.3)
+```
+
+```{r}
+summary(lmer(sem_icc ~ sample_size * overall_difference + (1|dv), rel_df_sample_size_summary))
+```
+
+Does between subjects variance change with sample size?
+
+Yes. Between subjects variance decreases with sample size. This is more pronounced for non-contrast measures.
+
+This goes against my intuitions. Looking at the change in between subjects percentage of individual measures' there seems to be a lot of inter-measure variance (more pronounced below for within subject variance). I'm not sure if there is something in common for the measures that show increasing between subjects variability with sample size and that separates them from those that show decreasing between subjects variability with sample size (the slight majority).
+
+```{r}
+tmp = rel_df_sample_size_summary %>%
+  na.exclude()%>%
+  group_by(overall_difference, sample_size, ddm_raw) %>%
+  summarise(mean_var_subs_pct = mean(mean_var_subs_pct, na.rm=T))
+
+rel_df_sample_size_summary %>%
+  na.exclude() %>%
+  ggplot(aes(factor(sample_size), mean_var_subs_pct))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(factor(sample_size),mean_var_subs_pct, color=ddm_raw, group=ddm_raw))+
+  geom_point(data = tmp, aes(factor(sample_size),mean_var_subs_pct, color=ddm_raw))+
+  facet_wrap(~overall_difference)+
+  ylab("Mean percentage of \n between subjects variance \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+summary(lmer(var_subs_pct ~ factor(sample_size) * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Does within subjects variance change with sample size?
+
+Yes. Within subject variance increses with sample size. This again goes against my intuition but here the inter-meausre differences are even more pronounced. There appears to be some measures for which the change in two measurements at different time points is larger the more subjects are tested and those that show a smaller decrease in within subject variance with larger sample sizes. I still don't know if these two types of measures have anything that distinguishes them.
+
+```{r}
+tmp = rel_df_sample_size_summary %>%
+  na.exclude()%>%
+  group_by(overall_difference, sample_size, ddm_raw) %>%
+  summarise(mean_var_ind_pct = mean(mean_var_ind_pct, na.rm=T))
+
+rel_df_sample_size_summary %>%
+  na.exclude() %>%
+  ggplot(aes(factor(sample_size), mean_var_ind_pct))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(factor(sample_size),mean_var_ind_pct, color=ddm_raw, group=ddm_raw))+
+  geom_point(data = tmp, aes(factor(sample_size),mean_var_ind_pct, color=ddm_raw))+
+  facet_wrap(~overall_difference)+
+  ylab("Mean percentage of \n within subjects variance \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+summary(lmer(var_ind_pct ~ factor(sample_size) * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+Does residual variance change with sample size?
+
+```{r}
+tmp = rel_df_sample_size_summary %>%
+  na.exclude()%>%
+  group_by(overall_difference, sample_size, ddm_raw) %>%
+  summarise(mean_var_resid_pct = mean(mean_var_resid_pct, na.rm=T))
+
+rel_df_sample_size_summary %>%
+  na.exclude() %>%
+  ggplot(aes(factor(sample_size), mean_var_resid_pct))+
+  geom_line(aes(group = dv, color=ddm_raw), alpha = 0.1)+
+  geom_line(data = tmp, aes(factor(sample_size),mean_var_resid_pct, color=ddm_raw, group=ddm_raw))+
+  geom_point(data = tmp, aes(factor(sample_size),mean_var_resid_pct, color=ddm_raw))+
+  facet_wrap(~overall_difference)+
+  ylab("Mean percentage of residual variance \n of 100 samples of size n")+
+  xlab("Sample size")+
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+summary(lmer(var_resid_pct ~ factor(sample_size) * overall_difference + (1|dv) + (1|iteration), rel_df_sample_size))
+```
+
+*Conclusion:* Larger samples are better for reliability but not necessarily always for the same reasons; for some variables this is due to increasing between subjects variance while for others it's due to decreasing residual variance (?).
+
+```{r}
+rm(rel_df_sample_size, rel_df_sample_size_summary)
+```
