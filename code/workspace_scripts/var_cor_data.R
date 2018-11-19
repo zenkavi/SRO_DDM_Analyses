@@ -22,9 +22,9 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
     rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
-    rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
+    rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw)%>%
     mutate(task_task = ifelse(task_group_1 == task_group_2,"same task", "different tasks"),
-           ddm_ddm = ifelse(ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm", "ddm-ddm",ifelse(ddm_raw_1 == "raw" & ddm_raw_2 == "raw", "raw-raw", ifelse((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") |(ddm_raw_1 == "raw" & ddm_raw_2 == "ddm"), "ddm-raw", NA))),
+           ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")|(rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt") | (rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
            time="test")
   
   #summarise by relationship between correlated variables for plotting
@@ -52,7 +52,7 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
     left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
     rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
     mutate(task_task = ifelse(task_group_1 == task_group_2,"same task", "different tasks"),
-           ddm_ddm = ifelse(ddm_raw_1 == "ddm" & ddm_raw_2 == "ddm", "ddm-ddm",ifelse(ddm_raw_1 == "raw" & ddm_raw_2 == "raw", "raw-raw", ifelse((ddm_raw_1 == "ddm" & ddm_raw_2 == "raw") |(ddm_raw_1 == "raw" & ddm_raw_2 == "ddm"), "ddm-raw", NA))),
+           ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")|(rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt") | (rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
            time="retest")
   
   retest_data_cor_med = retest_data_cor %>%
@@ -64,16 +64,6 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
   
   all_data_cor = rbind(test_data_cor, retest_data_cor)
   all_data_cor_med = rbind(test_data_cor_med, retest_data_cor_med)
-  
-  all_data_cor %>%
-    na.exclude() %>%
-    ggplot(aes(abs(value), fill=time))+
-    geom_histogram(position = "identity", alpha=0.5)+
-    geom_vline(data=all_data_cor_med, aes(xintercept=median_abs_cor, color=time), linetype = "dashed")+
-    facet_grid(task_task~ddm_ddm, scales = 'free_y')+
-    xlab("Absolute correlation")+
-    theme(legend.position = "bottom",
-          legend.title = element_blank())
   
   rm(test_data_cor, retest_data_cor, test_data_cor_med, retest_data_cor_med)
   
