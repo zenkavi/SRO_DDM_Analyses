@@ -16,6 +16,7 @@ tmp %>%
   ggplot(aes(m_kl, fill=proc))+
   geom_density(alpha=0.5)+
   facet_wrap(~time)+
-  theme(legend.title = element_blank())
+  theme(legend.title = element_blank())+
+  xlab("Mean KL divergence")
 
 ggsave(paste0('HDDM_fitstats_flatvshier.', out_device), device = out_device, path = fig_path, width = 9.5, height = 2.5, units = "in")

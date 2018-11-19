@@ -1,3 +1,7 @@
+if(!exists('fig_path')){
+  fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+}
+
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
 
 if(!exists('boot_df')){
@@ -25,12 +29,13 @@ boot_df %>%
   ylab("ICC")+
   xlab("")+
   theme(legend.title = element_blank(),
-        legend.position = 'bottom')#+
-# guides(fill = guide_legend(ncol = 2, byrow=F))
+        legend.position = 'bottom')+
+  scale_y_continuous(breaks=seq(-1,1,0.25),
+                     limits=c(-1,1))
 
 #ADD FIX_DDM_LEGEND
 #fix_ddm_legend(ddm_boot_plot)
 
 #rm(mylegend, ddm_boot_plot)
 
-ggsave(paste0('ddmvsraw_boot.', out_device), device = out_device, path = fig_path, width = 5, height = 3.5, units = "in")
+ggsave(paste0('ddmvsraw_boot.', out_device), device = out_device, path = fig_path, width = 12.5, height = 3.5, units = "in")

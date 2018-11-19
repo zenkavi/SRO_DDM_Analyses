@@ -1,5 +1,5 @@
 if(!exists('process_boot_df')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/process_boot_df')
+  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/process_boot_df.R')
 }
 
 ### Read in bootstrapped rel data

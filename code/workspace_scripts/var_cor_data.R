@@ -1,3 +1,5 @@
+require(tidyverse)
+
 if(!exists('rel_df')){
   source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_point_rel_data.R')
 }
@@ -27,14 +29,6 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
            ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")|(rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt") | (rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
            time="test")
   
-  #summarise by relationship between correlated variables for plotting
-  test_data_cor_med = test_data_cor %>%
-    na.exclude() %>%
-    group_by(task_task, ddm_ddm) %>%
-    summarise(median_abs_cor = median(abs(value)),
-              mean_abs_cor = mean(abs(value)),
-              time="test")
-  
   #Standardize dataset
   retest_data_std = retest_data %>% mutate_if(is.numeric, scale)
   retest_data_std = retest_data_std %>% select(-sub_id)
@@ -55,16 +49,18 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
            ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")|(rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt") | (rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
            time="retest")
   
-  retest_data_cor_med = retest_data_cor %>%
-    na.exclude() %>%
-    group_by(task_task, ddm_ddm) %>%
-    summarise(median_abs_cor = median(abs(value)),
-              mean_abs_cor = mean(abs(value)), 
-              time = "retest")
-  
   all_data_cor = rbind(test_data_cor, retest_data_cor)
-  all_data_cor_med = rbind(test_data_cor_med, retest_data_cor_med)
   
-  rm(test_data_cor, retest_data_cor, test_data_cor_med, retest_data_cor_med)
+  rm(test_data_cor, retest_data_cor)
+  
+  all_data_cor = all_data_cor %>% 
+    filter(!(raw_fit_1 == 'hddm' & raw_fit_2 == "EZ") & !(raw_fit_1 == "EZ" & raw_fit_2 == "hddm")) %>%
+    mutate(model = ifelse(raw_fit_1 == "hddm" & raw_fit_2 == 'hddm', 'hddm', ifelse(raw_fit_1 == "EZ" & raw_fit_1 == "EZ", "EZ", 'raw')))
+  
+  all_data_cor_med = all_data_cor %>%
+    group_by(task_task, ddm_ddm, model) %>%
+    summarise(median_abs_cor = median(abs(value)),
+              mean_abs_cor = mean(abs(value))) %>%
+    filter(!is.na(ddm_ddm))
   
 }

@@ -48,8 +48,8 @@ flat_difference %>%
   geom_abline(aes(intercept=0, slope=1), color="black", linetype="dashed")+
   facet_wrap(~ par, scales='free')+
   theme(legend.title=element_blank(),
-        legend.position = "none")+
+        legend.position = "bottom")+
   xlab("Hierarchical estimate")+
-  ylab("Hierarchical reliability")
+  ylab("Flat estimate")
 
-ggsave(paste0('HDDM_par_flatvshier.', out_device), device = out_device, path = fig_path, width = 14, height = 2.5, units = "in")
+ggsave(paste0('HDDM_par_flatvshier.', out_device), device = out_device, path = fig_path, width = 14, height = 3, units = "in")

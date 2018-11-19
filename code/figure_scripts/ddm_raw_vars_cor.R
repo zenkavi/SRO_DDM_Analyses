@@ -5,10 +5,10 @@ if(!exists('all_data_cor')){
 }
 
 all_data_cor %>%
-  na.exclude() %>%
-  ggplot(aes(abs(value), fill=time))+
+  filter(!is.na(ddm_ddm)) %>%
+  ggplot(aes(abs(value), fill=model))+
   geom_histogram(position = "identity", alpha=0.5)+
-  geom_vline(data=all_data_cor_med, aes(xintercept=median_abs_cor, color=time), linetype = "dashed")+
+  geom_vline(data=all_data_cor_med, aes(xintercept=median_abs_cor, color=model), linetype = "dashed", size=1)+
   facet_grid(task_task~ddm_ddm, scales = 'free_y')+
   xlab("Absolute correlation")+
   theme(legend.position = "bottom",

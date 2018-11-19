@@ -194,7 +194,7 @@ tmp = ez_t1_pca_3_loadings %>%
 
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity")+
+  geom_bar(stat = "identity", alpha=0.5)+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
@@ -246,7 +246,7 @@ tmp = data.frame(ez_t1_svd_rotatedLoadings) %>%
 
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity")+
+  geom_bar(stat = "identity", alpha=0.5)+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
@@ -323,7 +323,7 @@ tmp = ez_t1_fa_3_loadings %>%
      
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity")+
+  geom_bar(stat = "identity", alpha=0.5)+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
@@ -364,7 +364,7 @@ tmp = ez_t1_fa_8_loadings %>%
                          ifelse(grepl("non_dec", dv), "non-decision", NA))))
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity")+
+  geom_bar(stat = "identity", alpha=0.5)+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
@@ -468,7 +468,7 @@ tmp = hddm_t1_fa_3_loadings %>%
      
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity")+
+  geom_bar(stat = "identity", alpha=0.5)+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
@@ -523,7 +523,7 @@ tmp = hddm_t1_fa_3_subset_loadings %>%
      
 p = tmp%>%         
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity")+
+  geom_bar(stat = "identity", alpha=0.5)+
   facet_wrap(~Factor, nrow=1)+
   coord_flip()+
   xlab("")+
