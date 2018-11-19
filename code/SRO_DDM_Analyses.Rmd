@@ -346,18 +346,21 @@ rm(all_data_cor, all_data_cor_med)
 
 ### Factor analysis
 
-Can we recover a 3 factor structure for 
--EZ and
--HDDM variables that captures comparable processes across tasks?
+Can we recover a 3 factor structure for DDM parameters that captures comparable processes across tasks?   
 
-[Here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) is where I explore this more extensively and decide to use a 3 factor solution for the EZ variables.
+Although the above correlation analyses suggest that variables from the same task are more similar compared to variables across tasks having even one measure per task is not very helpful with numerous tasks (in our case 14) particularly in terms of capturing cognitive mechanisms that are both common and distinct to these tasks.  
 
-Although the above correlation analyses suggest that variables from the same task are more similar compared to variables across tasks having even one measure per task is not very helpful with numerous tasks (in our case 14) particularly in terms of capturing cognitive mechanisms that are both common and distinct to these tasks.
+Therefore we reduce the number of variables by running a factor analysis on a set of variables that ought to capture common processes across the tasks: the DDM parameters.  
 
-Therefore we reduce the number of variables by running a factor analysis on a set of variables that ought to capture common processes across the tasks: the DDM parameters.
+[In another notebook](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) I explore this more extensively and decide to use a 3 factor solution for the EZ variables.  To summarize my conclusions:   
+- A 3 factor solution for the T1 EZ data is not necessarily the model with the lowest BIC but it is not significantly worse from a more complicated model with the lowest BIC.  
+- HDDM parameters don't lend themselves as well to this analysis because the majority of the parameters are drift rates since only this parameter was allowed to vary across conditions. Therefore a 3 factor solution on the whole set of HDDM parameters mostly tries to separate out different drift rates from each other.    
+- Even when using a 3 factor solution the HDDM parameters don't cluster as separably by parameter types as EZ parameters do.  
 
 Here is the depiction of the 3 factor solution for the EZ variables of T1 data.  
 Bars are colored by the variable type. Bars that are outlined in black load negatively on the factor they are in.
+
+The figure suggests that the three parameter types are largely separable. The first factors captures a large majority of the drift rates. It, however, also contains numerous thresholds that load on negatively. The second factor in the middle contains mostly thresholds and the third factors contains only non-decision times.
 
 ```{r}
 fig_name = 'EZ_FA_T1_3.jpeg'
@@ -368,12 +371,29 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 ```{r}
 if(!exists('ez_t1_fa_3')){
   source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ez_fa_data.R')
-  }
+}
+
+summary(ez_t1_fa_3)
 ```
 
 ### Reliability of lower dimensions
 
--- Are these clusters more reliable than using either the raw or the DDM measures alone?
+Are these clusters more reliable than using either the raw or the DDM measures alone?
+
+To answer this question I used the T1 EFA model to predict the T2 data and extracted factor scores for all subjects for both time points.
+
+```{r}
+ez_t1_fa_3_scores = data.frame(ez_t1_fa_3$scores)
+ez_t1_fa_3_scores$sub_id = test_data$sub_id
+
+ez_t2_fa_3_scores = data.frame(ez_t2_fa_3)
+ez_t2_fa_3_scores$sub_id = retest_data$sub_id
+
+ez_fa_rel_df = make_rel_df(ez_t1_fa_3_scores, ez_t2_fa_3_scores, metrics = c("icc", "var_breakdown"))
+
+ez_fa_rel_df
+```
+
 
 ## Prediction
 
