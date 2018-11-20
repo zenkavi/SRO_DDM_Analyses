@@ -13,6 +13,7 @@ options(scipen = 1, digits = 4)
 
 helper_func_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/'
 source(paste0(helper_func_path, 'get_numeric_cols.R'))
+source(paste0(helper_func_path, 'make_rel_df.R'))
 source(paste0(helper_func_path, 'remove_outliers.R'))
 source(paste0(helper_func_path, 'remove_correlated_task_variables.R'))
 source(paste0(helper_func_path, 'transform_remove_skew.R'))
@@ -396,7 +397,7 @@ ggsave('EZ_FA_T1_8.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, h
 knitr::include_graphics(paste0(fig_path, 'EZ_FA_T1_8.jpeg'))
 ```
 
-Based on these results I ran 3 factor EFA's on the remaining data
+**Based on these results I ran 3 factor EFA's on the remaining data.**
 
 ## EFA on HDDM variables of test data
 
@@ -555,7 +556,7 @@ knitr::include_graphics(paste0(fig_path, 'HDDM_T1_FA_3_subset.jpeg'))
 
 ## EFA on EZ variables of retest data
 
-Using the model from the test data to predict the retest data. Later will use factor scores from this to calculate reliability of reduced dimensions.
+### Preparing the data
 
 ```{r}
 retest_data_ez = retest_data %>%
@@ -604,20 +605,168 @@ clean_retest_data_ez_std = cbind(clean_retest_data_ez_std, demographics[,c("Age"
 res_clean_retest_data_ez = residualize_baseline(clean_retest_data_ez_std)
 ```
 
-Predict retest data using the 3 factor EFA from test data.
+There are two ways we can go about this:
+
+1. Predicting factor scores for T2 data using the T1 factor solution
+2. Fitting a new 3-factor model to the T2 data
+
+### Predict retest data using the 3 factor EFA from test data
+
+Define helper functions to predict t2 factor scores using different scoring methods and calculating their ICCs with t1 factor scores.
 
 ```{r}
-ez_t2_fa_3_pred = predict(ez_t1_fa_3, res_clean_retest_data_ez, res_clean_test_data_ez)
+predict_t2_fa_scores = function(t1_df = res_clean_test_data_ez, t2_df = res_clean_retest_data_ez, scores="tenBerge", nfactors = 3,rotate='oblimin',fm='minres', sub_ids = retest_data$sub_id){
+  require(psych)
+  require(tidyverse)
+  t1_fa = fa(t1_df, nfactors, rotate=rotate, fm=fm, scores=scores)
+  t1_fa_scores = data.frame(t1_fa$scores) %>%
+    mutate(sub_id = sub_ids)
+  
+  t2_pred = predict(t1_fa, t2_df)
+  t2_pred_scores = as.data.frame(t2_pred) %>%
+    mutate(sub_id = sub_ids)
+  return(list(t1_fa_scores=t1_fa_scores, t2_pred_scores=t2_pred_scores))
+}
 
+get_icc_for_score_type = function(scores){
+  p = predict_t2_fa_scores(scores=scores)
+  r_df = make_rel_df(p$t1_fa_scores, p$t2_pred_scores, metrics = c("icc"))
+  r_df = r_df %>% 
+    spread(dv,icc) %>%
+    mutate(scores = scores)
+  return(r_df)
+}
 ```
 
-Fit a 3 factor model separately for T2 data.
+Using `tenBerge` our default option to calculate factor scores
+
+```{r}
+ez_t2_fa_3_pred = predict_t2_fa_scores()
+```
+
+Plotting predicted `tenBerge` scores for T2 data using T1 FA against T1 FA scores.
+
+```{r}
+ez_t2_fa_3_pred$t1_fa_scores %>%
+  mutate(time = "t1_fa_scores") %>%
+  rbind(ez_t2_fa_3_pred$t2_pred_scores %>% mutate(time="t2_pred_scores")) %>%
+  gather(factor, score, -sub_id, -time) %>%
+  spread(time, score) %>%
+  ggplot(aes(t1_fa_scores, t2_pred_scores, col=factor))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept=0))+
+  facet_wrap(~factor, scales='free')+
+  theme(legend.position = "none")
+```
+
+No relationship! As a result ICC's are 0 too.
+
+**BUT** `tenBerge` is not the only way of calculating factor scores. `psych` offers different methods for calculating factor scores based on [Grice (2001)](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&inst=5746887945952177237&q=Computing+and+evaluating+factor+scores+grice+2001&btnG=). Here I calculate the ICC's of the three factors using other methods of calculating the scores.  
+
+Regardless of which method I use I get the following warning
+
+```
+The estimated weights for the factor scores are probably incorrect.  Try a different factor extraction method.
+```
+
+I tried all five and only three gave me factor scores despite this warning. But they imply different reliabilities. `Anderson` and `Harman` yield high ICC's for all three factors where `tenBerge` says it should be 0.
+
+```{r warning=FALSE, message=FALSE}
+score_type_iccs = rbind(get_icc_for_score_type("tenBerge"),
+      get_icc_for_score_type("Anderson"),
+      get_icc_for_score_type("Harman"))
+
+score_type_iccs
+```
+
+```{r}
+score_type_iccs %>%
+  gather(factor, icc, -scores) %>%
+  ggplot(aes(scores, icc, col=factor))+
+  geom_point(size=2.5)+
+  xlab('')+
+  theme(legend.title=element_blank())
+```
+
+Plotting the scores using `Anderson` as an alternative example. Reflecting the high ICC's now all factor scores for both time points are highly correlated.
+
+```{r warning=FALSE, message=FALSE}
+ez_t2_fa_3_pred_bartlett = predict_t2_fa_scores(scores="Anderson")
+
+ez_t2_fa_3_pred_bartlett$t1_fa_scores %>%
+  mutate(time = "t1_fa_scores") %>%
+  rbind(ez_t2_fa_3_pred_bartlett$t2_pred_scores %>% mutate(time="t2_pred_scores")) %>%
+  gather(factor, score, -sub_id, -time) %>%
+  spread(time, score) %>%
+  ggplot(aes(t1_fa_scores, t2_pred_scores, col=factor))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept=0))+
+  facet_wrap(~factor, scales='free')+
+  theme(legend.position = "none")
+```
+
+Based on the warning in fitting the models I dug into the `psych` package to find the different weight matrix calculations depending on the score methods:    
+
+where x is data and
+r <- cor(x, use = "pairwise")
+f <- loadings(factor_model)
+Phi <- factor_model$Phi  
+
+`Thurston`
+```
+S <- f %*% Phi
+w <- try(solve(r, S), silent = TRUE)
+```
+
+`tenBerge`
+```
+L <- f %*% matSqrt(Phi)
+r.5 <- invMatSqrt(r)
+r <- cor.smooth(r)
+inv.r <- try(solve(r), silent = TRUE)
+C <- r.5 %*% L %*% invMatSqrt(t(L) %*% inv.r %*% L)
+w <- r.5 %*% C %*% matSqrt(Phi)
+```
+
+`Anderson`
+```
+I <- diag(1, nf, nf)
+h2 <- diag(f %*% Phi %*% t(f))
+U2 <- 1 - h2
+inv.U2 <- diag(1/U2)
+w <- inv.U2 %*% f %*% invMatSqrt(t(f) %*% inv.U2 %*% r %*% inv.U2 %*% f)
+```
+
+`Bartlett`
+```
+I <- diag(1, nf, nf)
+h2 <- diag(f %*% Phi %*% t(f))
+U2 <- 1 - h2
+inv.U2 <- diag(1/U2)
+w <- inv.U2 %*% f %*% (solve(t(f) %*% inv.U2 %*% f))
+```
+
+`Harman`
+```
+m <- f %*% t(S)
+diag(m) <- 1
+inv.m <- solve(m)
+w <- inv.m %*% f
+```
+
+I'm stuck here though and can't figure out what the problem with the `tenBerge` weight matrix is or what to make of different reliability results depending on the scoring method.
+
+### Fit a 3 factor model separately for T2 data.
+
+Instead of predicting T2 data from the T1 factor solution we can also fit a 3 factor model to the T2 data independently.  
+
+Conceptually this might be similar to fitting the DDM's separately for two time points when generating parameter estimates instead of using the estimates from the first time point for each subject.
 
 ```{r}
 ez_t2_fa_3 = fa(res_clean_retest_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
 ```
 
-3 Factor solution for T2 data
+Plot of independent 3 factor solution for T2 data looks very similar to that of T1 solution (with two factors switched names)
 
 ```{r message=FALSE}
 ez_t2_fa_3_loadings = as.data.frame(ez_t2_fa_3$loadings[])
@@ -672,65 +821,20 @@ ggsave('EZ_FA_T2_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, h
 p
 ```
 
-Comparison of factor scores using T1 EFA model predicting T2 data vs. fitting a new EFA
-
-```{r}
-ez_t1_fa_3_scores = data.frame(ez_t1_fa_3$scores)
-ez_t1_fa_3_scores = ez_t1_fa_3_scores %>%
-  rename(drift_rates = MR1, thresholds = MR2, non_decs = MR3)
-ez_t1_fa_3_scores$sub_id = test_data$sub_id
-
-ez_t2_fa_3_pred_scores = data.frame(ez_t2_fa_3_pred)
-ez_t2_fa_3_pred_scores = ez_t2_fa_3_pred_scores %>%
-  rename(drift_rates = MR1, thresholds = MR2, non_decs = MR3)
-ez_t2_fa_3_pred_scores$sub_id = retest_data$sub_id
-
-ez_t2_fa_3_scores = data.frame(ez_t2_fa_3$scores)
-ez_t2_fa_3_scores = ez_t2_fa_3_scores %>%
-  rename(drift_rates = MR1, thresholds = MR3, non_decs = MR2)
-ez_t2_fa_3_scores$sub_id = retest_data$sub_id
-```
-
 T1_fit scores vs T2_fit scores
 
 ```{r}
-ez_t1_fa_3_scores %>%
+ez_t2_fa_3_scores = data.frame(ez_t2_fa_3$scores)
+ez_t2_fa_3_scores$sub_id = retest_data$sub_id
+
+data.frame(ez_t1_fa_3$scores) %>%
+  mutate(sub_id = test_data$sub_id) %>%
   left_join(ez_t2_fa_3_scores, by = "sub_id") %>%
   gather(key, value, -sub_id) %>%
   separate(key, c("par", "model"), sep = "\\.") %>%
   mutate(model = ifelse(model=="y", "T2_fit","T1_fit")) %>%
   spread(model, value)%>%
   ggplot(aes(T1_fit, T2_fit))+
-  geom_point()+
-  facet_wrap(~par, scales= "free")+
-  geom_abline(aes(slope=1, intercept=0))
-```
-
-T1_fit scores vs T1_predict_T2 scores
-
-```{r}
-ez_t1_fa_3_scores %>%
-  left_join(ez_t2_fa_3_pred_scores, by = "sub_id") %>%
-  gather(key, value, -sub_id) %>%
-  separate(key, c("par", "model"), sep = "\\.") %>%
-  mutate(model = ifelse(model=="x", "T1_fit","T2_pred")) %>%
-  spread(model, value)%>%
-  ggplot(aes(T1_fit, T2_pred))+
-  geom_point()+
-  facet_wrap(~par, scales= "free")+
-  geom_abline(aes(slope=1, intercept=0))
-```
-
-T2_fit scores vs T1_predict_T2 scores
-
-```{r}
-ez_t2_fa_3_scores %>%
-  left_join(ez_t2_fa_3_pred_scores, by = "sub_id") %>%
-  gather(key, value, -sub_id) %>%
-  separate(key, c("par", "model"), sep = "\\.") %>%
-  mutate(model = ifelse(model=="x", "T2_fit","T2_pred")) %>%
-  spread(model, value)%>%
-  ggplot(aes(T2_fit, T2_pred))+
   geom_point()+
   facet_wrap(~par, scales= "free")+
   geom_abline(aes(slope=1, intercept=0))
