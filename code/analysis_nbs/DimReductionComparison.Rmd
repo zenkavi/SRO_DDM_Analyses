@@ -26,7 +26,10 @@ source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+
 cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+theme_set(theme_bw())
+ggplot <- function(...) ggplot2::ggplot(...) + scale_fill_manual(values=cbbPalette) + scale_color_manual(values=cbbPalette)
 ```
 
 To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline:   
@@ -170,7 +173,7 @@ data.frame(ez_t1_pca_3$values) %>%
 
 Visualizing the first three coponents and coloring them by the parameter type.
 
-```{r}
+```{r message=FALSE}
 ez_t1_pca_3_loadings = as.data.frame(ez_t1_pca_3$loadings[])
 
 ez_t1_pca_3_loadings[abs(ez_t1_pca_3_loadings)<0.3]=NA
@@ -199,7 +202,6 @@ p = tmp%>%
   coord_flip()+
   xlab("")+
   ylab("Absolute Loading")+
-  scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
         legend.title=element_blank(),
@@ -222,7 +224,7 @@ ez_t1_svd_rawLoadings = ez_svd$v[,1:ncomp] %*% diag(ez_svd$d/sqrt(df), ncomp, nc
 ez_t1_svd_rotatedLoadings <- GPArotation::oblimin(ez_t1_svd_rawLoadings)$loadings
 ```
 
-```{r}
+```{r message=FALSE}
 ez_t1_svd_rotatedLoadings[abs(ez_t1_svd_rotatedLoadings)<0.3]=NA
 
 tmp = data.frame(ez_t1_svd_rotatedLoadings) %>%
@@ -251,7 +253,6 @@ p = tmp%>%
   coord_flip()+
   xlab("")+
   ylab("Absolute Loading")+
-  scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
         legend.title=element_blank(),
@@ -298,7 +299,7 @@ anova(ez_t1_fa_3, ez_t1_fa_16)
 
 So what would the 3 factor solution look like? Not surprisingly, very similar to the PC's.
 
-```{r}
+```{r message=FALSE}
 ez_t1_fa_3_loadings = as.data.frame(ez_t1_fa_3$loadings[])
 
 ez_t1_fa_3_loadings[abs(ez_t1_fa_3_loadings)<0.3]=NA
@@ -333,19 +334,33 @@ p = tmp%>%
         legend.title=element_blank())
         # axis.text.y = element_blank())
 
-ggsave('EZ_FA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 15, height = 15, units = "in")
+ggsave('EZ_FA_T1_3_w_labels.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 15, height = 15, units = "in")
+
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
+  geom_bar(stat = "identity", alpha=0.5)+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  ylab("Absolute Loading")+
+  scale_color_identity()+
+  theme(legend.position = "bottom",
+        legend.title=element_blank(),
+        axis.text.y = element_blank())
+
+ggsave('EZ_FA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
 ```
 
 Are there notable differences in the 16 factor solution? (Looking at the first half of the model) The three parameter types seem to load on two factors each instead of one. These tend to reflect separations between tasks (e.g. one non-decision factor is just for the shape matching task while the other contains all the remaining ones). Since these differences are of less theoretical interest for this exercise I think choosing the three factor solution would be appropriate.
 
-```{r}
+```{r message=FALSE}
 ez_t1_fa_16_loadings = as.data.frame(ez_t1_fa_16$loadings[])
 
 ez_t1_fa_16_loadings[abs(ez_t1_fa_16_loadings)<0.3]=NA
 
-tmp = ez_t1_fa_8_loadings %>%
+tmp = ez_t1_fa_16_loadings %>%
   mutate(dv = row.names(.)) %>%
   select(dv, MR1, MR2, MR3, MR4, MR5, MR6, MR7, MR8) %>%
   mutate(num_loading = 8-(is.na(MR1)+is.na(MR2)+is.na(MR3)+is.na(MR4)+is.na(MR5)+is.na(MR6)+is.na(MR7)+is.na(MR8) ) ) %>%
@@ -442,7 +457,7 @@ hddm_t1_fa_3 = fa(res_clean_test_data_hddm, 3, rotate='oblimin', fm='minres', sc
 
 The three factor model does not work as well for HDDM's because of the 106 variables we have 75 are drift rates, 17 are threshold and 14 are non-decision times. This is because while all the parameters are fit separately for EZ only the drift rate parameter is allowed to vary by condition for the HDDM. So the model is mostly separating out drift rates from each other.
 
-```{r}
+```{r message=FALSE}
 hddm_t1_fa_3_loadings = as.data.frame(hddm_t1_fa_3$loadings[])
 
 hddm_t1_fa_3_loadings[abs(hddm_t1_fa_3_loadings)<0.3]=NA
@@ -472,7 +487,6 @@ p = tmp%>%
   coord_flip()+
   xlab("")+
   ylab("Absolute Loading")+
-  scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
         legend.title=element_blank(),
@@ -497,7 +511,7 @@ hddm_t1_fa_3_subset = fa(res_clean_test_data_hddm_subset, 3, rotate='oblimin', f
 
 Then it works better but still not doing a great job separating out thresholds from non-decision times.
 
-```{r}
+```{r message=FALSE}
 hddm_t1_fa_3_subset_loadings = as.data.frame(hddm_t1_fa_3_subset$loadings[])
 
 hddm_t1_fa_3_subset_loadings[abs(hddm_t1_fa_3_subset_loadings)<0.3]=NA
@@ -527,7 +541,6 @@ p = tmp%>%
   coord_flip()+
   xlab("")+
   ylab("Absolute Loading")+
-  scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
         legend.title=element_blank())
@@ -535,6 +548,7 @@ p = tmp%>%
 
 ggsave('HDDM_T1_FA_3_subset.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 ```
+
 ```{r}
 knitr::include_graphics(paste0(fig_path, 'HDDM_T1_FA_3_subset.jpeg'))
 ```
@@ -593,11 +607,19 @@ res_clean_retest_data_ez = residualize_baseline(clean_retest_data_ez_std)
 Predict retest data using the 3 factor EFA from test data.
 
 ```{r}
-#ez_t2_fa_3 = predict(ez_t1_fa_3, res_clean_retest_data_ez)
+ez_t2_fa_3_pred = predict(ez_t1_fa_3, res_clean_retest_data_ez, res_clean_test_data_ez)
+
+```
+
+Fit a 3 factor model separately for T2 data.
+
+```{r}
 ez_t2_fa_3 = fa(res_clean_retest_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
 ```
 
-```{r}
+3 Factor solution for T2 data
+
+```{r message=FALSE}
 ez_t2_fa_3_loadings = as.data.frame(ez_t2_fa_3$loadings[])
 
 ez_t2_fa_3_loadings[abs(ez_t2_fa_3_loadings)<0.3]=NA
@@ -630,11 +652,111 @@ p = tmp%>%
   ylab("Absolute Loading")+
   theme(legend.position = "bottom",
         legend.title=element_blank())
-        # axis.text.y = element_blank())
 
-ggsave('EZ_FA_T2_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 15, height = 12, units = "in")
+ggsave('EZ_FA_T2_3_w_labels.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 15, height = 15, units = "in")
+
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
+  geom_bar(stat = "identity", alpha=0.5)+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  scale_color_identity()+
+  ylab("Absolute Loading")+
+  theme(legend.position = "bottom",
+        legend.title=element_blank(),
+        axis.text.y = element_blank())
+
+ggsave('EZ_FA_T2_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
 
 p
+```
+
+Comparison of factor scores using T1 EFA model predicting T2 data vs. fitting a new EFA
+
+```{r}
+ez_t1_fa_3_scores = data.frame(ez_t1_fa_3$scores)
+ez_t1_fa_3_scores = ez_t1_fa_3_scores %>%
+  rename(drift_rates = MR1, thresholds = MR2, non_decs = MR3)
+ez_t1_fa_3_scores$sub_id = test_data$sub_id
+
+ez_t2_fa_3_pred_scores = data.frame(ez_t2_fa_3_pred)
+ez_t2_fa_3_pred_scores = ez_t2_fa_3_pred_scores %>%
+  rename(drift_rates = MR1, thresholds = MR2, non_decs = MR3)
+ez_t2_fa_3_pred_scores$sub_id = retest_data$sub_id
+
+ez_t2_fa_3_scores = data.frame(ez_t2_fa_3$scores)
+ez_t2_fa_3_scores = ez_t2_fa_3_scores %>%
+  rename(drift_rates = MR1, thresholds = MR3, non_decs = MR2)
+ez_t2_fa_3_scores$sub_id = retest_data$sub_id
+```
+
+T1_fit scores vs T2_fit scores
+
+```{r}
+ez_t1_fa_3_scores %>%
+  left_join(ez_t2_fa_3_scores, by = "sub_id") %>%
+  gather(key, value, -sub_id) %>%
+  separate(key, c("par", "model"), sep = "\\.") %>%
+  mutate(model = ifelse(model=="y", "T2_fit","T1_fit")) %>%
+  spread(model, value)%>%
+  ggplot(aes(T1_fit, T2_fit))+
+  geom_point()+
+  facet_wrap(~par, scales= "free")+
+  geom_abline(aes(slope=1, intercept=0))
+```
+
+T1_fit scores vs T1_predict_T2 scores
+
+```{r}
+ez_t1_fa_3_scores %>%
+  left_join(ez_t2_fa_3_pred_scores, by = "sub_id") %>%
+  gather(key, value, -sub_id) %>%
+  separate(key, c("par", "model"), sep = "\\.") %>%
+  mutate(model = ifelse(model=="x", "T1_fit","T2_pred")) %>%
+  spread(model, value)%>%
+  ggplot(aes(T1_fit, T2_pred))+
+  geom_point()+
+  facet_wrap(~par, scales= "free")+
+  geom_abline(aes(slope=1, intercept=0))
+```
+
+T2_fit scores vs T1_predict_T2 scores
+
+```{r}
+ez_t2_fa_3_scores %>%
+  left_join(ez_t2_fa_3_pred_scores, by = "sub_id") %>%
+  gather(key, value, -sub_id) %>%
+  separate(key, c("par", "model"), sep = "\\.") %>%
+  mutate(model = ifelse(model=="x", "T2_fit","T2_pred")) %>%
+  spread(model, value)%>%
+  ggplot(aes(T2_fit, T2_pred))+
+  geom_point()+
+  facet_wrap(~par, scales= "free")+
+  geom_abline(aes(slope=1, intercept=0))
+```
+
+T1_fit vs T2_fit loadings
+
+```{r}
+ez_t1_fa_3_loadings = data.frame(ez_t1_fa_3$loadings[]) %>%
+  rename(drift_rates = MR1, thresholds = MR2, non_decs = MR3) %>%
+  mutate(dv = row.names(.))
+
+ez_t2_fa_3_loadings = data.frame(ez_t2_fa_3$loadings[]) %>%
+  rename(drift_rates = MR1, thresholds = MR3, non_decs = MR2)%>%
+  mutate(dv = row.names(.))
+
+ez_t1_fa_3_loadings %>%
+  left_join(ez_t2_fa_3_loadings, by = "dv") %>%
+  gather(key, value, -dv) %>%
+  separate(key, c("par", "model"), sep = "\\.") %>%
+  mutate(model = ifelse(model == "x", "T1_fit", "T2_fit"))%>%
+  spread(model, value) %>%
+  ggplot(aes(T1_fit, T2_fit))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept=0))+
+  facet_wrap(~par)
 ```
 
 ## EFA on HDDM variables of retest data

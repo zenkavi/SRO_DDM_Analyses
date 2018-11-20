@@ -398,9 +398,7 @@ ez_fa_rel_df = make_rel_df(ez_t1_fa_3_scores, ez_t2_fa_3_scores, metrics = c("ic
 ez_fa_rel_df
 ```
 
-LOOK AT FACTOR SCORE SCATTER PLOT BETWEEN EZ_T1_FA_3 AND PREDICTED EZ_T2_FA_3
-LOOK AT FACTOR LOADING SCATTER PLOT BETWEEN EZ_T1_FA_3 AND FITTED
-EZ_T2_FA_3
+
  
 ## Prediction
 
