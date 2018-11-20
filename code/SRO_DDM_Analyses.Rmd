@@ -385,16 +385,23 @@ To answer this question I used the T1 EFA model to predict the T2 data and extra
 ```{r}
 ez_t1_fa_3_scores = data.frame(ez_t1_fa_3$scores)
 ez_t1_fa_3_scores$sub_id = test_data$sub_id
+ez_t1_fa_3_scores = ez_t1_fa_3_scores %>%
+  rename(drift_rates = MR1, thresholds = MR2, non_decs = MR3)
 
 ez_t2_fa_3_scores = data.frame(ez_t2_fa_3)
 ez_t2_fa_3_scores$sub_id = retest_data$sub_id
+ez_t2_fa_3_scores = ez_t2_fa_3_scores %>%
+  rename(drift_rates = MR1, thresholds = MR3, non_decs = MR2)
 
 ez_fa_rel_df = make_rel_df(ez_t1_fa_3_scores, ez_t2_fa_3_scores, metrics = c("icc", "var_breakdown"))
 
 ez_fa_rel_df
 ```
 
-
+LOOK AT FACTOR SCORE SCATTER PLOT BETWEEN EZ_T1_FA_3 AND PREDICTED EZ_T2_FA_3
+LOOK AT FACTOR LOADING SCATTER PLOT BETWEEN EZ_T1_FA_3 AND FITTED
+EZ_T2_FA_3
+ 
 ## Prediction
 
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?

@@ -328,13 +328,12 @@ p = tmp%>%
   coord_flip()+
   xlab("")+
   ylab("Absolute Loading")+
-  scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.position = "bottom",
-        legend.title=element_blank(),
-        axis.text.y = element_blank())
+        legend.title=element_blank())
+        # axis.text.y = element_blank())
 
-ggsave('EZ_FA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+ggsave('EZ_FA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 15, height = 15, units = "in")
 
 p
 ```
@@ -594,7 +593,48 @@ res_clean_retest_data_ez = residualize_baseline(clean_retest_data_ez_std)
 Predict retest data using the 3 factor EFA from test data.
 
 ```{r}
-ez_t2_fa_3 = predict(ez_t1_fa_3, res_clean_retest_data_ez)
+#ez_t2_fa_3 = predict(ez_t1_fa_3, res_clean_retest_data_ez)
+ez_t2_fa_3 = fa(res_clean_retest_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
+```
+
+```{r}
+ez_t2_fa_3_loadings = as.data.frame(ez_t2_fa_3$loadings[])
+
+ez_t2_fa_3_loadings[abs(ez_t2_fa_3_loadings)<0.3]=NA
+
+tmp = ez_t2_fa_3_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, MR1, MR2, MR3) %>%
+  mutate(num_loading = 3-(is.na(MR1)+is.na(MR2)+is.na(MR3) ) ) %>%
+  filter(num_loading!=0) %>%
+  select(-num_loading) %>%
+  arrange(-MR1, -MR2, -MR3) %>%
+  mutate(order_num = 1:n(),
+         dv = reorder(dv, -order_num)) %>%
+  select(-order_num) %>%
+  gather(Factor, Loading, -dv) %>%
+  na.exclude() %>%
+  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
+         var_type = ifelse(grepl("drift", dv), "drif rate",
+                  ifelse(grepl("thresh", dv), "threshold",
+                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+
+     
+p = tmp%>%         
+  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
+  geom_bar(stat = "identity", alpha=0.5)+
+  facet_wrap(~Factor, nrow=1)+
+  coord_flip()+
+  xlab("")+
+  scale_color_identity()+
+  ylab("Absolute Loading")+
+  theme(legend.position = "bottom",
+        legend.title=element_blank())
+        # axis.text.y = element_blank())
+
+ggsave('EZ_FA_T2_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 15, height = 12, units = "in")
+
+p
 ```
 
 ## EFA on HDDM variables of retest data
