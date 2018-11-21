@@ -48,7 +48,7 @@ non_dec_vars_sub = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "non-d
 
 # Time as grouping variable
 
-In this first approach ...
+In this first approach the same model is fit to two groups of data (e.g. students from different schools). I treat the time of measurement as an indicator variable for grouping and running the same model.
 
 ```{r}
 tmp1 = res_clean_test_data_ez %>% select(drift_vars, thresh_vars, non_dec_vars)
@@ -114,23 +114,29 @@ summary(ez.group.time.model.sub.fit, fit.measures=TRUE)
 measurementInvariance(ez.group.time.model.sub, data = group_time_data, group = "time", strict=FALSE)
 ```
 
-See slide #33 [here](http://www.personality-project.org/revelle/syllabi/454/rosseel_sem_longitudinal.pdf) for why this approach of using time as a grouping variable is tempting BUT not the correct way of assesing whether the means of latent variables change significantly
+See slide #33 [here](http://www.personality-project.org/revelle/syllabi/454/rosseel_sem_longitudinal.pdf) for why this approach of using time as a grouping variable is tempting BUT not completely the correct way of assesing whether the means of latent variables change significantly unless you assume strong invariance and optionally also specify that residuals from the two measurements are correlated (so strict invariance?). Here is what the strong invariance model looks like:
 
 ```{r}
-#Strong invariance model
-ez.group.time.model.fit_si = cfa(ez.group.time.model.sub, data = group_time_data, group = "time",  group.equal = c("loadings", "intercepts"))
+#Strong invariance model would be
+ez.group.time.model.sub.fit_si = cfa(ez.group.time.model.sub, data = group_time_data, group = "time",  group.equal = c("loadings", "intercepts"))
+```
+
+```{r}
+summary(ez.group.time.model.sub.fit_si, fit.measures=TRUE)
 ```
 
 # Time as latent variable
 
-Based on the concern raised above I tried checking whether the means of two separate factors (e.g. one consisting of all the drift rate variables from  T1 and another factor consisting of all the drift rate variables from T2) differed from each other. 
+The results above suggested that there is measurement invariance between the groups where the groups are two time points.
+
+I also tried to run a 'strict invariance' model that would check whether the means of two separate factors (e.g. one consisting of all the drift rate variables from  T1 and another factor consisting of all the drift rate variables from T2) differed from each other.
+
+Unfortunately I ran into problems with positive definite covariance matrices again and am not sure how to resolve them. 
 
 ```{r}
-# tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
-tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub)
+tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
 names(tmp1) = paste0(names(tmp1), "_1")
-# tmp2 = res_clean_retest_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
-tmp2 = res_clean_retest_data_ez %>% select(drift_vars_sub, thresh_vars_sub)
+tmp2 = res_clean_retest_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
 names(tmp2) = paste0(names(tmp2), "_2")
 latent_time_data = cbind(tmp1, tmp2)
 
@@ -275,11 +281,11 @@ ez.latent.time.model <- paste0("\ndrift_1=~", paste0(drift_vars_sub, "_1", colla
 ```
 
 
-```{r eval=FALSE}
+```{r error=TRUE}
 ez.latent.time.model.fit <- cfa(ez.latent.time.model, sample.cov = COV, sample.mean = MEAN, sample.nobs = 150)
 ```
 
 
-```{r eval=FALSE}
+```{r error=TRUE}
 summary(ez.latent.time.model.fit, fit.measures = TRUE, standardized = TRUE)
 ```
