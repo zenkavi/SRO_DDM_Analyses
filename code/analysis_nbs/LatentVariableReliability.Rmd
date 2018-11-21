@@ -126,14 +126,6 @@ ez.group.time.model.fit_si = cfa(ez.group.time.model.sub, data = group_time_data
 Based on the concern raised above I tried checking whether the means of two separate factors (e.g. one consisting of all the drift rate variables from  T1 and another factor consisting of all the drift rate variables from T2) differed from each other. 
 
 ```{r}
-drift_vars_sub = c("adaptive_n_back.EZ_drift" , "attention_network_task.EZ_drift" ,  "attention_network_task.alerting_EZ_drift" , "attention_network_task.conflict_EZ_drift" , "attention_network_task.orienting_EZ_drift" , "choice_reaction_time.EZ_drift" , "directed_forgetting.EZ_drift" , "directed_forgetting.proactive_interference_EZ_drift" , "dot_pattern_expectancy.AY.BY_EZ_drift" , "dot_pattern_expectancy.BX.BY_EZ_drift" , "dot_pattern_expectancy.EZ_drift" , "local_global_letter.EZ_drift" , "local_global_letter.conflict_EZ_drift" , "local_global_letter.global_bias_EZ_drift" , "local_global_letter.switch_cost_EZ_drift" , "motor_selective_stop_signal.EZ_drift" , "recent_probes.EZ_drift", "recent_probes.proactive_interference_EZ_drift" , "shape_matching.EZ_drift" , "shape_matching.stimulus_interference_EZ_drift" , "simon.EZ_drift", "simon.simon_EZ_drift" , "stim_selective_stop_signal.EZ_drift" , "stop_signal.EZ_drift" , "stroop.EZ_drift" , "stroop.stroop_EZ_drift" , "threebytwo.EZ_drift" , "threebytwo.cue_switch_cost_EZ_drift_100.0" , "threebytwo.cue_switch_cost_EZ_drift_900.0", "threebytwo.task_switch_cost_EZ_drift_100.0", "threebytwo.task_switch_cost_EZ_drift_900.0")
-
-thresh_vars_sub = c("adaptive_n_back.EZ_thresh" , "attention_network_task.EZ_thresh" , "attention_network_task.alerting_EZ_thresh" , "attention_network_task.conflict_EZ_thresh" , "attention_network_task.orienting_EZ_thresh" , "choice_reaction_time.EZ_thresh" , "directed_forgetting.EZ_thresh" ,  "directed_forgetting.proactive_interference_EZ_thresh" , "dot_pattern_expectancy.AY.BY_EZ_thresh" , "dot_pattern_expectancy.BX.BY_EZ_thresh" , "dot_pattern_expectancy.EZ_thresh" , "local_global_letter.EZ_thresh" ,  "local_global_letter.conflict_EZ_thresh" , "local_global_letter.global_bias_EZ_thresh" , "local_global_letter.switch_cost_EZ_thresh" , "motor_selective_stop_signal.EZ_thresh" , "recent_probes.EZ_thresh" , "recent_probes.proactive_interference_EZ_thresh" , "shape_matching.EZ_thresh" , "shape_matching.stimulus_interference_EZ_thresh" , "simon.EZ_thresh" , "simon.simon_EZ_thresh" , "stim_selective_stop_signal.EZ_thresh" , "stop_signal.EZ_thresh" , "stroop.EZ_thresh" , "stroop.stroop_EZ_thresh" , "threebytwo.EZ_thresh" , "threebytwo.cue_switch_cost_EZ_thresh_100.0" , "threebytwo.cue_switch_cost_EZ_thresh_900.0" , "threebytwo.task_switch_cost_EZ_thresh_100.0" , "threebytwo.task_switch_cost_EZ_thresh_900.0")
-
-non_dec_vars_sub = c("adaptive_n_back.EZ_non_decision" , "attention_network_task.EZ_non_decision" , "attention_network_task.alerting_EZ_non_decision" , "attention_network_task.conflict_EZ_non_decision" , "attention_network_task.orienting_EZ_non_decision" , "choice_reaction_time.EZ_non_decision" , "directed_forgetting.EZ_non_decision", "directed_forgetting.proactive_interference_EZ_non_decision" , "dot_pattern_expectancy.AY.BY_EZ_non_decision" , "dot_pattern_expectancy.BX.BY_EZ_non_decision" , "dot_pattern_expectancy.EZ_non_decision" , "local_global_letter.EZ_non_decision" , "local_global_letter.switch_cost_EZ_non_decision" , "motor_selective_stop_signal.EZ_non_decision" , "recent_probes.EZ_non_decision" , "recent_probes.proactive_interference_EZ_non_decision" , "shape_matching.EZ_non_decision" , "shape_matching.stimulus_interference_EZ_non_decision" , "simon.EZ_non_decision" , "simon.simon_EZ_non_decision" , "stim_selective_stop_signal.EZ_non_decision" , "stop_signal.EZ_non_decision" , "stroop.EZ_non_decision" , "stroop.stroop_EZ_non_decision" , "threebytwo.EZ_non_decision" , "threebytwo.cue_switch_cost_EZ_non_decision_100.0" , "threebytwo.cue_switch_cost_EZ_non_decision_900.0" , "threebytwo.task_switch_cost_EZ_non_decision_100.0" , "threebytwo.task_switch_cost_EZ_non_decision_900.0")
-```
-
-```{r}
 # tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
 tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub)
 names(tmp1) = paste0(names(tmp1), "_1")
@@ -283,11 +275,11 @@ ez.latent.time.model <- paste0("\ndrift_1=~", paste0(drift_vars_sub, "_1", colla
 ```
 
 
-```{r}
+```{r eval=FALSE}
 ez.latent.time.model.fit <- cfa(ez.latent.time.model, sample.cov = COV, sample.mean = MEAN, sample.nobs = 150)
 ```
 
 
-```{r}
+```{r eval=FALSE}
 summary(ez.latent.time.model.fit, fit.measures = TRUE, standardized = TRUE)
 ```
