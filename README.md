@@ -11,3 +11,4 @@ Other notebooks linked in the main analyses on supplementary questions:
 - [Comparison of HDDM T1 data fit using n=552 vs n=150](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/HDDM150vs522.nb.html)
 - [Comparison of using different numbers of posterior predictive samples in calculating fit statistics for HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/NumSamplesAnalysis.nb.html)
 - [How to calculate fit statistics for HDDM parameters](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/ModelvsActualRTs.nb.html)
+- [How to compare the reliability of latent variables](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/LatentVariableReliability.nb.html)

@@ -7,40 +7,61 @@ toc_float: yes
 ---
 
 ```{r}
-library(lavaan)
-require(tidyverse)
+ddm_workspace_scripts = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/'
+source(paste0(ddm_workspace_scripts,'ez_fa_data.R'))
 
+fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+
+library(lavaan)
+library(semTools)
+require(tidyverse)
 theme_set(theme_bw())
 options(scipen = 1, digits = 4)
 cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 theme_set(theme_bw())
 ggplot <- function(...) ggplot2::ggplot(...) + scale_fill_manual(values=cbbPalette) + scale_color_manual(values=cbbPalette)
 
-ddm_workspace_scripts = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/'
-source(paste0(ddm_workspace_scripts,'ez_fa_data.R'))
+```
 
-fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+In a [previous notebook](ttps://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) I was stuck on how to evaluate the reliability of a factor solution for data measures at two time points to check whether lower dimensional projections are stable enough across time to be used in trait-level analyses. 
+
+I tried two different approaches to this:  
+
+1. Predicting factor scores for T2 data using the factor solution from T1. I learned that there are different ways of calculating factor scores and only some of these yield reliable factor scores.  
+
+2. Fitting a separate 3 factor model to T2 data and comparing factor scores and factor loadings to each other. Though the solutions were very similar to each other the model being compared is not the same across time points in this approach.
+
+Dave suggested: 
+>The standard way to evaluate test-retest correlations with latent variables is to fit a latent variable for each time and then allow the latent variables to correlate. That is the test-retest correlation for the best, “true” score measure at each time point. 
+
+Based on this I did some reading (particularly important were slides 87-91 of [this presentation](http://users.ugent.be/~yrosseel/lavaan/zurich2017/INTRO/lavaan_intro_zurich2017.pdf) and slides 32-41 of [this presentation](http://www.personality-project.org/revelle/syllabi/454/rosseel_sem_longitudinal.pdf)) and here I impelement two ways of modeling the data from the two points together using the time point as a latent variable.  
+
+```{r}
+drift_vars = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "drift rate") %>% select(dv))[,]
+thresh_vars = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "threshold") %>% select(dv))[,]
+non_dec_vars = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "non-decision") %>% select(dv))[,]
+
+drift_vars_sub = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "drift rate" & overall_difference != "condition") %>% select(dv))[,]
+thresh_vars_sub = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "threshold" & overall_difference != "condition") %>% select(dv))[,]
+non_dec_vars_sub = (measure_labels %>% filter(raw_fit == "EZ" & rt_acc == "non-decision" & overall_difference != "condition") %>% select(dv))[,]
 ```
 
 # Time as grouping variable
 
-rbind data with "time" col added to each df
+In this first approach ...
 
 ```{r}
-tmp1 = res_clean_test_data_ez
+tmp1 = res_clean_test_data_ez %>% select(drift_vars, thresh_vars, non_dec_vars)
 tmp1$time = "t1"
 
-tmp2 = res_clean_retest_data_ez
+tmp2 = res_clean_retest_data_ez %>% select(drift_vars, thresh_vars, non_dec_vars)
 tmp2$time = "t2"
 
 group_time_data = rbind(tmp1, tmp2)
-
-# cat(grep("drift", names(group_time_data), value=T), sep=" + ")
-# cat(grep("thresh", names(group_time_data), value=T), sep=" + ")
-# cat(grep("non_dec", names(group_time_data), value=T), sep=" + ")
 ```
 
 ```{r}
+#What the paste statement result should look like
 ez.group.time.model <-'
 drift =~ adaptive_n_back.EZ_drift + attention_network_task.EZ_drift + attention_network_task.EZ_drift_congruent + attention_network_task.EZ_drift_incongruent + attention_network_task.EZ_drift_neutral + attention_network_task.alerting_EZ_drift + attention_network_task.conflict_EZ_drift + attention_network_task.orienting_EZ_drift + choice_reaction_time.EZ_drift + directed_forgetting.EZ_drift + directed_forgetting.EZ_drift_con + directed_forgetting.EZ_drift_neg + directed_forgetting.EZ_drift_pos + directed_forgetting.proactive_interference_EZ_drift + dot_pattern_expectancy.AY.BY_EZ_drift + dot_pattern_expectancy.BX.BY_EZ_drift + dot_pattern_expectancy.EZ_drift + dot_pattern_expectancy.EZ_drift_AX + dot_pattern_expectancy.EZ_drift_AY + dot_pattern_expectancy.EZ_drift_BX + dot_pattern_expectancy.EZ_drift_BY + local_global_letter.EZ_drift + local_global_letter.EZ_drift_congruent + local_global_letter.EZ_drift_global + local_global_letter.EZ_drift_incongruent + local_global_letter.EZ_drift_local + local_global_letter.EZ_drift_neutral + local_global_letter.EZ_drift_stay + local_global_letter.EZ_drift_switch + local_global_letter.conflict_EZ_drift + local_global_letter.global_bias_EZ_drift + local_global_letter.switch_cost_EZ_drift + motor_selective_stop_signal.EZ_drift + recent_probes.EZ_drift + recent_probes.EZ_drift_rec_neg + recent_probes.EZ_drift_rec_pos + recent_probes.EZ_drift_xrec + recent_probes.EZ_drift_xrec_neg + recent_probes.EZ_drift_xrec_pos + recent_probes.proactive_interference_EZ_drift + shape_matching.EZ_drift + shape_matching.EZ_drift_DDD + shape_matching.EZ_drift_DDS + shape_matching.EZ_drift_DNN + shape_matching.EZ_drift_DSD + shape_matching.EZ_drift_SDD + shape_matching.EZ_drift_SNN + shape_matching.EZ_drift_SSS + shape_matching.stimulus_interference_EZ_drift + simon.EZ_drift + simon.EZ_drift_congruent + simon.EZ_drift_incongruent + simon.simon_EZ_drift + stim_selective_stop_signal.EZ_drift + stop_signal.EZ_drift + stroop.EZ_drift + stroop.EZ_drift_congruent + stroop.EZ_drift_incongruent + stroop.stroop_EZ_drift + threebytwo.EZ_drift + threebytwo.EZ_drift_cue_stay_100.0 + threebytwo.EZ_drift_cue_stay_900.0 + threebytwo.EZ_drift_cue_switch_100.0 + threebytwo.EZ_drift_cue_switch_900.0 + threebytwo.EZ_drift_task_switch_100.0 + threebytwo.EZ_drift_task_switch_900.0 + threebytwo.cue_switch_cost_EZ_drift_100.0 + threebytwo.cue_switch_cost_EZ_drift_900.0 + threebytwo.task_switch_cost_EZ_drift_100.0 + threebytwo.task_switch_cost_EZ_drift_900.0
 thresh =~ adaptive_n_back.EZ_thresh + attention_network_task.EZ_thresh + attention_network_task.EZ_thresh_congruent + attention_network_task.EZ_thresh_incongruent + attention_network_task.EZ_thresh_neutral + attention_network_task.alerting_EZ_thresh + attention_network_task.conflict_EZ_thresh + attention_network_task.orienting_EZ_thresh + choice_reaction_time.EZ_thresh + directed_forgetting.EZ_thresh + directed_forgetting.EZ_thresh_con + directed_forgetting.EZ_thresh_neg + directed_forgetting.EZ_thresh_pos + directed_forgetting.proactive_interference_EZ_thresh + dot_pattern_expectancy.AY.BY_EZ_thresh + dot_pattern_expectancy.BX.BY_EZ_thresh + dot_pattern_expectancy.EZ_thresh + dot_pattern_expectancy.EZ_thresh_AX + dot_pattern_expectancy.EZ_thresh_AY + dot_pattern_expectancy.EZ_thresh_BX + dot_pattern_expectancy.EZ_thresh_BY + local_global_letter.EZ_thresh + local_global_letter.EZ_thresh_congruent + local_global_letter.EZ_thresh_global + local_global_letter.EZ_thresh_incongruent + local_global_letter.EZ_thresh_local + local_global_letter.EZ_thresh_neutral + local_global_letter.EZ_thresh_stay + local_global_letter.EZ_thresh_switch + local_global_letter.conflict_EZ_thresh + local_global_letter.global_bias_EZ_thresh + local_global_letter.switch_cost_EZ_thresh + motor_selective_stop_signal.EZ_thresh + recent_probes.EZ_thresh + recent_probes.EZ_thresh_rec_neg + recent_probes.EZ_thresh_rec_pos + recent_probes.EZ_thresh_xrec + recent_probes.EZ_thresh_xrec_neg + recent_probes.EZ_thresh_xrec_pos + recent_probes.proactive_interference_EZ_thresh + shape_matching.EZ_thresh + shape_matching.EZ_thresh_DDD + shape_matching.EZ_thresh_DDS + shape_matching.EZ_thresh_DNN + shape_matching.EZ_thresh_DSD + shape_matching.EZ_thresh_SDD + shape_matching.EZ_thresh_SNN + shape_matching.EZ_thresh_SSS + shape_matching.stimulus_interference_EZ_thresh + simon.EZ_thresh + simon.EZ_thresh_congruent + simon.EZ_thresh_incongruent + simon.simon_EZ_thresh + stim_selective_stop_signal.EZ_thresh + stop_signal.EZ_thresh + stroop.EZ_thresh + stroop.EZ_thresh_congruent + stroop.EZ_thresh_incongruent + stroop.stroop_EZ_thresh + threebytwo.EZ_thresh + threebytwo.EZ_thresh_cue_stay_100.0 + threebytwo.EZ_thresh_cue_stay_900.0 + threebytwo.EZ_thresh_cue_switch_100.0 + threebytwo.EZ_thresh_cue_switch_900.0 + threebytwo.EZ_thresh_task_switch_100.0 + threebytwo.EZ_thresh_task_switch_900.0 + threebytwo.cue_switch_cost_EZ_thresh_100.0 + threebytwo.cue_switch_cost_EZ_thresh_900.0 + threebytwo.task_switch_cost_EZ_thresh_100.0 + threebytwo.task_switch_cost_EZ_thresh_900.0
@@ -48,13 +69,225 @@ non_dec =~adaptive_n_back.EZ_non_decision + attention_network_task.EZ_non_decisi
 ```
 
 ```{r}
-
+ez.group.time.model <- paste0("\ndrift=~", paste0(drift_vars, collapse= " + "),
+       "\nthresh=~", paste0(thresh_vars, collapse= " + "),
+       "\nnon_dec=~", paste0(non_dec_vars, collapse= " + "),
+        collapse = "\n ")
 ```
 
 ```{r}
-fit_group = cfa(ez.group.time.model, data = group_time_data, group = "time")
+tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
+tmp1$time = "t1"
+
+tmp2 = res_clean_retest_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
+tmp2$time = "t2"
+
+group_time_data_sub = rbind(tmp1, tmp2)
 ```
 
 ```{r}
-summary(fit_group, fit.measures=TRUE)
+#What the paste statement result should look like
+ez.group.time.model.sub <-'
+drift =~ adaptive_n_back.EZ_drift + attention_network_task.EZ_drift +  attention_network_task.alerting_EZ_drift + attention_network_task.conflict_EZ_drift + attention_network_task.orienting_EZ_drift + choice_reaction_time.EZ_drift + directed_forgetting.EZ_drift + directed_forgetting.proactive_interference_EZ_drift + dot_pattern_expectancy.AY.BY_EZ_drift + dot_pattern_expectancy.BX.BY_EZ_drift + dot_pattern_expectancy.EZ_drift + local_global_letter.EZ_drift + local_global_letter.conflict_EZ_drift + local_global_letter.global_bias_EZ_drift + local_global_letter.switch_cost_EZ_drift + motor_selective_stop_signal.EZ_drift + recent_probes.EZ_drift + recent_probes.proactive_interference_EZ_drift + shape_matching.EZ_drift + shape_matching.stimulus_interference_EZ_drift + simon.EZ_drift + simon.simon_EZ_drift + stim_selective_stop_signal.EZ_drift + stop_signal.EZ_drift + stroop.EZ_drift + stroop.stroop_EZ_drift + threebytwo.EZ_drift + threebytwo.cue_switch_cost_EZ_drift_100.0 + threebytwo.cue_switch_cost_EZ_drift_900.0 + threebytwo.task_switch_cost_EZ_drift_100.0 + threebytwo.task_switch_cost_EZ_drift_900.0
+
+thresh =~ adaptive_n_back.EZ_thresh + attention_network_task.EZ_thresh + attention_network_task.alerting_EZ_thresh + attention_network_task.conflict_EZ_thresh + attention_network_task.orienting_EZ_thresh + choice_reaction_time.EZ_thresh + directed_forgetting.EZ_thresh +  directed_forgetting.proactive_interference_EZ_thresh + dot_pattern_expectancy.AY.BY_EZ_thresh + dot_pattern_expectancy.BX.BY_EZ_thresh + dot_pattern_expectancy.EZ_thresh + local_global_letter.EZ_thresh +  local_global_letter.conflict_EZ_thresh + local_global_letter.global_bias_EZ_thresh + local_global_letter.switch_cost_EZ_thresh + motor_selective_stop_signal.EZ_thresh + recent_probes.EZ_thresh + recent_probes.proactive_interference_EZ_thresh + shape_matching.EZ_thresh + shape_matching.stimulus_interference_EZ_thresh + simon.EZ_thresh + simon.simon_EZ_thresh + stim_selective_stop_signal.EZ_thresh + stop_signal.EZ_thresh + stroop.EZ_thresh + stroop.stroop_EZ_thresh + threebytwo.EZ_thresh + threebytwo.cue_switch_cost_EZ_thresh_100.0 + threebytwo.cue_switch_cost_EZ_thresh_900.0 + threebytwo.task_switch_cost_EZ_thresh_100.0 + threebytwo.task_switch_cost_EZ_thresh_900.0
+
+non_dec =~adaptive_n_back.EZ_non_decision + attention_network_task.EZ_non_decision + attention_network_task.alerting_EZ_non_decision + attention_network_task.conflict_EZ_non_decision + attention_network_task.orienting_EZ_non_decision + choice_reaction_time.EZ_non_decision + directed_forgetting.EZ_non_decision + directed_forgetting.proactive_interference_EZ_non_decision + dot_pattern_expectancy.AY.BY_EZ_non_decision + dot_pattern_expectancy.BX.BY_EZ_non_decision + dot_pattern_expectancy.EZ_non_decision + local_global_letter.EZ_non_decision + local_global_letter.switch_cost_EZ_non_decision + motor_selective_stop_signal.EZ_non_decision + recent_probes.EZ_non_decision + recent_probes.proactive_interference_EZ_non_decision + shape_matching.EZ_non_decision + shape_matching.stimulus_interference_EZ_non_decision + simon.EZ_non_decision + simon.simon_EZ_non_decision + stim_selective_stop_signal.EZ_non_decision + stop_signal.EZ_non_decision + stroop.EZ_non_decision + stroop.stroop_EZ_non_decision + threebytwo.EZ_non_decision + threebytwo.cue_switch_cost_EZ_non_decision_100.0 + threebytwo.cue_switch_cost_EZ_non_decision_900.0 + threebytwo.task_switch_cost_EZ_non_decision_100.0 + threebytwo.task_switch_cost_EZ_non_decision_900.0'
+```
+
+```{r}
+ez.group.time.model.sub <- paste0("\ndrift=~", paste0(drift_vars_sub, collapse= " + "),
+       "\nthresh=~", paste0(thresh_vars_sub, collapse= " + "),
+       "\nnon_dec=~", paste0(non_dec_vars_sub, collapse= " + "),
+        collapse = "\n ")
+```
+
+```{r}
+ez.group.time.model.sub.fit = cfa(ez.group.time.model.sub, data = group_time_data_sub, group = "time")
+```
+
+```{r}
+summary(ez.group.time.model.sub.fit, fit.measures=TRUE)
+```
+
+```{r}
+measurementInvariance(ez.group.time.model.sub, data = group_time_data, group = "time", strict=FALSE)
+```
+
+See slide #33 [here](http://www.personality-project.org/revelle/syllabi/454/rosseel_sem_longitudinal.pdf) for why this approach of using time as a grouping variable is tempting BUT not the correct way of assesing whether the means of latent variables change significantly
+
+```{r}
+#Strong invariance model
+ez.group.time.model.fit_si = cfa(ez.group.time.model.sub, data = group_time_data, group = "time",  group.equal = c("loadings", "intercepts"))
+```
+
+# Time as latent variable
+
+Based on the concern raised above I tried checking whether the means of two separate factors (e.g. one consisting of all the drift rate variables from  T1 and another factor consisting of all the drift rate variables from T2) differed from each other. 
+
+```{r}
+drift_vars_sub = c("adaptive_n_back.EZ_drift" , "attention_network_task.EZ_drift" ,  "attention_network_task.alerting_EZ_drift" , "attention_network_task.conflict_EZ_drift" , "attention_network_task.orienting_EZ_drift" , "choice_reaction_time.EZ_drift" , "directed_forgetting.EZ_drift" , "directed_forgetting.proactive_interference_EZ_drift" , "dot_pattern_expectancy.AY.BY_EZ_drift" , "dot_pattern_expectancy.BX.BY_EZ_drift" , "dot_pattern_expectancy.EZ_drift" , "local_global_letter.EZ_drift" , "local_global_letter.conflict_EZ_drift" , "local_global_letter.global_bias_EZ_drift" , "local_global_letter.switch_cost_EZ_drift" , "motor_selective_stop_signal.EZ_drift" , "recent_probes.EZ_drift", "recent_probes.proactive_interference_EZ_drift" , "shape_matching.EZ_drift" , "shape_matching.stimulus_interference_EZ_drift" , "simon.EZ_drift", "simon.simon_EZ_drift" , "stim_selective_stop_signal.EZ_drift" , "stop_signal.EZ_drift" , "stroop.EZ_drift" , "stroop.stroop_EZ_drift" , "threebytwo.EZ_drift" , "threebytwo.cue_switch_cost_EZ_drift_100.0" , "threebytwo.cue_switch_cost_EZ_drift_900.0", "threebytwo.task_switch_cost_EZ_drift_100.0", "threebytwo.task_switch_cost_EZ_drift_900.0")
+
+thresh_vars_sub = c("adaptive_n_back.EZ_thresh" , "attention_network_task.EZ_thresh" , "attention_network_task.alerting_EZ_thresh" , "attention_network_task.conflict_EZ_thresh" , "attention_network_task.orienting_EZ_thresh" , "choice_reaction_time.EZ_thresh" , "directed_forgetting.EZ_thresh" ,  "directed_forgetting.proactive_interference_EZ_thresh" , "dot_pattern_expectancy.AY.BY_EZ_thresh" , "dot_pattern_expectancy.BX.BY_EZ_thresh" , "dot_pattern_expectancy.EZ_thresh" , "local_global_letter.EZ_thresh" ,  "local_global_letter.conflict_EZ_thresh" , "local_global_letter.global_bias_EZ_thresh" , "local_global_letter.switch_cost_EZ_thresh" , "motor_selective_stop_signal.EZ_thresh" , "recent_probes.EZ_thresh" , "recent_probes.proactive_interference_EZ_thresh" , "shape_matching.EZ_thresh" , "shape_matching.stimulus_interference_EZ_thresh" , "simon.EZ_thresh" , "simon.simon_EZ_thresh" , "stim_selective_stop_signal.EZ_thresh" , "stop_signal.EZ_thresh" , "stroop.EZ_thresh" , "stroop.stroop_EZ_thresh" , "threebytwo.EZ_thresh" , "threebytwo.cue_switch_cost_EZ_thresh_100.0" , "threebytwo.cue_switch_cost_EZ_thresh_900.0" , "threebytwo.task_switch_cost_EZ_thresh_100.0" , "threebytwo.task_switch_cost_EZ_thresh_900.0")
+
+non_dec_vars_sub = c("adaptive_n_back.EZ_non_decision" , "attention_network_task.EZ_non_decision" , "attention_network_task.alerting_EZ_non_decision" , "attention_network_task.conflict_EZ_non_decision" , "attention_network_task.orienting_EZ_non_decision" , "choice_reaction_time.EZ_non_decision" , "directed_forgetting.EZ_non_decision", "directed_forgetting.proactive_interference_EZ_non_decision" , "dot_pattern_expectancy.AY.BY_EZ_non_decision" , "dot_pattern_expectancy.BX.BY_EZ_non_decision" , "dot_pattern_expectancy.EZ_non_decision" , "local_global_letter.EZ_non_decision" , "local_global_letter.switch_cost_EZ_non_decision" , "motor_selective_stop_signal.EZ_non_decision" , "recent_probes.EZ_non_decision" , "recent_probes.proactive_interference_EZ_non_decision" , "shape_matching.EZ_non_decision" , "shape_matching.stimulus_interference_EZ_non_decision" , "simon.EZ_non_decision" , "simon.simon_EZ_non_decision" , "stim_selective_stop_signal.EZ_non_decision" , "stop_signal.EZ_non_decision" , "stroop.EZ_non_decision" , "stroop.stroop_EZ_non_decision" , "threebytwo.EZ_non_decision" , "threebytwo.cue_switch_cost_EZ_non_decision_100.0" , "threebytwo.cue_switch_cost_EZ_non_decision_900.0" , "threebytwo.task_switch_cost_EZ_non_decision_100.0" , "threebytwo.task_switch_cost_EZ_non_decision_900.0")
+```
+
+```{r}
+# tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
+tmp1 = res_clean_test_data_ez %>% select(drift_vars_sub, thresh_vars_sub)
+names(tmp1) = paste0(names(tmp1), "_1")
+# tmp2 = res_clean_retest_data_ez %>% select(drift_vars_sub, thresh_vars_sub, non_dec_vars_sub)
+tmp2 = res_clean_retest_data_ez %>% select(drift_vars_sub, thresh_vars_sub)
+names(tmp2) = paste0(names(tmp2), "_2")
+latent_time_data = cbind(tmp1, tmp2)
+
+MEAN <- c(apply(tmp1, 2, mean),apply(tmp2, 2, mean)) 
+
+SDS <- c(apply(tmp1, 2, sd),apply(tmp2, 2, sd)) 
+
+x = cor(latent_time_data)
+x = cor.smooth(x)
+lower = x[lower.tri(x, diag = T)]
+
+COV <- getCov(lower, sds=SDS, names = names(latent_time_data))
+```
+
+```{r eval=FALSE}
+#What the resulting model string should look like
+ez.latent.time.model <- '
+drift_1 =~ adaptive_n_back.EZ_drift_1 + attention_network_task.EZ_drift_1 + attention_network_task.alerting_EZ_drift_1 + attention_network_task.conflict_EZ_drift_1 + attention_network_task.orienting_EZ_drift_1 + choice_reaction_time.EZ_drift_1 + directed_forgetting.EZ_drift_1 + directed_forgetting.proactive_interference_EZ_drift_1 + dot_pattern_expectancy.AY.BY_EZ_drift_1 + dot_pattern_expectancy.BX.BY_EZ_drift_1 + dot_pattern_expectancy.EZ_drift_1 + local_global_letter.EZ_drift_1 + local_global_letter.conflict_EZ_drift_1 + local_global_letter.global_bias_EZ_drift_1 + local_global_letter.switch_cost_EZ_drift_1 + motor_selective_stop_signal.EZ_drift_1 + recent_probes.EZ_drift_1 + recent_probes.proactive_interference_EZ_drift_1 + shape_matching.EZ_drift_1 + shape_matching.stimulus_interference_EZ_drift_1 + simon.EZ_drift_1 + simon.simon_EZ_drift_1 + stim_selective_stop_signal.EZ_drift_1 + stop_signal.EZ_drift_1 + stroop.EZ_drift_1 + stroop.stroop_EZ_drift_1 + threebytwo.EZ_drift_1 + threebytwo.cue_switch_cost_EZ_drift_100.0_1 + threebytwo.cue_switch_cost_EZ_drift_900.0_1 + threebytwo.task_switch_cost_EZ_drift_100.0_1 + threebytwo.task_switch_cost_EZ_drift_900.0_1
+thresh_1 =~ adaptive_n_back.EZ_thresh_1 + attention_network_task.EZ_thresh_1 + attention_network_task.alerting_EZ_thresh_1 + attention_network_task.conflict_EZ_thresh_1 + attention_network_task.orienting_EZ_thresh_1 + choice_reaction_time.EZ_thresh_1 + directed_forgetting.EZ_thresh_1 + directed_forgetting.proactive_interference_EZ_thresh_1 + dot_pattern_expectancy.AY.BY_EZ_thresh_1 + dot_pattern_expectancy.BX.BY_EZ_thresh_1 + dot_pattern_expectancy.EZ_thresh_1 + local_global_letter.EZ_thresh_1 + local_global_letter.conflict_EZ_thresh_1 + local_global_letter.global_bias_EZ_thresh_1 + local_global_letter.switch_cost_EZ_thresh_1 + motor_selective_stop_signal.EZ_thresh_1 + recent_probes.EZ_thresh_1 + recent_probes.proactive_interference_EZ_thresh_1 + shape_matching.EZ_thresh_1 + shape_matching.stimulus_interference_EZ_thresh_1 + simon.EZ_thresh_1 + simon.simon_EZ_thresh_1 + stim_selective_stop_signal.EZ_thresh_1 + stop_signal.EZ_thresh_1 + stroop.EZ_thresh_1 + stroop.stroop_EZ_thresh_1 + threebytwo.EZ_thresh_1 + threebytwo.cue_switch_cost_EZ_thresh_100.0_1 + threebytwo.cue_switch_cost_EZ_thresh_900.0_1 + threebytwo.task_switch_cost_EZ_thresh_100.0_1 + threebytwo.task_switch_cost_EZ_thresh_900.0_1
+non_dec_1 =~ adaptive_n_back.EZ_non_decision_1 + attention_network_task.EZ_non_decision_1 + attention_network_task.alerting_EZ_non_decision_1 + attention_network_task.conflict_EZ_non_decision_1 + attention_network_task.orienting_EZ_non_decision_1 + choice_reaction_time.EZ_non_decision_1 + directed_forgetting.EZ_non_decision_1 + directed_forgetting.proactive_interference_EZ_non_decision_1 + dot_pattern_expectancy.AY.BY_EZ_non_decision_1 + dot_pattern_expectancy.BX.BY_EZ_non_decision_1 + dot_pattern_expectancy.EZ_non_decision_1 + local_global_letter.EZ_non_decision_1 + local_global_letter.switch_cost_EZ_non_decision_1 + motor_selective_stop_signal.EZ_non_decision_1 + recent_probes.EZ_non_decision_1 + recent_probes.proactive_interference_EZ_non_decision_1 + shape_matching.EZ_non_decision_1 + shape_matching.stimulus_interference_EZ_non_decision_1 + simon.EZ_non_decision_1 + simon.simon_EZ_non_decision_1 + stim_selective_stop_signal.EZ_non_decision_1 + stop_signal.EZ_non_decision_1 + stroop.EZ_non_decision_1 + stroop.stroop_EZ_non_decision_1 + threebytwo.EZ_non_decision_1 + threebytwo.cue_switch_cost_EZ_non_decision_100.0_1 + threebytwo.cue_switch_cost_EZ_non_decision_900.0_1 + threebytwo.task_switch_cost_EZ_non_decision_100.0_1 + threebytwo.task_switch_cost_EZ_non_decision_900.0_1
+drift_2 =~ adaptive_n_back.EZ_drift_2 + attention_network_task.EZ_drift_2 + attention_network_task.alerting_EZ_drift_2 + attention_network_task.conflict_EZ_drift_2 + attention_network_task.orienting_EZ_drift_2 + choice_reaction_time.EZ_drift_2 + directed_forgetting.EZ_drift_2 + directed_forgetting.proactive_interference_EZ_drift_2 + dot_pattern_expectancy.AY.BY_EZ_drift_2 + dot_pattern_expectancy.BX.BY_EZ_drift_2 + dot_pattern_expectancy.EZ_drift_2 + local_global_letter.EZ_drift_2 + local_global_letter.conflict_EZ_drift_2 + local_global_letter.global_bias_EZ_drift_2 + local_global_letter.switch_cost_EZ_drift_2 + motor_selective_stop_signal.EZ_drift_2 + recent_probes.EZ_drift_2 + recent_probes.proactive_interference_EZ_drift_2 + shape_matching.EZ_drift_2 + shape_matching.stimulus_interference_EZ_drift_2 + simon.EZ_drift_2 + simon.simon_EZ_drift_2 + stim_selective_stop_signal.EZ_drift_2 + stop_signal.EZ_drift_2 + stroop.EZ_drift_2 + stroop.stroop_EZ_drift_2 + threebytwo.EZ_drift_2 + threebytwo.cue_switch_cost_EZ_drift_100.0_2 + threebytwo.cue_switch_cost_EZ_drift_900.0_2 + threebytwo.task_switch_cost_EZ_drift_100.0_2 + threebytwo.task_switch_cost_EZ_drift_900.0_2
+thresh_2 =~ adaptive_n_back.EZ_thresh_2 + attention_network_task.EZ_thresh_2 + attention_network_task.alerting_EZ_thresh_2 + attention_network_task.conflict_EZ_thresh_2 + attention_network_task.orienting_EZ_thresh_2 + choice_reaction_time.EZ_thresh_2 + directed_forgetting.EZ_thresh_2 + directed_forgetting.proactive_interference_EZ_thresh_2 + dot_pattern_expectancy.AY.BY_EZ_thresh_2 + dot_pattern_expectancy.BX.BY_EZ_thresh_2 + dot_pattern_expectancy.EZ_thresh_2 + local_global_letter.EZ_thresh_2 + local_global_letter.conflict_EZ_thresh_2 + local_global_letter.global_bias_EZ_thresh_2 + local_global_letter.switch_cost_EZ_thresh_2 + motor_selective_stop_signal.EZ_thresh_2 + recent_probes.EZ_thresh_2 + recent_probes.proactive_interference_EZ_thresh_2 + shape_matching.EZ_thresh_2 + shape_matching.stimulus_interference_EZ_thresh_2 + simon.EZ_thresh_2 + simon.simon_EZ_thresh_2 + stim_selective_stop_signal.EZ_thresh_2 + stop_signal.EZ_thresh_2 + stroop.EZ_thresh_2 + stroop.stroop_EZ_thresh_2 + threebytwo.EZ_thresh_2 + threebytwo.cue_switch_cost_EZ_thresh_100.0_2 + threebytwo.cue_switch_cost_EZ_thresh_900.0_2 + threebytwo.task_switch_cost_EZ_thresh_100.0_2 + threebytwo.task_switch_cost_EZ_thresh_900.0_2
+non_dec_2 =~ adaptive_n_back.EZ_non_decision_2 + attention_network_task.EZ_non_decision_2 + attention_network_task.alerting_EZ_non_decision_2 + attention_network_task.conflict_EZ_non_decision_2 + attention_network_task.orienting_EZ_non_decision_2 + choice_reaction_time.EZ_non_decision_2 + directed_forgetting.EZ_non_decision_2 + directed_forgetting.proactive_interference_EZ_non_decision_2 + dot_pattern_expectancy.AY.BY_EZ_non_decision_2 + dot_pattern_expectancy.BX.BY_EZ_non_decision_2 + dot_pattern_expectancy.EZ_non_decision_2 + local_global_letter.EZ_non_decision_2 + local_global_letter.switch_cost_EZ_non_decision_2 + motor_selective_stop_signal.EZ_non_decision_2 + recent_probes.EZ_non_decision_2 + recent_probes.proactive_interference_EZ_non_decision_2 + shape_matching.EZ_non_decision_2 + shape_matching.stimulus_interference_EZ_non_decision_2 + simon.EZ_non_decision_2 + simon.simon_EZ_non_decision_2 + stim_selective_stop_signal.EZ_non_decision_2 + stop_signal.EZ_non_decision_2 + stroop.EZ_non_decision_2 + stroop.stroop_EZ_non_decision_2 + threebytwo.EZ_non_decision_2 + threebytwo.cue_switch_cost_EZ_non_decision_100.0_2 + threebytwo.cue_switch_cost_EZ_non_decision_900.0_2 + threebytwo.task_switch_cost_EZ_non_decision_100.0_2 + threebytwo.task_switch_cost_EZ_non_decision_900.0_2
+
+# intercepts
+
+# residual covariances
+adaptive_n_back.EZ_drift_1 ~~ adaptive_n_back.EZ_drift_2
+ attention_network_task.EZ_drift_1 ~~ attention_network_task.EZ_drift_2
+ attention_network_task.alerting_EZ_drift_1 ~~ attention_network_task.alerting_EZ_drift_2
+ attention_network_task.conflict_EZ_drift_1 ~~ attention_network_task.conflict_EZ_drift_2
+ attention_network_task.orienting_EZ_drift_1 ~~ attention_network_task.orienting_EZ_drift_2
+ choice_reaction_time.EZ_drift_1 ~~ choice_reaction_time.EZ_drift_2
+ directed_forgetting.EZ_drift_1 ~~ directed_forgetting.EZ_drift_2
+ directed_forgetting.proactive_interference_EZ_drift_1 ~~ directed_forgetting.proactive_interference_EZ_drift_2
+ dot_pattern_expectancy.AY.BY_EZ_drift_1 ~~ dot_pattern_expectancy.AY.BY_EZ_drift_2
+ dot_pattern_expectancy.BX.BY_EZ_drift_1 ~~ dot_pattern_expectancy.BX.BY_EZ_drift_2
+ dot_pattern_expectancy.EZ_drift_1 ~~ dot_pattern_expectancy.EZ_drift_2
+ local_global_letter.EZ_drift_1 ~~ local_global_letter.EZ_drift_2
+ local_global_letter.conflict_EZ_drift_1 ~~ local_global_letter.conflict_EZ_drift_2
+ local_global_letter.global_bias_EZ_drift_1 ~~ local_global_letter.global_bias_EZ_drift_2
+ local_global_letter.switch_cost_EZ_drift_1 ~~ local_global_letter.switch_cost_EZ_drift_2
+ motor_selective_stop_signal.EZ_drift_1 ~~ motor_selective_stop_signal.EZ_drift_2
+ recent_probes.EZ_drift_1 ~~ recent_probes.EZ_drift_2
+ recent_probes.proactive_interference_EZ_drift_1 ~~ recent_probes.proactive_interference_EZ_drift_2
+ shape_matching.EZ_drift_1 ~~ shape_matching.EZ_drift_2
+ shape_matching.stimulus_interference_EZ_drift_1 ~~ shape_matching.stimulus_interference_EZ_drift_2
+ simon.EZ_drift_1 ~~ simon.EZ_drift_2
+ simon.simon_EZ_drift_1 ~~ simon.simon_EZ_drift_2
+ stim_selective_stop_signal.EZ_drift_1 ~~ stim_selective_stop_signal.EZ_drift_2
+ stop_signal.EZ_drift_1 ~~ stop_signal.EZ_drift_2
+ stroop.EZ_drift_1 ~~ stroop.EZ_drift_2
+ stroop.stroop_EZ_drift_1 ~~ stroop.stroop_EZ_drift_2
+ threebytwo.EZ_drift_1 ~~ threebytwo.EZ_drift_2
+ threebytwo.cue_switch_cost_EZ_drift_100.0_1 ~~ threebytwo.cue_switch_cost_EZ_drift_100.0_2
+ threebytwo.cue_switch_cost_EZ_drift_900.0_1 ~~ threebytwo.cue_switch_cost_EZ_drift_900.0_2
+ threebytwo.task_switch_cost_EZ_drift_100.0_1 ~~ threebytwo.task_switch_cost_EZ_drift_100.0_2
+ threebytwo.task_switch_cost_EZ_drift_900.0_1 ~~ threebytwo.task_switch_cost_EZ_drift_900.0_2
+adaptive_n_back.EZ_thresh_1 ~~ adaptive_n_back.EZ_thresh_2
+ attention_network_task.EZ_thresh_1 ~~ attention_network_task.EZ_thresh_2
+ attention_network_task.alerting_EZ_thresh_1 ~~ attention_network_task.alerting_EZ_thresh_2
+ attention_network_task.conflict_EZ_thresh_1 ~~ attention_network_task.conflict_EZ_thresh_2
+ attention_network_task.orienting_EZ_thresh_1 ~~ attention_network_task.orienting_EZ_thresh_2
+ choice_reaction_time.EZ_thresh_1 ~~ choice_reaction_time.EZ_thresh_2
+ directed_forgetting.EZ_thresh_1 ~~ directed_forgetting.EZ_thresh_2
+ directed_forgetting.proactive_interference_EZ_thresh_1 ~~ directed_forgetting.proactive_interference_EZ_thresh_2
+ dot_pattern_expectancy.AY.BY_EZ_thresh_1 ~~ dot_pattern_expectancy.AY.BY_EZ_thresh_2
+ dot_pattern_expectancy.BX.BY_EZ_thresh_1 ~~ dot_pattern_expectancy.BX.BY_EZ_thresh_2
+ dot_pattern_expectancy.EZ_thresh_1 ~~ dot_pattern_expectancy.EZ_thresh_2
+ local_global_letter.EZ_thresh_1 ~~ local_global_letter.EZ_thresh_2
+ local_global_letter.conflict_EZ_thresh_1 ~~ local_global_letter.conflict_EZ_thresh_2
+ local_global_letter.global_bias_EZ_thresh_1 ~~ local_global_letter.global_bias_EZ_thresh_2
+ local_global_letter.switch_cost_EZ_thresh_1 ~~ local_global_letter.switch_cost_EZ_thresh_2
+ motor_selective_stop_signal.EZ_thresh_1 ~~ motor_selective_stop_signal.EZ_thresh_2
+ recent_probes.EZ_thresh_1 ~~ recent_probes.EZ_thresh_2
+ recent_probes.proactive_interference_EZ_thresh_1 ~~ recent_probes.proactive_interference_EZ_thresh_2
+ shape_matching.EZ_thresh_1 ~~ shape_matching.EZ_thresh_2
+ shape_matching.stimulus_interference_EZ_thresh_1 ~~ shape_matching.stimulus_interference_EZ_thresh_2
+ simon.EZ_thresh_1 ~~ simon.EZ_thresh_2
+ simon.simon_EZ_thresh_1 ~~ simon.simon_EZ_thresh_2
+ stim_selective_stop_signal.EZ_thresh_1 ~~ stim_selective_stop_signal.EZ_thresh_2
+ stop_signal.EZ_thresh_1 ~~ stop_signal.EZ_thresh_2
+ stroop.EZ_thresh_1 ~~ stroop.EZ_thresh_2
+ stroop.stroop_EZ_thresh_1 ~~ stroop.stroop_EZ_thresh_2
+ threebytwo.EZ_thresh_1 ~~ threebytwo.EZ_thresh_2
+ threebytwo.cue_switch_cost_EZ_thresh_100.0_1 ~~ threebytwo.cue_switch_cost_EZ_thresh_100.0_2
+ threebytwo.cue_switch_cost_EZ_thresh_900.0_1 ~~ threebytwo.cue_switch_cost_EZ_thresh_900.0_2
+ threebytwo.task_switch_cost_EZ_thresh_100.0_1 ~~ threebytwo.task_switch_cost_EZ_thresh_100.0_2
+ threebytwo.task_switch_cost_EZ_thresh_900.0_1 ~~ threebytwo.task_switch_cost_EZ_thresh_900.0_2
+adaptive_n_back.EZ_non_decision_1 ~~ adaptive_n_back.EZ_non_decision_2
+ attention_network_task.EZ_non_decision_1 ~~ attention_network_task.EZ_non_decision_2
+ attention_network_task.alerting_EZ_non_decision_1 ~~ attention_network_task.alerting_EZ_non_decision_2
+ attention_network_task.conflict_EZ_non_decision_1 ~~ attention_network_task.conflict_EZ_non_decision_2
+ attention_network_task.orienting_EZ_non_decision_1 ~~ attention_network_task.orienting_EZ_non_decision_2
+ choice_reaction_time.EZ_non_decision_1 ~~ choice_reaction_time.EZ_non_decision_2
+ directed_forgetting.EZ_non_decision_1 ~~ directed_forgetting.EZ_non_decision_2
+ directed_forgetting.proactive_interference_EZ_non_decision_1 ~~ directed_forgetting.proactive_interference_EZ_non_decision_2
+ dot_pattern_expectancy.AY.BY_EZ_non_decision_1 ~~ dot_pattern_expectancy.AY.BY_EZ_non_decision_2
+ dot_pattern_expectancy.BX.BY_EZ_non_decision_1 ~~ dot_pattern_expectancy.BX.BY_EZ_non_decision_2
+ dot_pattern_expectancy.EZ_non_decision_1 ~~ dot_pattern_expectancy.EZ_non_decision_2
+ local_global_letter.EZ_non_decision_1 ~~ local_global_letter.EZ_non_decision_2
+ local_global_letter.switch_cost_EZ_non_decision_1 ~~ local_global_letter.switch_cost_EZ_non_decision_2
+ motor_selective_stop_signal.EZ_non_decision_1 ~~ motor_selective_stop_signal.EZ_non_decision_2
+ recent_probes.EZ_non_decision_1 ~~ recent_probes.EZ_non_decision_2
+ recent_probes.proactive_interference_EZ_non_decision_1 ~~ recent_probes.proactive_interference_EZ_non_decision_2
+ shape_matching.EZ_non_decision_1 ~~ shape_matching.EZ_non_decision_2
+ shape_matching.stimulus_interference_EZ_non_decision_1 ~~ shape_matching.stimulus_interference_EZ_non_decision_2
+ simon.EZ_non_decision_1 ~~ simon.EZ_non_decision_2
+ simon.simon_EZ_non_decision_1 ~~ simon.simon_EZ_non_decision_2
+ stim_selective_stop_signal.EZ_non_decision_1 ~~ stim_selective_stop_signal.EZ_non_decision_2
+ stop_signal.EZ_non_decision_1 ~~ stop_signal.EZ_non_decision_2
+ stroop.EZ_non_decision_1 ~~ stroop.EZ_non_decision_2
+ stroop.stroop_EZ_non_decision_1 ~~ stroop.stroop_EZ_non_decision_2
+ threebytwo.EZ_non_decision_1 ~~ threebytwo.EZ_non_decision_2
+ threebytwo.cue_switch_cost_EZ_non_decision_100.0_1 ~~ threebytwo.cue_switch_cost_EZ_non_decision_100.0_2
+ threebytwo.cue_switch_cost_EZ_non_decision_900.0_1 ~~ threebytwo.cue_switch_cost_EZ_non_decision_900.0_2
+ threebytwo.task_switch_cost_EZ_non_decision_100.0_1 ~~ threebytwo.task_switch_cost_EZ_non_decision_100.0_2
+ threebytwo.task_switch_cost_EZ_non_decision_900.0_1 ~~ threebytwo.task_switch_cost_EZ_non_decision_900.0_2
+
+#latent means
+drift_1 ~ 0*1
+drift_2 ~ 1
+thresh_1 ~ 0*1
+thresh_2 ~ 1
+non_dec_1 ~ 0*1
+non_dec_2 ~ 1
+'
+```
+
+```{r}
+ez.latent.time.model <- paste0("\ndrift_1=~", paste0(drift_vars_sub, "_1", collapse= " + "),
+       "\nthresh_1=~", paste0(thresh_vars_sub, "_1", collapse= " + "),
+       "\nnon_dec_1=~", paste0(non_dec_vars_sub, "_1", collapse= " + "), 
+       "\ndrift_2=~", paste0(drift_vars_sub, "_2", collapse= " + "),
+       "\nthresh_2=~", paste0(thresh_vars_sub, "_2", collapse= " + "),
+       "\nnon_dec_2=~", paste0(non_dec_vars_sub, "_2", collapse= " + "), 
+       paste0("\n",drift_vars_sub, "_1"," ~~ ", drift_vars_sub, "_2", collapse = "\n"),
+       paste0("\n",thresh_vars_sub, "_1"," ~~ ", thresh_vars_sub, "_2", collapse = "\n"),
+       paste0("\n",non_dec_vars_sub, "_1"," ~~ ", non_dec_vars_sub, "_2", collapse = "\n"),
+       paste0('\ndrift_1 ~ 0*1', '\ndrift_2 ~ 1','\nthresh_1 ~ 0*1','\nthresh_2 ~ 1','\nnon_dec_1 ~ 0*1','\nnon_dec_2 ~ 1',collapse = "\n"),
+        collapse = "\n ")
+```
+
+
+```{r}
+ez.latent.time.model.fit <- cfa(ez.latent.time.model, sample.cov = COV, sample.mean = MEAN, sample.nobs = 150)
+```
+
+
+```{r}
+summary(ez.latent.time.model.fit, fit.measures = TRUE, standardized = TRUE)
 ```
