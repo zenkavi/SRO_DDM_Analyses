@@ -16,9 +16,6 @@ source(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'))
 source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
-fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
-cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-
 test_data_ez = test_data %>%
 select(grep('EZ', names(test_data), value=T))
 
@@ -50,8 +47,6 @@ clean_test_data_ez_std = cbind(clean_test_data_ez_std, demographics[,c("Age", "S
 
 res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
 
-ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
-
 retest_data_ez = retest_data %>%
   select(grep('EZ', names(retest_data), value=T))
 
@@ -74,5 +69,3 @@ clean_retest_data_ez_std = clean_retest_data_ez_std %>%
 clean_retest_data_ez_std = cbind(clean_retest_data_ez_std, demographics[,c("Age", "Sex")])
 
 res_clean_retest_data_ez = residualize_baseline(clean_retest_data_ez_std)
-
-ez_t2_fa_3 = predict(ez_t1_fa_3, res_clean_retest_data_ez)

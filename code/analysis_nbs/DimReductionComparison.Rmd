@@ -863,6 +863,14 @@ ez_t1_fa_3_loadings %>%
   facet_wrap(~par)
 ```
 
+### Model time as a latent variable 
+
+Dave's response to my confusions on this:
+
+>The standard way to evaluate test-retest correlations with latent variables is to fit a latent variable for each time and then allow the latent variables to correlate. That is the test-retest correlation for the best, “true” score measure at each time point. 
+
+Based on this I tried modeling all the data together using timepoint it was collected in as a latent variable. The details of those analyses are [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/LatentVariableReliability.nb.html)
+
 ## EFA on HDDM variables of retest data
 
 ```{r}
