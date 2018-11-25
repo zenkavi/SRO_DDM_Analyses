@@ -36,7 +36,7 @@ rel_df %>%
   xlab("ICC")+
   guides(color=FALSE)
 
-ggsave(paste0('ez_fa_rel_t2fit.', out_device), device = out_device, path = fig_path, width = 7, height = 5, units = "in")
+ggsave(paste0('ez_fa_rel_t2fit.', out_device), device = out_device, path = fig_path, width = 5, height = 5, units = "in")
 
 ez_t1_loadings = data.frame(ez_t1_fa_3$loadings[]) %>%
   mutate(dv = row.names(.)) %>%
@@ -45,6 +45,11 @@ ez_t1_loadings = data.frame(ez_t1_fa_3$loadings[]) %>%
 ez_t2_loadings = data.frame(ez_t2_fa_3$loadings[]) %>%
   mutate(dv = row.names(.)) %>%
   rename(drift_rate = MR1, threshold = MR3, non_dec = MR2)
+
+load_cors = diag(cor(ez_t1_loadings%>%select(-dv), ez_t2_loadings%>%select(-dv)))
+load_cors = data.frame(par = row.names(data.frame(load_cors)), 
+                       r = data.frame(load_cors)$load_cors)
+load_cors$r = paste("r =",as.character(round(load_cors$r, 2)))
 
 ez_t1_loadings %>%
   left_join(ez_t2_loadings, by = "dv") %>%
@@ -55,6 +60,7 @@ ez_t1_loadings %>%
   ggplot(aes(T1_fit, T2_fit))+
   geom_point(aes(col=par))+
   geom_abline(aes(slope=1, intercept=0))+
+  geom_text(data=load_cors, x = 0.5, y = -0.4, label = load_cors$r)+
   facet_wrap(~par)+
   theme(legend.title = element_blank(),
         strip.text = element_blank())+
@@ -64,4 +70,4 @@ ez_t1_loadings %>%
   xlab("Factor loading for T1 model")+
   ylab("Factor loading for T2 model")
 
-ggsave(paste0('ez_fa_t1vst2_loadings.', out_device), device = out_device, path = fig_path, width = 7, height = 5, units = "in")
+ggsave(paste0('ez_fa_t1vst2_loadings.', out_device), device = out_device, path = fig_path, width = 9, height = 5, units = "in")

@@ -37,4 +37,4 @@ rel_df %>%
   xlab("ICC")+
   guides(color=FALSE)
 
-ggsave(paste0('ez_fa_rel_t2pred.', out_device), device = out_device, path = fig_path, width = 7, height = 5, units = "in")
+ggsave(paste0('ez_fa_rel_t2pred.', out_device), device = out_device, path = fig_path, width = 5, height = 5, units = "in")
