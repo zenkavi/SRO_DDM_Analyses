@@ -368,11 +368,12 @@ fig_name = 'EZ_FA_T1_3.jpeg'
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 if(!exists('ez_t1_fa_3')){
   source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ez_fa_data.R')
 }
 
+ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='Anderson')
 summary(ez_t1_fa_3)
 ```
 
@@ -380,9 +381,22 @@ summary(ez_t1_fa_3)
 
 Are these clusters more reliable than using either the raw or the DDM measures alone?
 
-To answer this question I used the T1 EFA model to predict the T2 data and extracted factor scores for all subjects for both time points.
+I had some questions on how to calcualte reliabilities for latent variables. Details of my explorations on these questions can be found [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/LatentVariableReliability.nb.html):
 
- 
+I concluded to present two approaches to evaluate this:
+
+1. Predicting T2 using the 3 fator model from the T1 data
+
+```{r}
+
+```
+
+2. Fitting a 3 factor separately for the T2 data and comparing it to the T1 solution
+
+```{r}
+
+```
+
 ## Prediction
 
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
