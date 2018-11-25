@@ -401,6 +401,14 @@ fig_name = 'ez_fa_rel_t2fit.jpeg'
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
+Here's how the loadings the two models compare to each other
+
+```{r}
+fig_name = 'ez_fa_t1vst2_loadings.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
 ## Prediction
 
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
