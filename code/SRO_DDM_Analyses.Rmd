@@ -385,16 +385,20 @@ I had some questions on how to calcualte reliabilities for latent variables. Det
 
 I concluded to present two approaches to evaluate this:
 
-1. Predicting T2 using the 3 fator model from the T1 data
+1. Predicting T2 using the 3 factor model from the T1 data
 
 ```{r}
+fig_name = 'ez_fa_rel_t2pred.jpeg'
 
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 2. Fitting a 3 factor separately for the T2 data and comparing it to the T1 solution
 
 ```{r}
+fig_name = 'ez_fa_rel_t2fit.jpeg'
 
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 ## Prediction

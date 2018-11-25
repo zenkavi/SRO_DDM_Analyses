@@ -8,6 +8,8 @@ if(!exists('ez_t1_fa_3')){
   source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ez_fa_data.R')
   }
 
+ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
+
 ez_t1_fa_3_loadings = as.data.frame(ez_t1_fa_3$loadings[])
 
 ez_t1_fa_3_loadings[abs(ez_t1_fa_3_loadings)<0.3]=NA
