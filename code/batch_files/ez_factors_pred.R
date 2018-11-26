@@ -1,4 +1,10 @@
 library(caret)
+library(RCurl)
+
+helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
+
+eval(parse(text = getURL(paste0(helper_func_path,'get_demographics.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'residualize_baseline.R'), ssl.verifypeer = FALSE)))
 
 input_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/input/'
 output_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/'

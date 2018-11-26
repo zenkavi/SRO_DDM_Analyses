@@ -1,19 +1,20 @@
+library(RCurl)
 require(tidyverse)
 theme_set(theme_bw())
 options(scipen = 1, digits = 4)
 
-helper_func_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/'
-source(paste0(helper_func_path, 'get_numeric_cols.R'))
-source(paste0(helper_func_path, 'remove_outliers.R'))
-source(paste0(helper_func_path, 'remove_correlated_task_variables.R'))
-source(paste0(helper_func_path, 'transform_remove_skew.R'))
-source(paste0(helper_func_path, 'get_demographics.R'))
-source(paste0(helper_func_path, 'residualize_baseline.R'))
-source(paste0(helper_func_path, 'find_optimal_components.R'))
+helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
+eval(parse(text = getURL(paste0(helper_func_path,'get_numeric_cols.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'remove_outliers.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'remove_correlated_task_variables.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'transform_remove_skew.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'get_demographics.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'residualize_baseline.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'find_optimal_components.R'), ssl.verifypeer = FALSE)))
 
-ddm_workspace_scripts = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/'
-source(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'))
-source(paste0(ddm_workspace_scripts,'ddm_subject_data.R'))
+ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_subject_data.R'), ssl.verifypeer = FALSE)))
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
