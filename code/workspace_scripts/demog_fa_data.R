@@ -14,7 +14,7 @@ demographics = get_demographics(dataset = paste0(data_path, release, dataset))
 
 res_demographics = residualize_baseline(demographics)
 
-demog_fa = fa(res_demographics, demog_comp_metrics$comp[1], rotate='oblimin', fm='ml', scores='tenBerge')
+demog_fa = fa(res_demographics, 9, rotate='oblimin', fm='ml', scores='tenBerge')
 
 demog_fa_loadings = data.frame(demog_fa$loadings[]) %>%
   mutate(dv = row.names(.)) %>%
