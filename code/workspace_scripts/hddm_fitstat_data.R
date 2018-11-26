@@ -1,4 +1,4 @@
-process_fitstats = function(samples=c('t1_hierarchical', 't1_flat', 'refit_hierarchical','refit_flat', 'refit'), input_path = 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/hddm_fitstat/'){
+process_fitstats = function(samples=c('t1_hierarchical', 't1_flat', 'refit_hierarchical','refit_flat', 'refit'), input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/hddm_fitstat/'){
   fitstats = data.frame()
   for(s in samples){
     file_path = paste0(input_path, s, "/")

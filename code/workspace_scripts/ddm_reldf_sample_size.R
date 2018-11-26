@@ -1,5 +1,5 @@
-if(!exists('input_path') | input_path != 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/'){
-  input_path = 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/'
+if(!exists('input_path') | input_path != 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'){
+  input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
 }
 
 rel_df_sample_size = read.csv(gzfile(paste0(input_path, 'rel_df_sample_size.csv.gz')))

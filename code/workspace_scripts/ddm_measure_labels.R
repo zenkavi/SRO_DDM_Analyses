@@ -1,4 +1,4 @@
-input_path = 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/'
+input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
 
 measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
 

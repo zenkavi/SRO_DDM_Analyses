@@ -12,7 +12,7 @@ retest_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_On
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 
-input_path = 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/'
+input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
 
 eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
 
