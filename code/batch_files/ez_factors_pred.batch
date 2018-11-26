@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=ez_factors_pred
-#SBATCH --output=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/ez_factors_pred.job.out
-#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/ez_factors_pred.job.err
+#SBATCH --job-name=ez_prediction
+#SBATCH --output=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/ez_prediction.job.out
+#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/ez_prediction.job.err
 #SBATCH -p russpold,owners,normal
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
@@ -10,4 +10,4 @@
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=zenkavi@stanford.edu
 source activate SRO
-Rscript --vanilla ez_factors_pred.R
+Rscript --vanilla ez_prediction.R
