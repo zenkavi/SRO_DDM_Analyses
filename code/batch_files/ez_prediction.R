@@ -1,4 +1,4 @@
-library(tidyverse)
+library(dplyr)
 library(caret)
 library(RCurl)
 
@@ -58,4 +58,4 @@ ez_pred_out = rbind(ez_t1_factors_pred, ez_t2_preds_pred, ez_t2_factors_pred, ez
 output_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output
 /batch_output/'
 
-write.csv(ez_factors_pred, paste0(output_path, 'ez_factors_pred.csv'), row.names = F)
+write.csv(ez_pred_out, paste0(output_path, 'ez_pred_out.csv'), row.names = F)
