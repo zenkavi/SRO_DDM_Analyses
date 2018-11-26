@@ -14,7 +14,7 @@ out = data.frame(dv=NA, iv=NA, Rsquared=NA, RsquaredSD=NA)
 for(i in demog_factors){
   for(j in ez_vars){
     
-    x = ez_measures[,c("Age", "Sex", j)]
+    x = ez_measures[,c(j)]
     y = demog_fa_scores[,i]
     
     print(paste0('Running CV for y= ', i, ' and x= ', j))
