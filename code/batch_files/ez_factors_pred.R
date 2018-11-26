@@ -6,12 +6,7 @@ eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Anal
 
 eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
 
-eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/herlper_functions/sro_predict.R', ssl.verifypeer = FALSE)))
-
-demog_fa_scores = demog_fa_scores %>%
-  filter(sub_id %in% ez_t1_fa_3_scores$sub_id)
-
-demog_fa_scores[is.na(demog_fa_scores)]=0
+eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/sro_predict.R', ssl.verifypeer = FALSE)))
 
 ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='Anderson')
 
@@ -38,14 +33,27 @@ ez_t2_fa_3_scores = ez_t2_fa_3_scores %>%
   rename(drift_rate = MR1, threshold = MR2, non_decision = MR3) %>%
   select(sub_id, everything())
 
+demog_fa_scores = demog_fa_scores %>%
+  filter(sub_id %in% ez_t1_fa_3_scores$sub_id)
+
+demog_fa_scores[is.na(demog_fa_scores)]=0
+
 ez_t1_factors_pred = sro_predict(ez_t1_fa_3_scores, demog_fa_scores)
 ez_t1_factors_pred$model = "ez_t1_fa_3"
+
 ez_t2_preds_pred = sro_predict(ez_t2_fa_3_pred_scores, demog_fa_scores)
 ez_t2_preds_pred$model = "ez_t2_fa_3_pred"
+
 ez_t2_factors_pred = sro_predict(ez_t2_fa_3_scores, demog_fa_scores)
 ez_t2_factors_pred$model = "ez_t2_fa_3"
 
-ez_factors_pred = rbind(ez_t1_factors_pred, ez_t2_preds_pred, ez_t2_factors_pred)
+ez_t1_measures_pred = sro_predict(res_clean_test_data_ez, demog_fa_scores)
+ez_t1_measures_pred$model = "ez_t1_measures"
+
+ez_t2_measures_pred = sro_predict(res_clean_retest_data_ez, demog_fa_scores)
+ez_t2_measures_pred$model = "ez_t2_measures"
+
+ez_pred_out = rbind(ez_t1_factors_pred, ez_t2_preds_pred, ez_t2_factors_pred, ez_t1_measures_pred, ez_t1_measures_pred)
 
 output_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output
 /batch_output/'
