@@ -8,37 +8,48 @@ ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores
 
 ez_t1_fa_3_scores = as.data.frame(ez_t1_fa_3$scores)
 
-# ez_pca_scores = read.csv(paste0(input_path, 'ez_pca_scores.csv'))
-# demog_fa_scores = read.csv(paste0(input_path, 'demog_fa_scores.csv'))
+ez_t1_fa_3_scores = ez_t1_fa_3_scores %>%
+  mutate(sub_id = test_data$sub_id) %>%
+  rename(drift_rate = MR1, threshold = MR2, non_decision = MR3) %>%
+  select(sub_id, everything())
 
+demog_fa_scores = demog_fa_scores %>%
+  filter(sub_id %in% ez_t1_fa_3_scores$sub_id)
 
+demog_fa_scores[is.na(demog_fa_scores)]=0
 
-demog_factors = c("Obesity","Daily_Smoking","Problem_Drinking","Mental_Health","Drug_Use", "Lifetime_Smoking","Binge_Drinking","Unsafe_Drinking", "Income")
-ez_factors = c("threshold","non_decision","drift_rate"  )
+function(x_df, y_df){
 
-out = data.frame(dv=NA, iv=NA, Rsquared=NA, RsquaredSD=NA)
+  require(tidyverse)
 
-for(i in demog_factors){
-  for(j in ez_factors){
-    
-    x = ez_pca_scores[,j]
-    y = demog_fa_scores[,i]
-    
-    print(paste0('Running CV for y= ', i, ' and x= ', j))
-    
-    model = train(x,y,
-                  method="lm",
-                  trControl = trainControl(method="cv", number=10),
-                  na.action = na.exclude)
-    
-    tmp = data.frame(dv = i, iv = j, Rsquared = model$results$Rsquared, RsquaredSD = model$results$RsquaredSD) 
-    
-    out = rbind(out, tmp)
-    
-  }
+  out = data.frame(dv=NA, iv=NA, Rsquared=NA, RsquaredSD=NA)
+
+  x_s = names(x_df)[-which(names(x_df)=="sub_id")]
+  y_s = names(y_df)[-which(names(y_df)=="sub_id")]
+
+  for(i in x_s){
+    for(j in y_s){
+
+      x = x_df%>%select(j)
+      y = y_df[,i]
+      
+      print(paste0('Running CV for y= ', i, ' and x= ', j))
+
+      model = train(x,y,
+                    method="lm",
+                    trControl = trainControl(method="cv", number=10),
+                    na.action = na.exclude)
+
+      tmp = data.frame(dv = i, iv = j, Rsquared = model$results$Rsquared, RsquaredSD = model$results$RsquaredSD)
+
+      out = rbind(out, tmp)
+
+      print("Done with loop. Saving...")
+    }
+
+  out = out[-1,]
+  return(out)
 }
-
-print("Done with loop. Saving...")
 
 output_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output
 /batch_output/'
