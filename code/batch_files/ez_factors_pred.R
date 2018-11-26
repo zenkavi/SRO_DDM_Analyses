@@ -2,7 +2,11 @@ library(caret)
 library(RCurl)
 
 eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
+eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/demog_fa_data.R', ssl.verifypeer = FALSE)))
 
+ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='Anderson')
+
+ez_t1_fa_3_scores = as.data.frame(ez_t1_fa_3$scores)
 
 # ez_pca_scores = read.csv(paste0(input_path, 'ez_pca_scores.csv'))
 # demog_fa_scores = read.csv(paste0(input_path, 'demog_fa_scores.csv'))
