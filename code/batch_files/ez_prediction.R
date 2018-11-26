@@ -53,7 +53,7 @@ ez_t1_measures_pred$model = "ez_t1_measures"
 ez_t2_measures_pred = sro_predict(res_clean_retest_data_ez, demog_fa_scores)
 ez_t2_measures_pred$model = "ez_t2_measures"
 
-ez_pred_out = rbind(ez_t1_factors_pred, ez_t2_preds_pred, ez_t2_factors_pred, ez_t1_measures_pred, ez_t1_measures_pred)
+ez_pred_out = rbind(ez_t1_factors_pred, ez_t2_preds_pred, ez_t2_factors_pred, ez_t1_measures_pred, ez_t2_measures_pred)
 
 output_path = '/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output
 /batch_output/'
