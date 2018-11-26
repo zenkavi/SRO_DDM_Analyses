@@ -1,9 +1,10 @@
 if(!exists('retest_data_path')){
-  retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
+  retest_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018/'
 }
 
 if(!exists('measure_labels')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_measure_labels.R')
+  ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
 }
 
 ### Load time 1 data
@@ -19,7 +20,7 @@ test_data_hddm_fullfit$sub_id = test_data_hddm_fullfit_subs
 
 rm(test_data_hddm_fullfit_subs)
 
-### Load time 2 data 
+### Load time 2 data
 
 retest_data <- read.csv(paste0(retest_data_path,'variables_exhaustive.csv'))
 

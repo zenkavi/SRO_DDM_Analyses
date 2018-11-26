@@ -1,5 +1,6 @@
 if(!exists('process_boot_df')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/process_boot_df.R')
+  helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
+  eval(parse(text = getURL(paste0(helper_func_path,'process_boot_df.R'), ssl.verifypeer = FALSE)))
 }
 
 ### Read in bootstrapped rel data

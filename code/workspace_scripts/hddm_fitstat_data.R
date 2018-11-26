@@ -1,4 +1,4 @@
-process_fitstats = function(samples=c('t1_hierarchical', 't1_flat', 'refit_hierarchical','refit_flat', 'refit'), input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/hddm_fitstat/'){
+process_fitstats = function(samples=c('t1_hierarchical', 't1_flat', 'refit_hierarchical','refit_flat', 'refit'), input_path = 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/hddm_fitstat/'){
   fitstats = data.frame()
   for(s in samples){
     file_path = paste0(input_path, s, "/")
@@ -9,7 +9,7 @@ process_fitstats = function(samples=c('t1_hierarchical', 't1_flat', 'refit_hiera
           tmp = tmp[,-which(names(tmp)=="sub_id")]
         }
         num_samples = unlist(regmatches(f, gregexpr("[[:digit:]]+", f)))
-        num_samples = ifelse(length(num_samples)>1, num_samples[-1], 
+        num_samples = ifelse(length(num_samples)>1, num_samples[-1],
                              ifelse(is.na(num_samples), '500', num_samples))
         tmp$num_samples = ifelse(is.na(num_samples), '500', num_samples)
         tmp$task_name = gsub(paste0("_",s,".*$"), "", f)

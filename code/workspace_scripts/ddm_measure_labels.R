@@ -1,8 +1,8 @@
-input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
+input_path = 'https://raw.githubusercontent.com/zenkavi/Self_DDM_Analyses/master/input/'
 
 measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
 
-measure_labels = measure_labels %>% 
+measure_labels = measure_labels %>%
   select(-measure_description) %>%
   filter(ddm_task == 1) %>%
   select(-ddm_task) %>%

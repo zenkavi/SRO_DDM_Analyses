@@ -35,7 +35,7 @@ clean_test_data_ez_std[is.na(clean_test_data_ez_std)]=0
 clean_test_data_ez_std = clean_test_data_ez_std %>%
 select_if(function(col) sd(col) != 0)
 
-data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/'
+data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/'
 release = 'Complete_03-29-2018/'
 dataset = 'demographic_health.csv'
 

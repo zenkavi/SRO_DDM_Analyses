@@ -1,5 +1,6 @@
 if(!exists('test_data_hddm_fullfit') | !exists('test_data_hddm_refit')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_subject_data.R')
+  ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_subject_data.R'), ssl.verifypeer = FALSE))
 }
 
 hddm_pars_fullfit = test_data_hddm_fullfit %>%
