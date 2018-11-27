@@ -6,6 +6,15 @@ toc: yes
 toc_float: yes
 ---
 
+# Helper Functions and T1 demogs
+
+```{r}
+helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
+eval(parse(text = getURL(paste0(helper_func_path,'get_demographics.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'residualize_baseline.R'), ssl.verifypeer = FALSE)))
+eval(parse(text = getURL(paste0(helper_func_path,'find_optimal_components.R'), ssl.verifypeer = FALSE)))
+```
+
 ## `get_demographics` function
 
 https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/selfregulation/utils/utils.py#L241
@@ -35,9 +44,7 @@ https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/selfregulat
   - create `Obese` column `demogdata['BMI']>30)`
   - only keep variables with fewer NaNs then num_response_thresh
 
-- Output:
-
-```{r}
+```{r eval=FALSE}
 get_demographics = function(dataset=NA, cleanup=TRUE, num_response_thresh=10, drop_categorical=TRUE){
   require(tidyverse)
   
@@ -84,9 +91,9 @@ data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Onto
 release = 'Complete_03-29-2018/'
 dataset = 'demographic_health.csv'
 
-demographics = get_demographics(dataset = paste0(data_path, release, dataset))
+demographics_t1 = get_demographics(dataset = paste0(data_path, release, dataset))
 
-demographics
+demographics_t1
 ```
 
 ## `residualize_baseline` function
@@ -107,7 +114,7 @@ https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional
 - Output:
   - data with columns that have the effect of Age and Sex residualized out
 
-```{r}
+```{r eval=FALSE}
 residualize_baseline = function(df, baseline_vars = c("Age", "Sex")){
   require(tidyverse)
   
@@ -131,7 +138,7 @@ residualize_baseline = function(df, baseline_vars = c("Age", "Sex")){
 ```
 
 ```{r}
-res_demographics = residualize_baseline(demographics)
+res_demographics_t1 = residualize_baseline(demographics_t1)
 ```
 
 ## `Demographic Analysis` class
@@ -154,12 +161,6 @@ https://github.com/IanEisenberg/Self_Regulation_Ontology/blob/master/dimensional
       - `get_factor_entropies`
 
 ```{r eval=FALSE}
-psych::fa(data, n_components, rotate='oblimin', fm='ml', n_obs=0,
-                      scores='tenBerge')
-```
-
-
-```{r}
 find_optimal_components = function(data, minc=1, maxc=50, fm="ml"){
   
   require(tidyverse)
@@ -190,17 +191,17 @@ find_optimal_components = function(data, minc=1, maxc=50, fm="ml"){
 ```
 
 ```{r warning=FALSE, message=FALSE}
-demog_comp_metrics = find_optimal_components(res_demographics)
+demog_comp_metrics_t1 = find_optimal_components(res_demographics_t1)
 
-demog_comp_metrics
+demog_comp_metrics_t1
 ```
 
 ```{r}
-demog_fa = psych::fa(res_demographics, demog_comp_metrics$comp[1], rotate='oblimin', fm='ml', scores='tenBerge')
+demog_fa_t1 = psych::fa(res_demographics_t1, demog_comp_metrics_t1$comp[1], rotate='oblimin', fm='ml', scores='tenBerge')
 ```
 
 ```{r}
-demog_fa_loadings = data.frame(demog_fa$loadings[]) %>%
+demog_fa_loadings_t1 = data.frame(demog_fa_t1$loadings[]) %>%
   mutate(dv = row.names(.)) %>%
   select(dv,everything()) %>%
   rename(Daily_Smoking=ML1,
@@ -213,12 +214,12 @@ demog_fa_loadings = data.frame(demog_fa$loadings[]) %>%
        Unsafe_Drinking=ML8,
        Income_LifeMilestones=ML9)
 
-demog_fa_loadings
+demog_fa_loadings_t1
 ```
 
 ```{r}
-demog_fa_scores = data.frame(demog_fa$scores[]) %>%
-  mutate(sub_id = demographics$X) %>%
+demog_fa_scores_t1 = data.frame(demog_fa_t1$scores[]) %>%
+  mutate(sub_id = demographics_t1$X) %>%
   select(sub_id,everything()) %>%
   rename(Daily_Smoking=ML1,
        Lifetime_Smoking=ML2,
@@ -230,9 +231,10 @@ demog_fa_scores = data.frame(demog_fa$scores[]) %>%
        Unsafe_Drinking=ML8,
        Income_LifeMilestones=ML9)
 
-demog_fa_scores
+demog_fa_scores_t1
 ```
 
+Compare my factors with Ian's from Python
 
 ```{r}
 ian_demog = read.csv('/Users/zeynepenkavi/Downloads/demo_factors.csv')
@@ -250,7 +252,7 @@ ian_demog = ian_demog %>%
 ```
 
 ```{r}
-demog_fa_scores %>%
+demog_fa_scores_t1 %>%
   mutate(exec = "me") %>%
   rbind(.,ian_demog) %>%
   gather(key, value, -sub_id, -exec) %>%
@@ -259,4 +261,91 @@ demog_fa_scores %>%
   geom_point()+
   geom_abline(intercept=0, slope=1)+
   facet_wrap(~key)
+```
+
+# T2 demogs
+
+```{r}
+data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/'
+release = 'Retest_03-29-2018/'
+dataset = 'demographic_health.csv'
+
+demographics_t2 = get_demographics(dataset = paste0(data_path, release, dataset))
+
+res_demographics_t2 = residualize_baseline(demographics_t2)
+```
+
+```{r warning=FALSE, message=FALSE}
+demog_comp_metrics_t2 = find_optimal_components(res_demographics_t2)
+
+demog_comp_metrics_t2
+```
+
+Predicting factor scores for t2 using t1 model doesn't work. There is a problem in matrix dimensions in multiplication. Not sure why.
+
+```{r error=TRUE}
+demog_fa_t2_pred = predict(demog_fa_t1, res_demographics_t2)
+```
+
+Fitting separate 9 factor solution to t2 data
+
+```{r}
+demog_fa_t2 = fa(res_demographics_t2, 4, rotate='oblimin', fm='ml', scores='tenBerge')
+```
+
+```{r}
+data.frame(demog_fa_t2$loadings[]) %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv, everything()) %>%
+  # rename(Drug_Use = ML1,
+  #        Daily_Smoking = ML2,
+  #        Obesity = ML3,
+  #        Lifetime_Smoking = ML6,
+  #        Mental_Health = ML7,
+  #        Problem_Dringking = ML8,
+  #        Income_LifeMilestone = ML9) %>%
+  rename(Smoking = ML1,
+         Mental_Health = ML2,
+         Drug_Use = ML3,
+         Alcohol_Use = ML4) %>%
+  arrange(dv)
+```
+
+```{r}
+demog_fa_loadings_t1 %>%
+  arrange(-Binge_Drinking)
+```
+
+```{r}
+names(demog_fa_loadings_t1)
+```
+
+```{r}
+demog_fa_loadings_t2 = data.frame(demog_fa_t2$loadings[]) %>%
+  mutate(dv = row.names(.)) %>%
+  select(dv,everything()) %>%
+  rename(Daily_Smoking=ML1,
+         Lifetime_Smoking=ML2,
+         Problem_Drinking=ML3,
+         Mental_Health = ML4,
+         Drug_Use = ML5,
+         Obesity = ML6,
+         Binge_Drinking=ML7,
+         Unsafe_Drinking=ML8,
+         Income_LifeMilestones=ML9)
+```
+
+```{r}
+demog_fa_scores_t2 = data.frame(demog_fa_t2$scores[]) %>%
+  mutate(sub_id = demographics_t2$X) %>%
+  select(sub_id,everything()) %>%
+  rename(Daily_Smoking=ML1,
+         Lifetime_Smoking=ML2,
+         Problem_Drinking=ML3,
+         Mental_Health = ML4,
+         Drug_Use = ML5,
+         Obesity = ML6,
+         Binge_Drinking=ML7,
+         Unsafe_Drinking=ML8,
+         Income_LifeMilestones=ML9)
 ```

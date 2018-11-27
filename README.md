@@ -1,6 +1,6 @@
 This repository contains analyses comparing the drift diffusion model (DDM) parameters to raw measures they are derived from (response times and accuracies) in their suitability for individual difference analyses.
 
-Slides for a talk on this dataset can be found [here]()
+Slides for a talk on this dataset can be found [here](https://docs.google.com/presentation/d/1rzKtbaCxEG5_6ABagdAcqPT62sDl93jlOSw8mRHg9G8/edit?usp=sharing)
 
 [Main Analysis Notebook](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/SRO_DDM_Analyses.nb.html)
 

@@ -414,17 +414,7 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 -- Do raw or DDM measures (or factor scores) predict real world outcomes better?
 
 ```{r}
-ez_pred_out %>%
-  mutate(RsquareSE = RsquaredSD/sqrt(10),
-         time = ifelse(grepl("t1", model), "t1", "t2"),
-         par = ifelse(iv %in% c("drift_rate", "non_decision", "threshold"), iv, "measure"),
-         par = factor(par, levels = c("drift_rate", "non_decision", "threshold", "measure"),labels = c("drift_rate", "non_decision", "threshold", "measure"))) %>%
-  group_by()
-  filter(time == "t1") %>%
-  ggplot(aes(dv, Rsquared, fill=par))+
-  geom_bar(stat="identity", position = position_dodge())+
-  xlab("")+
-  ylab(expression(R^{2}))+
-  theme(legend.title = element_blank())
+
+  
 
 ```
