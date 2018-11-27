@@ -322,59 +322,31 @@ demog_fa_t2 = fa(res_demographics_t2, 4, rotate='oblimin', fm='ml', scores='tenB
 ```
 
 ```{r}
-tmp = data.frame(demog_fa_t2$loadings[])
-tmp[abs(tmp)<0.3] = NA
-tmp %>%
+demog_fa_loadings_t2 = data.frame(demog_fa_t2$loadings[])
+demog_fa_loadings_t2[abs(demog_fa_loadings_t2)<0.3] = NA
+demog_fa_loadings_t2 = demog_fa_loadings_t2 %>%
   mutate(num_load = 4-(is.na(ML1)+is.na(ML2)+is.na(ML3)+is.na(ML4))) %>%
   filter(num_load>0)
 
-data.frame(demog_fa_t2$loadings[]) %>%
+demog_fa_loadings_t2 = demog_fa_loadings_t2 %>%
   mutate(dv = row.names(.)) %>%
   select(dv, everything()) %>%
-  # rename(Drug_Use = ML1,
-  #        Daily_Smoking = ML2,
-  #        Obesity = ML3,
-  #        Lifetime_Smoking = ML6,
-  #        Mental_Health = ML7,
-  #        Problem_Dringking = ML8,
-  #        Income_LifeMilestone = ML9) %>%
   rename(Smoking = ML1,
          Mental_Health = ML2,
          Drug_Use = ML3,
-         Alcohol_Use = ML4) %>%
-  arrange(dv)
-```
+         Alcohol_Use = ML4)
 
-```{r}
-names(demog_fa_loadings_t1)
-```
-
-```{r}
-demog_fa_loadings_t2 = data.frame(demog_fa_t2$loadings[]) %>%
-  mutate(dv = row.names(.)) %>%
-  select(dv,everything()) %>%
-  rename(Daily_Smoking=ML1,
-         Lifetime_Smoking=ML2,
-         Problem_Drinking=ML3,
-         Mental_Health = ML4,
-         Drug_Use = ML5,
-         Obesity = ML6,
-         Binge_Drinking=ML7,
-         Unsafe_Drinking=ML8,
-         Income_LifeMilestones=ML9)
+demog_fa_loadings_t2
 ```
 
 ```{r}
 demog_fa_scores_t2 = data.frame(demog_fa_t2$scores[]) %>%
   mutate(sub_id = demographics_t2$X) %>%
   select(sub_id,everything()) %>%
-  rename(Daily_Smoking=ML1,
-         Lifetime_Smoking=ML2,
-         Problem_Drinking=ML3,
-         Mental_Health = ML4,
-         Drug_Use = ML5,
-         Obesity = ML6,
-         Binge_Drinking=ML7,
-         Unsafe_Drinking=ML8,
-         Income_LifeMilestones=ML9)
+  rename(Smoking = ML1,
+         Mental_Health = ML2,
+         Drug_Use = ML3,
+         Alcohol_Use = ML4)
+
+demog_fa_scores_t2
 ```
