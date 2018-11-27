@@ -276,6 +276,37 @@ res_demographics_t2 = residualize_baseline(demographics_t2)
 res_demographics_t2 = res_demographics_t2 %>% select(names(res_demographics_t2)[which(names(res_demographics_t2)%in%names(res_demographics_t1))])
 ```
 
+Predicting factor scores for t2 using t1 model.
+
+```{r error=TRUE}
+demog_fa_scores_t2_pred = predict(demog_fa_t1, res_demographics_t2)
+```
+
+```{r}
+data.frame(demog_fa_scores_t2_pred) %>%
+  mutate(sub_id = demographics_t2$X,
+         time = "T2") %>%
+  select(sub_id,everything()) %>%
+  rename(Daily_Smoking=ML1,
+       Lifetime_Smoking=ML2,
+       Problem_Drinking=ML3,
+       Mental_Health = ML4,
+       Drug_Use = ML5,
+       Obesity = ML6,
+       Binge_Drinking=ML7,
+       Unsafe_Drinking=ML8,
+       Income_LifeMilestones=ML9) %>%
+  rbind(demog_fa_scores_t1 %>% 
+          filter(sub_id %in% demographics_t2$X) %>%
+          mutate(time = "T1")) %>%
+  gather(key, value, -sub_id, -time) %>%
+  spread(time, value) %>%
+  ggplot(aes(T1, T2))+
+  geom_point()+
+  geom_abline(aes(slope=1, intercept=0))+
+  facet_wrap(~key)
+```
+
 The optimal number of factors for t2 demographics are smaller than the optimal number for t1 demographics.
 
 ```{r warning=FALSE, message=FALSE}
@@ -284,13 +315,7 @@ demog_comp_metrics_t2 = find_optimal_components(res_demographics_t2)
 demog_comp_metrics_t2
 ```
 
-Predicting factor scores for t2 using t1 model.
-
-```{r error=TRUE}
-demog_fa_t2_pred = predict(demog_fa_t1, res_demographics_t2)
-```
-
-Fitting separate 9 factor solution to t2 data
+Fitting separate factor model for t2 demographics using the optimal number of components.
 
 ```{r}
 demog_fa_t2 = fa(res_demographics_t2, 4, rotate='oblimin', fm='ml', scores='tenBerge')
