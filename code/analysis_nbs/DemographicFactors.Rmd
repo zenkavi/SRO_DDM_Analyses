@@ -273,7 +273,10 @@ dataset = 'demographic_health.csv'
 demographics_t2 = get_demographics(dataset = paste0(data_path, release, dataset))
 
 res_demographics_t2 = residualize_baseline(demographics_t2)
+res_demographics_t2 = res_demographics_t2 %>% select(names(res_demographics_t2)[which(names(res_demographics_t2)%in%names(res_demographics_t1))])
 ```
+
+The optimal number of factors for t2 demographics are smaller than the optimal number for t1 demographics.
 
 ```{r warning=FALSE, message=FALSE}
 demog_comp_metrics_t2 = find_optimal_components(res_demographics_t2)
@@ -281,7 +284,7 @@ demog_comp_metrics_t2 = find_optimal_components(res_demographics_t2)
 demog_comp_metrics_t2
 ```
 
-Predicting factor scores for t2 using t1 model doesn't work. There is a problem in matrix dimensions in multiplication. Not sure why.
+Predicting factor scores for t2 using t1 model.
 
 ```{r error=TRUE}
 demog_fa_t2_pred = predict(demog_fa_t1, res_demographics_t2)
@@ -294,6 +297,12 @@ demog_fa_t2 = fa(res_demographics_t2, 4, rotate='oblimin', fm='ml', scores='tenB
 ```
 
 ```{r}
+tmp = data.frame(demog_fa_t2$loadings[])
+tmp[abs(tmp)<0.3] = NA
+tmp %>%
+  mutate(num_load = 4-(is.na(ML1)+is.na(ML2)+is.na(ML3)+is.na(ML4))) %>%
+  filter(num_load>0)
+
 data.frame(demog_fa_t2$loadings[]) %>%
   mutate(dv = row.names(.)) %>%
   select(dv, everything()) %>%
@@ -309,11 +318,6 @@ data.frame(demog_fa_t2$loadings[]) %>%
          Drug_Use = ML3,
          Alcohol_Use = ML4) %>%
   arrange(dv)
-```
-
-```{r}
-demog_fa_loadings_t1 %>%
-  arrange(-Binge_Drinking)
 ```
 
 ```{r}
