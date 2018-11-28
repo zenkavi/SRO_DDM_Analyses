@@ -12,7 +12,7 @@ dv_data <- args[2]
 cv_folds <- as.numeric(args[3])
 output_path <- args[4]
 
-if(iv_data %in% c('ez_t1_fa_3', 'ez_t2_fa_3', 'ez_t2_fa_3_pred', 'ez_t1_measures', 'ez_t2_measures')){
+if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez')){
     eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
 
     ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='Anderson')

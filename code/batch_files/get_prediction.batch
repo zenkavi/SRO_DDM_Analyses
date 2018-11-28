@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ez_prediction_{IV_DATA}_{DV_DATA}
 #SBATCH --output=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/pred_{IV_DATA}_{DV_DATA}.job.out
-#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/predi_{IV_DATA}_{DV_DATA}.job.err
+#SBATCH --error=/oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/pred_{IV_DATA}_{DV_DATA}.job.err
 #SBATCH -p russpold,owners,normal
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
