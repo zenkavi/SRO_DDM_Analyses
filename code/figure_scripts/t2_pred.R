@@ -80,4 +80,6 @@ p = t1_ez_fa_t1_demog %>%
   scale_alpha_manual(values = c(0.5, 1, 1))+
   guides(alpha=FALSE)
 
-ggsave(paste0('t1_pred.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+ggsave(paste0('t1_pred_9.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+
+ggsave(paste0('t1_pred_4.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
