@@ -68,4 +68,4 @@ out = sro_predict(get0(iv_data), get0(dv_data), cv_folds = cv_folds)
 out$iv_data = iv_data
 out$dv_data = dv_data
 
-write.csv(out, paste0(output_path, 'pred_out', iv_data, '_', dv_data, '.csv'), row.names = F)
+write.csv(out, paste0(output_path, 'pred_out_', iv_data, '_', dv_data, '.csv'), row.names = F)

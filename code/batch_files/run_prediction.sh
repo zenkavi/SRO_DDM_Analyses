@@ -1,5 +1,5 @@
 set -e
-for iv_data in ez_t1_fa_3 ez_t2_fa_3 ez_t2_fa_3_pred ez_t1_measures ez_t2_measures res_clean_test_data_raw res_clean_retest_data_raw
+for iv_data in ez_t1_fa_3_scores ez_t2_fa_3_scores ez_t2_fa_3_pred_scores res_clean_test_data_ez res_clean_retest_data_ez res_clean_test_data_raw res_clean_retest_data_raw
 do
   for dv_data in demog_fa_scores_t1 demog_fa_scores_t2 demog_fa_scores_t2_pred
   do
