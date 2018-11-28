@@ -13,6 +13,11 @@ eval(parse(text = getURL(paste0(helper_func_path,'sem.R'), ssl.verifypeer = FALS
 
 input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
 
+ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+
+eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
+
+
 t1_ez_fa_t1_demog = read.csv(paste0(input_path,'/prediction/pred_out_ez_t1_fa_3_scores_demog_fa_scores_t1.csv'))
 
 t1_ez_fa_t1_demog = t1_ez_fa_t1_demog %>%
@@ -39,10 +44,6 @@ t1_ez_mes_t1_demog = t1_ez_mes_t1_demog %>%
   select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
 
 t1_raw_t1_demog = read.csv(paste0(input_path,'prediction/pred_out_res_clean_test_data_raw_demog_fa_scores_t1.csv'))
-
-ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
-
-eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
 
 t1_raw_t1_demog = t1_raw_t1_demog %>%
   mutate(iv=as.character(iv),
