@@ -41,7 +41,7 @@ if(iv_data %in% c('ez_t1_fa_3', 'ez_t2_fa_3', 'ez_t2_fa_3_pred', 'ez_t1_measures
       select(sub_id, everything())
 }
 
-if(iv_data %in% c('raw_t1_measures', 'raw_t2_measures')){
+if(iv_data %in% c('res_clean_test_data_raw', 'res_clean_retest_data_raw')){
     eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/raw_rtacc_data.R', ssl.verifypeer = FALSE)))
 }
 

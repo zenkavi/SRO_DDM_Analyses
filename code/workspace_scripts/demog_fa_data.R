@@ -82,3 +82,11 @@ demog_fa_loadings_t2 = demog_fa_loadings_t2 %>%
          Mental_Health = ML2,
          Drug_Use = ML3,
          Alcohol_Use = ML4)
+
+demog_fa_scores_t2 = data.frame(demog_fa_t2$scores[]) %>%
+  mutate(sub_id = demographics_t2$X) %>%
+  select(sub_id,everything()) %>%
+  rename(Smoking = ML1,
+         Mental_Health = ML2,
+         Drug_Use = ML3,
+         Alcohol_Use = ML4)
