@@ -411,10 +411,8 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 
 ## Prediction
 
--- Do raw or DDM measures (or factor scores) predict real world outcomes better?
+Do raw or DDM measures (or factor scores) predict real world outcomes better?
 
 ```{r}
-
-  
 
 ```
