@@ -54,8 +54,7 @@ res_demographics_t2 = res_demographics_t2 %>% select(names(res_demographics_t2)[
 demog_fa_scores_t2_pred = predict(demog_fa_t1, res_demographics_t2)
 
 demog_fa_scores_t2_pred = data.frame(demog_fa_scores_t2_pred) %>%
-  mutate(sub_id = demographics_t2$X,
-         time = "T2") %>%
+  mutate(sub_id = demographics_t2$X) %>%
   select(sub_id,everything()) %>%
   rename(Daily_Smoking=ML1,
          Lifetime_Smoking=ML2,
