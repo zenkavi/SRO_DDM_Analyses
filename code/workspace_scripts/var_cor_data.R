@@ -2,13 +2,13 @@ require(tidyverse)
 
 if(!exists('rel_df')){
   ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
-  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_point_rel_data.R'), ssl.verifypeer = FALSE))
+  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_point_rel_data.R'), ssl.verifypeer = FALSE)))
 }
 
 if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')){
 
   ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
-  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_subject_data.R'), ssl.verifypeer = FALSE))
+  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_subject_data.R'), ssl.verifypeer = FALSE)))
 
   #Standardize dataset
   test_data_std = test_data %>% mutate_if(is.numeric, scale)

@@ -1,8 +1,15 @@
-source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
+library(tidyverse)
+library(RCurl)
+
+if(!exists('fig_path')){
+  fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+}
+
+eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/figure_scripts/figure_res_wrapper.R', ssl.verifypeer = FALSE)))
 
 if(!exists('all_data_cor')){
-  source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/var_cor_data.R')
-}
+  eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/var_cor_data.R', ssl.verifypeer = FALSE)))
+  }
 
 all_data_cor %>%
   filter(!is.na(ddm_ddm)) %>%
