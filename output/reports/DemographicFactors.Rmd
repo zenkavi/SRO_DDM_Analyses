@@ -236,7 +236,7 @@ demog_fa_scores
 
 
 ```{r}
-ian_demog = read.csv('/Users/zeynepenkavi/Dropbox/SRO_DDM_Analyses/input/ian_demog_scores.csv')
+ian_demog = read.csv('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/ian_demog_scores.csv')
 ian_demog = ian_demog %>%
   rename(sub_id = X,
          Drug_Use = Drug.Use,

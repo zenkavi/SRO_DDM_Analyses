@@ -89,3 +89,5 @@ demog_fa_scores_t2 = data.frame(demog_fa_t2$scores[]) %>%
          Mental_Health = ML2,
          Drug_Use = ML3,
          Alcohol_Use = ML4)
+
+ian_demog_scores = read.csv('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/ian_demog_scores.csv')
