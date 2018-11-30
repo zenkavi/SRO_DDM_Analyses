@@ -15,20 +15,24 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
   test_data_std = test_data_std %>% select(-sub_id)
 
   #Get correlation table for test data and melt into long form
-  test_data_cor = data.frame(cor(test_data_std, use="pairwise.complete.obs"))
-  test_data_cor = test_data_cor %>%
+  test_data_cor = cor(test_data_std, use="pairwise.complete.obs")
+  test_data_cor[upper.tri(test_data_cor, diag=TRUE)] = NA
+  test_data_cor = as.data.frame(test_data_cor) %>%
     mutate(dv = row.names(.)) %>%
     gather(key, value, -dv) %>%
-    filter(value != 1 & duplicated(value)==FALSE)
+    filter(!is.na(value))
 
   #Add measure type info to long form correlation table
   test_data_cor = test_data_cor %>%
-    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
-    rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
-    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
-    rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw)%>%
+    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw, overall_difference), by = "dv") %>%
+    rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw, overall_difference_1 = overall_difference) %>%
+    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw, overall_difference), by = "dv") %>%
+    rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw, overall_difference_2 = overall_difference)%>%
+    filter(overall_difference_1 != "non-contrast"&overall_difference_2 != "non-contrast",
+           overall_difference_1 == overall_difference_2,
+           raw_fit_1 == raw_fit_2) %>%
     mutate(task_task = ifelse(task_group_1 == task_group_2,"same task", "different tasks"),
-           ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")|(rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt") | (rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
+           ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")| (rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt")|(rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
            time="test")
 
   #Standardize dataset
@@ -36,17 +40,21 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
   retest_data_std = retest_data_std %>% select(-sub_id)
 
   #Get same correlation table for retest data
-  retest_data_cor = data.frame(cor(retest_data_std, use="pairwise.complete.obs"))
-  retest_data_cor = retest_data_cor %>%
+  retest_data_cor = cor(retest_data_std, use="pairwise.complete.obs")
+  retest_data_cor[upper.tri(retest_data_cor, diag=TRUE)] = NA
+  retest_data_cor = as.data.frame(retest_data_cor) %>%
     mutate(dv = row.names(.)) %>%
     gather(key, value, -dv) %>%
-    filter(value != 1 & duplicated(value)==FALSE)
+    filter(!is.na(value))
 
   retest_data_cor = retest_data_cor %>%
-    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
-    rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw) %>%
-    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw), by = "dv") %>%
-    rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw) %>%
+    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw, overall_difference), by = "dv") %>%
+    rename(var_1 = dv, dv = key, task_group_1 = task_group, raw_fit_1 = raw_fit, rt_acc_1 = rt_acc, ddm_raw_1 = ddm_raw, overall_difference_1 = overall_difference) %>%
+    left_join(rel_df %>% select(dv, task_group, raw_fit, rt_acc, ddm_raw, overall_difference), by = "dv") %>%
+    rename(var_2 = dv, task_group_2 = task_group, raw_fit_2 = raw_fit, rt_acc_2 = rt_acc, ddm_raw_2 = ddm_raw, overall_difference_2 = overall_difference) %>%
+    filter(overall_difference_1 != "non-contrast"&overall_difference_2 != "non-contrast",
+           overall_difference_1 == overall_difference_2,
+           raw_fit_1 == raw_fit_2) %>%
     mutate(task_task = ifelse(task_group_1 == task_group_2,"same task", "different tasks"),
            ddm_ddm = ifelse((rt_acc_1 == "drift rate" & rt_acc_2 == "drift rate")|(rt_acc_1 == "threshold" & rt_acc_2 == "threshold")|(rt_acc_1 == "non-decision" & rt_acc_2 == "non-decision"), "ddm-ddm", ifelse((rt_acc_1 == "rt" & rt_acc_2 == "rt") | (rt_acc_1 == "accuracy" & rt_acc_2 == "accuracy"), 'raw-raw', NA)),
            time="retest")
@@ -56,7 +64,6 @@ if(!exists('t1_data_std') | !exists('retest_data_std') | !exists('all_data_cor')
   rm(test_data_cor, retest_data_cor)
 
   all_data_cor = all_data_cor %>%
-    filter(!(raw_fit_1 == 'hddm' & raw_fit_2 == "EZ") & !(raw_fit_1 == "EZ" & raw_fit_2 == "hddm")) %>%
     mutate(model = ifelse(raw_fit_1 == "hddm" & raw_fit_2 == 'hddm', 'hddm', ifelse(raw_fit_1 == "EZ" & raw_fit_1 == "EZ", "EZ", 'raw')))
 
   all_data_cor_med = all_data_cor %>%

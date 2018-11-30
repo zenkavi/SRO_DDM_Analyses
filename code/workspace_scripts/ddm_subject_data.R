@@ -1,5 +1,6 @@
 if(!exists('retest_data_path')){
   retest_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018/'
+  test_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Complete_03-29-2018/'
 }
 
 if(!exists('measure_labels')){
@@ -19,6 +20,17 @@ test_data_hddm_fullfit = test_data_hddm_fullfit %>%
 test_data_hddm_fullfit$sub_id = test_data_hddm_fullfit_subs
 
 rm(test_data_hddm_fullfit_subs)
+
+test_data_522 <- read.csv(paste0(test_data_path,'variables_exhaustive.csv'))
+
+test_data_522_subs = as.character(test_data_522$X)
+
+test_data_522 = test_data_522 %>%
+  select(measure_labels$dv)
+
+test_data_522$sub_id = test_data_522_subs
+
+rm(test_data_522_subs)
 
 ### Load time 2 data
 
