@@ -2,6 +2,8 @@ library(tidyverse)
 library(caret)
 library(RCurl)
 
+set.seed(203872039)
+
 args = commandArgs(trailingOnly=TRUE)
 
 #Usage:
@@ -12,7 +14,7 @@ dv_data <- args[2]
 cv_folds <- as.numeric(args[3])
 output_path <- args[4]
 
-if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez')){
+if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez')){
     eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
 
     ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='Anderson')
@@ -21,6 +23,15 @@ if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_sco
 
     ez_t1_fa_3_scores = ez_t1_fa_3_scores %>%
       mutate(sub_id = test_data$sub_id) %>%
+      rename(drift_rate = MR1, threshold = MR2, non_decision = MR3) %>%
+      select(sub_id, everything())
+    
+    ez_t1_522_fa_3 = fa(res_clean_test_data_ez_522, 3, rotate='oblimin', fm='minres', scores='Anderson')
+    
+    ez_t1_522_fa_3_scores = as.data.frame(ez_t1_522_fa_3$scores)
+    
+    ez_t1_522_fa_3_scores = ez_t1_522_fa_3_scores %>%
+      mutate(sub_id = test_data_522$sub_id) %>%
       rename(drift_rate = MR1, threshold = MR2, non_decision = MR3) %>%
       select(sub_id, everything())
 

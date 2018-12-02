@@ -68,9 +68,9 @@ clean_test_data_ez_std = cbind(clean_test_data_ez_std, demographics[,c("Age", "S
 
 res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
 
-clean_test_data_ez_std_552 = cbind(clean_test_data_ez_std_552, demographics_552[,c("Age", "Sex")])
+clean_test_data_ez_std_522 = cbind(clean_test_data_ez_std_522, demographics_522[,c("Age", "Sex")])
 
-res_clean_test_data_ez_552 = residualize_baseline(clean_test_data_ez_std_552)
+res_clean_test_data_ez_522 = residualize_baseline(clean_test_data_ez_std_522)
 
 retest_data_ez = retest_data %>%
   select(grep('EZ', names(retest_data), value=T))
