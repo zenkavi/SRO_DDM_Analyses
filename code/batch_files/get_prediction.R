@@ -14,7 +14,7 @@ dv_data <- args[2]
 cv_folds <- as.numeric(args[3])
 output_path <- args[4]
 
-if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_fa_522_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez')){
+if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez')){
   
   eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
   
@@ -37,7 +37,7 @@ if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scor
       select(sub_id, everything())
   }
   
-  if(iv_data %in% c('ez_t1_fa_522_3_scores', 'ez_t2_fa_522_3_pred_scores')){
+  if(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t2_522_fa_3_pred_scores')){
     
     ez_t1_522_fa_3 = fa(res_clean_test_data_ez_522, 3, rotate='oblimin', fm='minres', scores='Anderson')
     
@@ -48,9 +48,9 @@ if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scor
       rename(drift_rate = MR1, threshold = MR3, non_decision = MR2) %>%
       select(sub_id, everything()) 
     
-    ez_t2_fa_522_3_pred = predict(ez_t1_522_fa_3, res_clean_retest_data_ez)
+    ez_t2_522_fa_3_pred = predict(ez_t1_522_fa_3, res_clean_retest_data_ez)
     
-    ez_t2_fa_522_3_pred_scores = data.frame(ez_t2_fa_522_3_pred) %>%
+    ez_t2_522_fa_3_pred_scores = data.frame(ez_t2_522_fa_3_pred) %>%
       mutate(sub_id = retest_data$sub_id) %>%
       rename(drift_rate = MR1, threshold = MR3, non_decision = MR2) %>%
       select(sub_id, everything())
