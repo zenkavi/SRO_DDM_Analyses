@@ -91,3 +91,14 @@ demog_fa_scores_t2 = data.frame(demog_fa_t2$scores[]) %>%
          Alcohol_Use = ML4)
 
 ian_demog_scores = read.csv('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/ian_demog_scores.csv')
+
+ian_demog_scores = ian_demog_scores %>%
+  rename(sub_id = X,
+         Drug_Use = Drug.Use,
+         Mental_Health = Mental.Health,
+         Problem_Drinking = Problem.Drinking,
+         Daily_Smoking = Daily.Smoking,
+         Binge_Drinking = Binge.Drinking,
+         Lifetime_Smoking = Lifetime.Smoking,
+         Unsafe_Drinking = Unsafe.Drinking,
+         Income_LifeMilestones = Income...Life.Milestones)
