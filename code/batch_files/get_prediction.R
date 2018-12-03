@@ -14,7 +14,7 @@ dv_data <- args[2]
 cv_folds <- as.numeric(args[3])
 output_path <- args[4]
 
-if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez','res_clean_test_data_ez_522', 'res_clean_test_data_ez_nont2subs')){
+if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez','res_clean_test_data_ez_522', 'res_clean_test_data_ez_nont2subs','ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs','ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs','ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs')){
   
   eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
   
@@ -37,7 +37,7 @@ if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scor
       select(sub_id, everything())
   }
   
-  if(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t2_522_fa_3_pred_scores')){
+  if(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t2_522_fa_3_pred_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs')){
     
     ez_t1_522_fa_3 = fa(res_clean_test_data_ez_522, 3, rotate='oblimin', fm='minres', scores='Anderson')
     
@@ -48,12 +48,38 @@ if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scor
       rename(drift_rate = MR1, threshold = MR3, non_decision = MR2) %>%
       select(sub_id, everything()) 
     
+    ez_t1_522_fa_3_scores_t2subs = ez_t1_522_fa_3_scores %>%
+      filter(sub_id %in% retest_data$sub_id)
+    ez_t1_522_fa_3_scores_nont2subs = ez_t1_522_fa_3_scores %>%
+      filter(sub_id %in% retest_data$sub_id == FALSE)
+    
     ez_t2_522_fa_3_pred = predict(ez_t1_522_fa_3, res_clean_retest_data_ez)
     
     ez_t2_522_fa_3_pred_scores = data.frame(ez_t2_522_fa_3_pred) %>%
       mutate(sub_id = retest_data$sub_id) %>%
       rename(drift_rate = MR1, threshold = MR3, non_decision = MR2) %>%
       select(sub_id, everything())
+  }
+  
+  if(iv_data %in% c('ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs')){
+    res_clean_test_data_ez_522_condition = res_clean_test_data_ez_522 %>%
+      select((measure_labels %>% 
+                filter(raw_fit == "EZ" & overall_difference == "condition"))$dv)
+    
+    ez_t1_522_fa_3_condition = fa(res_clean_test_data_ez_522_condition, 3, rotate='oblimin', fm='minres', scores='Anderson')
+    
+    ez_t1_522_fa_3_condition_scores = as.data.frame(ez_t1_522_fa_3_condition$scores)
+    
+    ez_t1_522_fa_3_condition_scores = ez_t1_522_fa_3_condition_scores %>%
+      mutate(sub_id = test_data_522$sub_id) %>%
+      rename(drift_rate = MR1, threshold = MR3, non_decision = MR2) %>%
+      select(sub_id, everything()) 
+    
+    ez_t1_522_fa_3_condition_scores_t2subs = ez_t1_522_fa_3_condition_scores %>%
+      filter(sub_id %in% retest_data$sub_id)
+    ez_t1_522_fa_3_condition_scores_nont2subs = ez_t1_522_fa_3_condition_scores %>%
+      filter(sub_id %in% retest_data$sub_id == FALSE)
+    
   }
 
   if(iv_data %in% c('ez_t2_fa_3_scores')){
