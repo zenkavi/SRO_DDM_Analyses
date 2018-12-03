@@ -111,7 +111,7 @@ if(dv_data %in% c("ian_demog_scores", "demog_fa_scores_t1") & iv_data %in% c('ez
     filter(sub_id %in% retest_workers)
 }
 
-if(dv_data %in% c("ian_demog_scores", "demog_fa_scores_t1") & iv_data %in% c('ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs', 'res_clean_test_data_ez_nont2sub', 'res_clean_test_data_raw_nont2subs')){
+if(dv_data %in% c("ian_demog_scores", "demog_fa_scores_t1") & iv_data %in% c('ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs', 'res_clean_test_data_ez_nont2subs', 'res_clean_test_data_raw_nont2subs')){
   ian_demog_scores = ian_demog_scores %>%
     filter(sub_id %in% retest_workers==FALSE)
   
