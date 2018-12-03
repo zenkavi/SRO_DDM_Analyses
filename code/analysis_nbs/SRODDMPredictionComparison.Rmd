@@ -8,6 +8,10 @@ toc_float: yes
 
 Trying to get to the bottom of the differences between my and Ian's prediction analyses.
 
+#DV Data
+
+Ian's vs my factor scores
+
 ```{r}
 helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
 
@@ -114,3 +118,11 @@ fig_name = 'pred_comparison.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
+
+# IV Data
+
+- Sample the factor models are based on
+- Sample the prediction is done on
+- Variables that go in to the factor model
+
+Demog factors as rows

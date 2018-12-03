@@ -14,7 +14,7 @@ dv_data <- args[2]
 cv_folds <- as.numeric(args[3])
 output_path <- args[4]
 
-if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez')){
+if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez','res_clean_test_data_ez_522', 'res_clean_test_data_ez_nont2subs')){
   
   eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
   
@@ -69,7 +69,7 @@ if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scor
   
 }
 
-if(iv_data %in% c('res_clean_test_data_raw', 'res_clean_retest_data_raw')){
+if(iv_data %in% c('res_clean_test_data_raw', 'res_clean_retest_data_raw', 'res_clean_test_data_raw_522', 'res_clean_test_data_raw_nont2subs')){
   eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/raw_rtacc_data.R', ssl.verifypeer = FALSE)))
 }
 

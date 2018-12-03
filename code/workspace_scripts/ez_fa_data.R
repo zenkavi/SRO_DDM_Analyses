@@ -72,6 +72,8 @@ clean_test_data_ez_std_522 = cbind(clean_test_data_ez_std_522, demographics_522[
 
 res_clean_test_data_ez_522 = residualize_baseline(clean_test_data_ez_std_522)
 
+res_clean_test_data_ez_nont2subs = res_clean_test_data_ez_522[test_data_522$sub_id %in% retest_data$sub_id == FALSE,]
+
 retest_data_ez = retest_data %>%
   select(grep('EZ', names(retest_data), value=T))
 
