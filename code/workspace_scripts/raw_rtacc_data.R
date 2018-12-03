@@ -35,8 +35,6 @@ test_data_raw_522 = test_data_522 %>%
 
 clean_test_data_raw_522 = remove_correlated_task_variables(test_data_raw_522)
 
-clean_test_data_raw_522 = as.data.frame(apply(clean_test_data_raw_522, 2, remove_outliers))
-
 numeric_cols = get_numeric_cols()
 numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data_raw_522) == T]
 clean_test_data_raw_522 = transform_remove_skew(clean_test_data_raw_522, numeric_cols)
@@ -44,10 +42,6 @@ clean_test_data_raw_522 = transform_remove_skew(clean_test_data_raw_522, numeric
 clean_test_data_raw_std_522 = clean_test_data_raw_522 %>% mutate_if(is.numeric, scale)
 
 clean_test_data_raw_std_522[is.na(clean_test_data_raw_std_522)]=0
-
-clean_test_data_raw_std_522 = clean_test_data_raw_std_522 %>%
-  select_if(function(col) sd(col) != 0)
-
 
 data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/'
 release = 'Complete_03-29-2018/'
