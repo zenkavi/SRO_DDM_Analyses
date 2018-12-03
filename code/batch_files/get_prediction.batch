@@ -9,8 +9,8 @@
 #SBATCH -p russpold,owners,normal
 
 # Outputs ----------------------------------
-#SBATCH -o /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/%J-%a.out
-#SBATCH -e /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/%J-%a.err
+#SBATCH -o /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.out/%A-%a.out
+#SBATCH -e /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/code/batch_files/.err/%A-%a.err
 #SBATCH --mail-user=zenkavi@stanford.edu
 #SBATCH --mail-type=FAIL
 # ------------------------------------------
