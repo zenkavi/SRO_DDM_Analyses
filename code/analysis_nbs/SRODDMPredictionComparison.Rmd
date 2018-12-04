@@ -18,8 +18,9 @@ We both calculated 9 factor solutions for the demographic items separately. our 
 Still, checked whether there were any differences predicting his or my factor scores. 
 
 The plot below suggests  
-- There are no systematic differences depending on the DV data
-- The largest difference is between predicting using n=522 or n=150
+- There are no systematic differences depending on the DV data  
+- The largest difference is between predicting using n=522 or n=150  
+- Raw measures seem to have some >0 association too  
 
 ```{r}
 helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
@@ -37,7 +38,7 @@ out_device = "jpeg"
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 ```
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 iv_dfs = c("ez_t1_522_fa_3_scores", "ez_t1_fa_3_scores", "res_clean_test_data_raw", "res_clean_test_data_ez")
 dv_dfs = c('ian_demog_scores', 'demog_fa_scores_t1')
 
@@ -97,7 +98,7 @@ for(iv_data in iv_dfs){
 
 ```{r}
 p = out %>% 
-  mutate(iv = factor(iv, levels = c("accuracy", "rt", "drift_rate", "threshold", "non_decision"), labels=c("accuracy", "rt", "drift rate", "threshold", "non-decision")),
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision","accuracy", "rt"), labels=c("drift rate", "threshold", "non-decision","accuracy", "rt")),
          dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
          iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_scores", "ez_t1_fa_3_scores", "res_clean_test_data_ez", "res_clean_test_data_raw"),
                           labels = c("EZ factors (n=522)", "EZ factors (n=150)", "EZ measures", "Raw measures"))) %>%
@@ -122,6 +123,8 @@ p = out %>%
 ggsave(paste0('pred_dv_data_comparison.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
 ```
 
+Larger figure [here](https://github.com/zenkavi/SRO_DDM_Analyses/blob/master/output/figures/pred_dv_data_comparison.jpeg)
+
 ```{r}
 fig_name = 'pred_dv_data_comparison.jpeg'
 
@@ -129,18 +132,22 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 #2. IV data
-- Sample the factor models are based on: ez_t1_522_fa_3 vs ez_t1_fa_3
-- Sample the prediction is done on: ez_t1_522_fa_3, ez_t1_522_fa_3_scores_t2subs, ez_t1_522_fa_3_scores_nont2subs
-- Variables that go in to the factor model: ez_t1_522_fa_3_condition
 
-```{r}
-fig_name = 'pred_iv_data_comparison.jpeg'
+Based on the above plot I wondered:  
+a. Is there something weird about retest sample (n=150)  
+b. If the factor model for the EZ variables is not good due to linear dependencies between the measures going into the model do the results change if we fit the model on a subset of the EZ variables (specifically condition variables only)  
 
-knitr::include_graphics(paste0(fig_path, fig_name))
-```
+Thus the IV data can vary on a few dimensions:  
 
-```{r}
-iv_dfs = c('ez_t1_522_fa_3', 'ez_t1_fa_3', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition', 'ez_t1_522_fa_3_condition_t2subs', 'ez_t1_522_fa_3_condition_nont2subs', 'res_clean_test_data_ez','res_clean_test_data_ez_t2subs','res_clean_test_data_ez_nont2subs','res_clean_test_data_raw','res_clean_test_data_raw_t2subs','res_clean_test_data_raw_nont2subs' )
+- Sample the factor models are based on: The models depicted below are always fit on the whole sample 
+- Sample the prediction is done on: Even though all models are fit on the whole sample for prediction I used either all the scores or smaller subsets (retest sample and non-retest sample)
+- Variables that go in to the factor model: Modeling either all EZ variables or just EZ condition variables
+
+In the plot n=150 refers to the retest sample, n=372 subjects who aren't in the retest sample (non-retest sample)
+
+
+```{r warning=FALSE, message=FALSE}
+iv_dfs = c('ez_t1_522_fa_3_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs', 'res_clean_test_data_ez','res_clean_test_data_ez_522','res_clean_test_data_ez_nont2subs','res_clean_test_data_raw','res_clean_test_data_raw_522','res_clean_test_data_raw_nont2subs' )
 dv_dfs = c('demog_fa_scores_t1')
 
 out = data.frame()
@@ -151,7 +158,7 @@ for(iv_data in iv_dfs){
     
     d = read.csv(file_name) 
     
-    if(iv_data %in% c('ez_t1_522_fa_3', 'ez_t1_fa_3', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition', 'ez_t1_522_fa_3_condition_t2subs', 'ez_t1_522_fa_3_condition_nont2subs')){
+    if(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs')){
       d = d %>%
         mutate(RsquaredSE = RsquaredSD/sqrt(10),
          iv=as.character(iv),
@@ -161,7 +168,7 @@ for(iv_data in iv_dfs){
   select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
     }
     
-    if(iv_data %in% c("res_clean_test_data_raw", "res_clean_test_data_raw_t2subs", "res_clean_test_data_raw_nont2subs")){
+    if(iv_data %in% c("res_clean_test_data_raw_522", "res_clean_test_data_raw", "res_clean_test_data_raw_nont2subs")){
       d = d %>%
         mutate(iv=as.character(iv),
          iv=gsub(".ReflogTr", "",iv),
@@ -178,7 +185,7 @@ for(iv_data in iv_dfs){
   select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
     }
     
-    if(iv_data %in% c("res_clean_test_data_ez", "res_clean_test_data_ez_t2subs", "res_clean_test_data_ez_nont2subs")){
+    if(iv_data %in% c("res_clean_test_data_ez_522", "res_clean_test_data_ez", "res_clean_test_data_ez_nont2subs")){
       d = d%>%
         mutate(par = ifelse(grepl("drift",iv), "drift_rate", ifelse(grepl("thresh", iv), "threshold", ifelse(grepl("non_decision", iv), "non_decision", NA)))) %>% 
   group_by(dv, par) %>%
@@ -199,14 +206,15 @@ for(iv_data in iv_dfs){
 
 ```{r}
 p = out %>% 
-  mutate(iv = factor(iv, levels = c("accuracy", "rt", "drift_rate", "threshold", "non_decision"), labels=c("accuracy", "rt", "drift rate", "threshold", "non-decision")),
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision", "accuracy", "rt"), labels=c("drift rate", "threshold", "non-decision","accuracy", "rt")),
          dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
-         iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_scores", "ez_t1_fa_3_scores", "res_clean_test_data_ez", "res_clean_test_data_raw"),
-                          labels = c("EZ factors (n=522)", "EZ factors (n=150)", "EZ measures", "Raw measures"))) %>%
-  ggplot(aes(iv, Rsquared, fill=iv, alpha=dv_data))+
+         iv_data_2 = ifelse(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs'),"EZ all var factors",ifelse(iv_data %in% c('ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs'),"EZ cond var factors", ifelse(iv_data %in% c('res_clean_test_data_ez_522', 'res_clean_test_data_ez', 'res_clean_test_data_ez_nont2subs'), "EZ measures", ifelse(iv_data %in% c('res_clean_test_data_raw_522','res_clean_test_data_raw','res_clean_test_data_raw_nont2subs'),"Raw measures",NA)))),
+         sample = ifelse(iv_data %in% c('ez_t1_522_fa_3_scores','ez_t1_522_fa_3_condition_scores', 'res_clean_test_data_ez_522','res_clean_test_data_raw_522'),522,ifelse(iv_data %in% c('ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs', 'res_clean_test_data_ez_nont2subs', 'res_clean_test_data_raw_nont2subs'),372, ifelse(iv_data %in% c('ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_t2subs', 'res_clean_test_data_ez', 'res_clean_test_data_raw'),150, NA))),
+         sample = factor(sample, levels = c(150, 372, 522), labels = c(150, 372, 522))) %>%
+  ggplot(aes(iv, Rsquared, fill=iv, alpha=sample))+
   geom_bar(stat="identity", position = position_dodge())+
   geom_errorbar(aes(ymin=Rsquared-RsquaredSE, ymax=Rsquared+RsquaredSE, color=iv), position=position_dodge(width=0.9), width=0.1)+
-  facet_grid(iv_data~dv, scales='free_x', labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
+  facet_grid(iv_data_2~dv, scales='free_x', labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
   theme(legend.title = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
@@ -216,10 +224,15 @@ p = out %>%
         axis.text.y= element_text(size=14))+
   xlab("")+
   ylab(expression(R^{2}))+
-  scale_alpha_manual(values = c(0.5, 1),
-                     breaks = c("demog_fa_scores_t1", "ian_demog_scores"),
-                     labels = c("My demog factors", "Ian demog factors"))
-  # guides(alpha=FALSE)
+  scale_alpha_manual(values = c(0.33,0.66, 1))
 
-ggsave(paste0('pred_dv_data_comparison.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+ggsave(paste0('pred_iv_data_comparison.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+```
+
+Larger figure [here](https://github.com/zenkavi/SRO_DDM_Analyses/blob/master/output/figures/pred_iv_data_comparison.jpeg)
+
+```{r}
+fig_name = 'pred_iv_data_comparison.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
 ```
