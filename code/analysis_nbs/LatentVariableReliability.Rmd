@@ -23,7 +23,7 @@ ggplot <- function(...) ggplot2::ggplot(...) + scale_fill_manual(values=cbbPalet
 
 ```
 
-In a [previous notebook](ttps://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) I was stuck on how to evaluate the reliability of a factor solution for data measures at two time points to check whether lower dimensional projections are stable enough across time to be used in trait-level analyses. 
+In a [previous notebook](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DimReductionComparison.nb.html) I was stuck on how to evaluate the reliability of a factor solution for data measures at two time points to check whether lower dimensional projections are stable enough across time to be used in trait-level analyses. 
 
 I tried two different approaches to this:  
 

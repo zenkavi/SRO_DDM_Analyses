@@ -8,9 +8,18 @@ toc_float: yes
 
 Trying to get to the bottom of the differences between my and Ian's prediction analyses.
 
-#DV Data
+Problem: In his analyses Ian found very low cross-validated $R^2$ values when predicting demographic factors using the task ontology. In my analyses using factors of EZ DDM variables and raw RT's and accuracies I found relationships that were >0.
 
-Ian's vs my factor scores
+Approach: Our analyses differ in multiple aspects both in the predicted data (DV data) and predictor data (IV data) so we checked each of them to find where the difference may lay.  
+
+#1. DV data  
+We both calculated 9 factor solutions for the demographic items separately. our factor scores are essentially the same as can be seen in the last plot [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DemographicFactors.nb.html).  
+
+Still, checked whether there were any differences predicting his or my factor scores. 
+
+The plot below suggests  
+- There are no systematic differences depending on the DV data
+- The largest difference is between predicting using n=522 or n=150
 
 ```{r}
 helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
@@ -110,19 +119,107 @@ p = out %>%
                      labels = c("My demog factors", "Ian demog factors"))
   # guides(alpha=FALSE)
 
-ggsave(paste0('pred_comparison.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+ggsave(paste0('pred_dv_data_comparison.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
 ```
 
 ```{r}
-fig_name = 'pred_comparison.jpeg'
+fig_name = 'pred_dv_data_comparison.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
-# IV Data
+#2. IV data
+- Sample the factor models are based on: ez_t1_522_fa_3 vs ez_t1_fa_3
+- Sample the prediction is done on: ez_t1_522_fa_3, ez_t1_522_fa_3_scores_t2subs, ez_t1_522_fa_3_scores_nont2subs
+- Variables that go in to the factor model: ez_t1_522_fa_3_condition
 
-- Sample the factor models are based on
-- Sample the prediction is done on
-- Variables that go in to the factor model
+```{r}
+fig_name = 'pred_iv_data_comparison.jpeg'
 
-Demog factors as rows
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+```{r}
+iv_dfs = c('ez_t1_522_fa_3', 'ez_t1_fa_3', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition', 'ez_t1_522_fa_3_condition_t2subs', 'ez_t1_522_fa_3_condition_nont2subs', 'res_clean_test_data_ez','res_clean_test_data_ez_t2subs','res_clean_test_data_ez_nont2subs','res_clean_test_data_raw','res_clean_test_data_raw_t2subs','res_clean_test_data_raw_nont2subs' )
+dv_dfs = c('demog_fa_scores_t1')
+
+out = data.frame()
+
+for(iv_data in iv_dfs){
+  for(dv_data in dv_dfs){
+    file_name = paste0(input_path,'prediction/pred_out_', iv_data,'_', dv_data, '.csv')
+    
+    d = read.csv(file_name) 
+    
+    if(iv_data %in% c('ez_t1_522_fa_3', 'ez_t1_fa_3', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition', 'ez_t1_522_fa_3_condition_t2subs', 'ez_t1_522_fa_3_condition_nont2subs')){
+      d = d %>%
+        mutate(RsquaredSE = RsquaredSD/sqrt(10),
+         iv=as.character(iv),
+         dv = as.character(dv),
+         iv_data = as.character(iv_data),
+         dv_data = as.character(dv_data)) %>%
+  select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
+    }
+    
+    if(iv_data %in% c("res_clean_test_data_raw", "res_clean_test_data_raw_t2subs", "res_clean_test_data_raw_nont2subs")){
+      d = d %>%
+        mutate(iv=as.character(iv),
+         iv=gsub(".ReflogTr", "",iv),
+         iv=gsub(".logTr", "",iv)) %>% 
+  left_join(measure_labels %>% select(dv, rt_acc) %>% rename(iv=dv), by="iv") %>%
+  group_by(dv, rt_acc) %>%
+  summarise(RsquaredSE = sem(Rsquared),
+            Rsquared = mean(Rsquared),
+            iv_data = as.character(unique(iv_data)),
+            dv_data = as.character(unique(dv_data))) %>%
+  rename(iv = rt_acc) %>%
+  ungroup() %>%
+  mutate(dv = as.character(dv)) %>%
+  select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
+    }
+    
+    if(iv_data %in% c("res_clean_test_data_ez", "res_clean_test_data_ez_t2subs", "res_clean_test_data_ez_nont2subs")){
+      d = d%>%
+        mutate(par = ifelse(grepl("drift",iv), "drift_rate", ifelse(grepl("thresh", iv), "threshold", ifelse(grepl("non_decision", iv), "non_decision", NA)))) %>% 
+  group_by(dv, par) %>%
+  summarise(RsquaredSE = sem(Rsquared),
+            Rsquared = mean(Rsquared),
+            iv_data = as.character(unique(iv_data)),
+            dv_data = as.character(unique(dv_data))) %>%
+  rename(iv = par) %>%
+  ungroup() %>%
+  mutate(dv = as.character(dv)) %>%
+  select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
+    }
+    out = out %>%
+      bind_rows(d)
+  }
+}
+```
+
+```{r}
+p = out %>% 
+  mutate(iv = factor(iv, levels = c("accuracy", "rt", "drift_rate", "threshold", "non_decision"), labels=c("accuracy", "rt", "drift rate", "threshold", "non-decision")),
+         dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
+         iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_scores", "ez_t1_fa_3_scores", "res_clean_test_data_ez", "res_clean_test_data_raw"),
+                          labels = c("EZ factors (n=522)", "EZ factors (n=150)", "EZ measures", "Raw measures"))) %>%
+  ggplot(aes(iv, Rsquared, fill=iv, alpha=dv_data))+
+  geom_bar(stat="identity", position = position_dodge())+
+  geom_errorbar(aes(ymin=Rsquared-RsquaredSE, ymax=Rsquared+RsquaredSE, color=iv), position=position_dodge(width=0.9), width=0.1)+
+  facet_grid(iv_data~dv, scales='free_x', labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.text = element_text(size=16),
+        strip.text = element_text(size=16),
+        axis.title.y = element_text(size=16),
+        axis.text.y= element_text(size=14))+
+  xlab("")+
+  ylab(expression(R^{2}))+
+  scale_alpha_manual(values = c(0.5, 1),
+                     breaks = c("demog_fa_scores_t1", "ian_demog_scores"),
+                     labels = c("My demog factors", "Ian demog factors"))
+  # guides(alpha=FALSE)
+
+ggsave(paste0('pred_dv_data_comparison.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+```
