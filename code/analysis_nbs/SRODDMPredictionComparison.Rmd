@@ -148,7 +148,6 @@ In the plot n=150 refers to the retest sample, n=372 subjects who aren't in the 
 
 ```{r warning=FALSE, message=FALSE}
 iv_dfs = c('ez_t1_522_fa_3_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs', 'res_clean_test_data_ez','res_clean_test_data_ez_522','res_clean_test_data_ez_nont2subs','res_clean_test_data_raw','res_clean_test_data_raw_522','res_clean_test_data_raw_nont2subs' )
-dv_dfs = c('demog_fa_scores_t1')
 
 out = data.frame()
 
@@ -236,3 +235,150 @@ fig_name = 'pred_iv_data_comparison.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
+
+## RMSE instead of $R^2$
+
+```{r}
+iv_dfs = c('ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs')
+dv_dfs = c('demog_fa_scores_t1')
+
+out = data.frame()
+
+for(iv_data in iv_dfs){
+  for(dv_data in dv_dfs){
+    file_name = paste0(input_path,'prediction/pred_out_', iv_data,'_', dv_data, '.csv')
+    
+    d = read.csv(file_name) 
+    
+    if(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs')){
+      d = d %>%
+        mutate(RMSESE = RMSESD/sqrt(10),
+         iv=as.character(iv),
+         dv = as.character(dv),
+         iv_data = as.character(iv_data),
+         dv_data = as.character(dv_data)) %>%
+  select(dv, iv, RMSE, RMSESE, iv_data, dv_data)
+    }
+    
+    if(iv_data %in% c("res_clean_test_data_raw_522", "res_clean_test_data_raw", "res_clean_test_data_raw_nont2subs")){
+      d = d %>%
+        mutate(iv=as.character(iv),
+         iv=gsub(".ReflogTr", "",iv),
+         iv=gsub(".logTr", "",iv)) %>% 
+  left_join(measure_labels %>% select(dv, rt_acc) %>% rename(iv=dv), by="iv") %>%
+  group_by(dv, rt_acc) %>%
+  summarise(RMSESE = sem(RMSE),
+            RMSE = mean(RMSE),
+            iv_data = as.character(unique(iv_data)),
+            dv_data = as.character(unique(dv_data))) %>%
+  rename(iv = rt_acc) %>%
+  ungroup() %>%
+  mutate(dv = as.character(dv)) %>%
+  select(dv, iv, RMSE, RMSESE, iv_data, dv_data)
+    }
+    
+    if(iv_data %in% c("res_clean_test_data_ez_522", "res_clean_test_data_ez", "res_clean_test_data_ez_nont2subs")){
+      d = d%>%
+        mutate(par = ifelse(grepl("drift",iv), "drift_rate", ifelse(grepl("thresh", iv), "threshold", ifelse(grepl("non_decision", iv), "non_decision", NA)))) %>% 
+  group_by(dv, par) %>%
+  summarise(RMSESE = sem(RMSE),
+            RMSE = mean(RMSE),
+            iv_data = as.character(unique(iv_data)),
+            dv_data = as.character(unique(dv_data))) %>%
+  rename(iv = par) %>%
+  ungroup() %>%
+  mutate(dv = as.character(dv)) %>%
+  select(dv, iv, RMSE, RMSESE, iv_data, dv_data)
+    }
+    out = out %>%
+      bind_rows(d)
+  }
+}
+```
+
+
+```{r}
+out %>% 
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision"), labels=c("drift rate", "threshold", "non-decision")),
+         dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
+         iv_data_2 = ifelse(iv_data %in% c('ez_t1_522_fa_3_scores', 'ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs'),"EZ all var factors",ifelse(iv_data %in% c('ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs'),"EZ cond var factors", ifelse(iv_data %in% c('res_clean_test_data_ez_522', 'res_clean_test_data_ez', 'res_clean_test_data_ez_nont2subs'), "EZ measures", ifelse(iv_data %in% c('res_clean_test_data_raw_522','res_clean_test_data_raw','res_clean_test_data_raw_nont2subs'),"Raw measures",NA)))),
+         sample = ifelse(iv_data %in% c('ez_t1_522_fa_3_scores','ez_t1_522_fa_3_condition_scores', 'res_clean_test_data_ez_522','res_clean_test_data_raw_522'),522,ifelse(iv_data %in% c('ez_t1_522_fa_3_scores_nont2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs', 'res_clean_test_data_ez_nont2subs', 'res_clean_test_data_raw_nont2subs'),372, ifelse(iv_data %in% c('ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_t2subs', 'res_clean_test_data_ez', 'res_clean_test_data_raw'),150, NA))),
+         sample = factor(sample, levels = c(150, 372, 522), labels = c(150, 372, 522))) %>%
+  ggplot(aes(iv, RMSE, fill=iv, alpha=sample))+
+  geom_bar(stat="identity", position = position_dodge())+
+  geom_errorbar(aes(ymin=RMSE-RMSESE, ymax=RMSE+RMSESE, color=iv), position=position_dodge(width=0.9), width=0.1)+
+  facet_grid(.~dv, scales='free_x', labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
+  theme(legend.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.text = element_text(size=16),
+        strip.text = element_text(size=16),
+        axis.title.y = element_text(size=16),
+        axis.text.y= element_text(size=14))+
+  xlab("")+
+  ylab("RMSE")+
+  scale_alpha_manual(values = c(0.33,0.66, 1))
+
+ggsave(paste0('pred_iv_data_comparison_RMSE.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+```
+
+# Correlations across folds 
+
+```{r}
+iv_dfs = c("ez_t1_522_fa_3_condition_scores", "ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs")
+dv_dfs = c('demog_fa_scores_t1')
+
+out = data.frame()
+
+for(iv_data in iv_dfs){
+  for(dv_data in dv_dfs){
+    file_name = paste0(input_path,'prediction/pred_fold_cors_', iv_data,'_', dv_data, '.csv')
+    
+    d = read.csv(file_name) 
+    
+    out = out %>%
+      bind_rows(d)
+  }
+}
+```
+
+```{r}
+out_m = out %>%
+  group_by(dv, iv,iv_data) %>%
+  summarise(m_R = mean(R),
+            sem_R = sem(R))
+
+out = out %>%
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision"), labels=c("drift rate", "threshold", "non-decision")),
+         dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
+         iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs", "ez_t1_522_fa_3_condition_scores"), labels = c(150, 372, 522)))
+
+
+```
+
+
+```{r}
+out_m %>%
+  ungroup() %>%
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision"), labels=c("drift rate", "threshold", "non-decision")),
+         dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
+         iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs", "ez_t1_522_fa_3_condition_scores"), labels = c("150","372","522"))) %>%
+  ggplot(aes(iv, m_R))+
+  geom_bar(stat="identity", position=position_dodge(width=0.9), aes(alpha=iv_data, fill=iv))+
+  geom_errorbar(aes(ymin=m_R-sem_R, ymax=m_R+sem_R, col=iv, alpha=iv_data), position = position_dodge(width = 0.9), width=0.1)+
+  geom_point(data=out, aes(iv, R, alpha=iv_data, color=iv), position = position_dodge(width=0.9))+
+  facet_grid(~dv,labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
+  xlab("")+
+  ylab("R")+
+  theme(legend.title = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x=element_blank(),
+        legend.text = element_text(size=16),
+        strip.text = element_text(size=16),
+        axis.title.y = element_text(size=16),
+        axis.text.y= element_text(size=14))+
+  scale_alpha_manual(values = c(0.33,0.66, 1))
+
+ggsave(paste0('pred_fold_cor_comparison.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
+```
+
