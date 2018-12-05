@@ -14,7 +14,7 @@ dv_data <- args[2]
 cv_folds <- as.numeric(args[3])
 output_path <- args[4]
 
-if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez','res_clean_test_data_ez_522', 'res_clean_test_data_ez_nont2subs','ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs','ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs','ez_t1_522_fa_3_condition_scores', 'ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs')){
+if(iv_data %in% c('ez_t1_fa_3_scores', 'ez_t1_522_fa_3_scores', 'ez_t2_fa_3_scores', 'ez_t2_fa_3_pred_scores', 'ez_t2_522_fa_3_pred_scores', 'res_clean_test_data_ez', 'res_clean_retest_data_ez','res_clean_test_data_ez_522', 'res_clean_test_data_ez_nont2subs','ez_t1_522_fa_3_scores_t2subs', 'ez_t1_522_fa_3_scores_nont2subs','ez_t1_522_fa_3_condition_scores_t2subs', 'ez_t1_522_fa_3_condition_scores_nont2subs','ez_t1_522_fa_3_condition_scores')){
   
   eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ez_fa_data.R', ssl.verifypeer = FALSE)))
   
@@ -131,8 +131,16 @@ demog_fa_scores_t2_pred[is.na(demog_fa_scores_t2_pred)]=0
 
 eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/sro_predict.R', ssl.verifypeer = FALSE)))
 
-out = sro_predict(get0(iv_data), get0(dv_data), cv_folds = cv_folds)
+all_out = sro_predict(get0(iv_data), get0(dv_data), cv_folds = cv_folds)
+
+out = all_out$out
 out$iv_data = iv_data
 out$dv_data = dv_data
 
 write.csv(out, paste0(output_path, 'pred_out_', iv_data, '_', dv_data, '.csv'), row.names = F)
+
+fold_cors = all_out$fold_cors
+fold_cors$iv_data = iv_data
+fold_cors$dv_data = dv_data
+
+write.csv(fold_cors, paste0(output_path, 'pred_fold_cors_', iv_data, '_', dv_data, '.csv'), row.names = F)
