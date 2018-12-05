@@ -12,15 +12,6 @@ Problem: In his analyses Ian found very low cross-validated $R^2$ values when pr
 
 Approach: Our analyses differ in multiple aspects both in the predicted data (DV data) and predictor data (IV data) so we checked each of them to find where the difference may lay.  
 
-#1. DV data  
-We both calculated 9 factor solutions for the demographic items separately. our factor scores are essentially the same as can be seen in the last plot [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DemographicFactors.nb.html).  
-
-Still, checked whether there were any differences predicting his or my factor scores. 
-
-The plot below suggests  
-- There are no systematic differences depending on the DV data  
-- The largest difference is between predicting using n=522 or n=150  
-- Raw measures seem to have some >0 association too  
 
 ```{r}
 helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
@@ -37,6 +28,16 @@ out_device = "jpeg"
 
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 ```
+
+#1. DV data  
+We both calculated 9 factor solutions for the demographic items separately. our factor scores are essentially the same as can be seen in the last plot [here](https://zenkavi.github.io/SRO_DDM_Analyses/output/reports/DemographicFactors.nb.html).  
+
+Still, checked whether there were any differences predicting his or my factor scores. 
+
+The plot below suggests  
+- There are no systematic differences depending on the DV data  
+- The largest difference is between predicting using n=522 or n=150  
+- Raw measures seem to have some >0 association too  
 
 ```{r warning=FALSE, message=FALSE}
 iv_dfs = c("ez_t1_522_fa_3_scores", "ez_t1_fa_3_scores", "res_clean_test_data_raw", "res_clean_test_data_ez")
@@ -130,6 +131,7 @@ fig_name = 'pred_dv_data_comparison.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
+
 
 #2. IV data
 
@@ -322,6 +324,7 @@ out %>%
 ggsave(paste0('pred_iv_data_comparison_RMSE.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
 ```
 
+
 # Correlations across folds 
 
 ```{r}
@@ -382,10 +385,11 @@ out_m %>%
 ggsave(paste0('pred_fold_cor_comparison.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
 ```
 
-# $R^2$ collaped across folds
+
+# R and $R^2$ collaped across folds
 
 ```{r}
-iv_dfs = c("ez_t1_522_fa_3_condition_scores", "ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs")
+iv_dfs = c("ez_t1_522_fa_3_condition_scores", "ez_t1_522_fa_3_condition_scores_t2subs")
 dv_dfs = c('demog_fa_scores_t1')
 
 out = data.frame()
@@ -400,7 +404,34 @@ for(iv_data in iv_dfs){
       bind_rows(d)
   }
 }
+
+out
 ```
+
+```{r}
+out %>%
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision"), labels=c("drift rate", "threshold", "non-decision")),
+         dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
+         iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs", "ez_t1_522_fa_3_condition_scores"), labels = c("150","372","522"))) %>%
+  ggplot(aes(iv, all_folds_r2))+
+  geom_bar(stat="identity", position=position_dodge(width=0.9), aes(alpha=iv_data, fill=iv))+
+  geom_point(aes(iv, shuffle_mean_r2, col=iv, alpha=iv_data),col="black", position=position_dodge(width=0.9))+
+  geom_errorbar(aes(ymin = shuffle_mean_r2-shuffle_sem_r2, ymax = shuffle_mean_r2+shuffle_sem_r2, col=iv, alpha=iv_data), col="black",position=position_dodge(width=0.9), width=0.1)+
+  facet_grid(~dv,labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
+  xlab("")+
+  ylab(expression(R^{2}))+
+  theme(legend.title = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x=element_blank(),
+        legend.text = element_text(size=16),
+        strip.text = element_text(size=16),
+        axis.title.y = element_text(size=16),
+        axis.text.y= element_text(size=14))+
+  scale_alpha_manual(values = c(0.5, 1))
+  
+```
+
+
 
 ```{r}
 out %>%
@@ -411,8 +442,7 @@ out %>%
   geom_bar(stat="identity", position=position_dodge(width=0.9), aes(alpha=iv_data, fill=iv))+
   facet_grid(~dv,labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
   xlab("")+
-  # ylab(expression(R^{2}))+  
-  ylab("R")+  
+  ylab("R")+
   theme(legend.title = element_blank(),
         axis.ticks.x = element_blank(),
         axis.text.x=element_blank(),
@@ -420,6 +450,6 @@ out %>%
         strip.text = element_text(size=16),
         axis.title.y = element_text(size=16),
         axis.text.y= element_text(size=14))+
-  scale_alpha_manual(values = c(0.33,0.66, 1))
+  scale_alpha_manual(values = c(0.5, 1))
   
 ```
