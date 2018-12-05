@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #SBATCH -J prediction
-#SBATCH --array=1-23%23
+#SBATCH --array=1-32%32
 
 #SBATCH --time=4:00:00
 #SBATCH -n 1
