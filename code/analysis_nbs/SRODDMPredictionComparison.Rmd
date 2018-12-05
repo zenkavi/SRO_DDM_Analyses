@@ -382,3 +382,44 @@ out_m %>%
 ggsave(paste0('pred_fold_cor_comparison.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
 ```
 
+# $R^2$ collaped across folds
+
+```{r}
+iv_dfs = c("ez_t1_522_fa_3_condition_scores", "ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs")
+dv_dfs = c('demog_fa_scores_t1')
+
+out = data.frame()
+
+for(iv_data in iv_dfs){
+  for(dv_data in dv_dfs){
+    file_name = paste0(input_path,'prediction/pred_out_', iv_data,'_', dv_data, '.csv')
+    
+    d = read.csv(file_name) 
+    
+    out = out %>%
+      bind_rows(d)
+  }
+}
+```
+
+```{r}
+out %>%
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision"), labels=c("drift rate", "threshold", "non-decision")),
+         dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
+         iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs", "ez_t1_522_fa_3_condition_scores"), labels = c("150","372","522"))) %>%
+  ggplot(aes(iv, all_folds_r))+
+  geom_bar(stat="identity", position=position_dodge(width=0.9), aes(alpha=iv_data, fill=iv))+
+  facet_grid(~dv,labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
+  xlab("")+
+  # ylab(expression(R^{2}))+  
+  ylab("R")+  
+  theme(legend.title = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.x=element_blank(),
+        legend.text = element_text(size=16),
+        strip.text = element_text(size=16),
+        axis.title.y = element_text(size=16),
+        axis.text.y= element_text(size=14))+
+  scale_alpha_manual(values = c(0.33,0.66, 1))
+  
+```
