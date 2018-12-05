@@ -131,7 +131,7 @@ demog_fa_scores_t2_pred[is.na(demog_fa_scores_t2_pred)]=0
 
 eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/sro_predict.R', ssl.verifypeer = FALSE)))
 
-all_out = sro_predict(get0(iv_data), get0(dv_data), cv_folds = cv_folds)
+all_out = sro_predict(get0(iv_data), get0(dv_data), cv_folds = cv_folds, shuffle=TRUE)
 
 out = all_out$out
 out$iv_data = iv_data
