@@ -46,12 +46,19 @@ if(!exists('rel_df_flat')){
 
 
 rel_df_flat %>%
+  mutate(rt_acc = factor(rt_acc, levels = c("drift rate", "threshold", "non-decision"), labels = c("Drift Rate", "Threshold", "Non-decision"))) %>%
   ggplot(aes(icc.y, icc.x))+
   geom_point()+
   geom_abline(aes(slope=1, intercept = 0), color="red")+
   facet_wrap(~rt_acc)+
   xlab("Hierarchical reliability")+
-  ylab("Flat reliability")
+  ylab("Flat reliability")+
+  theme(strip.text = element_text(size=16),
+        axis.title= element_text(size=16),
+        panel.grid = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(), 
+        aspect.ratio = 1)
 
 
-ggsave(paste0('HDDM_rel_flatvshier.', out_device), device = out_device, path = fig_path, width = 14.5, height = 2.5, units = "in")
+ggsave(paste0('HDDM_rel_flatvshier.', out_device), device = out_device, path = fig_path, width = 9.5, height = 3.5, units = "in")
