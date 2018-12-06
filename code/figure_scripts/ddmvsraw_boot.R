@@ -59,7 +59,8 @@ boot_df %>%
         legend.text = element_text(size = 16),
         axis.text = element_text(size=16), 
         strip.text = element_text(size=16),
-        axis.title.y = element_text(size=16))+
+        axis.title.y = element_text(size=16), 
+        panel.grid = element_blank())+
   scale_y_continuous(breaks=seq(0,1,0.25),
                      limits = c(0,1))+
   guides(fill = guide_legend(nrow=2, byrow=T))

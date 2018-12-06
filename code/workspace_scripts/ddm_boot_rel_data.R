@@ -15,7 +15,7 @@ if(!exists('measure_labels')){
 
 ### Read in bootstrapped rel data
 
-fullfit_boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')), header=T)
+fullfit_boot_df <- read.csv(gzfile(paste0('/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/','bootstrap_merged.csv.gz')), header=T)
 
 fullfit_boot_df = process_boot_df(fullfit_boot_df)
 
