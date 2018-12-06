@@ -47,6 +47,6 @@ rel_df %>%
         axis.text = element_text(size=16),
         axis.title = element_text(size=16))+
   xlab("ICC")+
-  ylab()
+  ylab("")
 
 ggsave(paste0('ez_fa_rel_t2pred.', out_device), device = out_device, path = fig_path, width = 5, height = 5.5, units = "in")
