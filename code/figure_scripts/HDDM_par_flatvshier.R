@@ -1,7 +1,15 @@
+library(RCurl)
+
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
+
+if(!exists('retest_data')){
+  eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ddm_subject_data.R', ssl.verifypeer = FALSE)))
+}
 
 if(!exists('flat_difference')){
   
+  #Don't change until PR is merged
+  # retest_data_path = https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018
   retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
   
   retest_hddm_flat = read.csv(paste0(retest_data_path,'retest_hddm_flat.csv'))

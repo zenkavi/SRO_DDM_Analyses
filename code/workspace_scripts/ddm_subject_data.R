@@ -1,4 +1,4 @@
-if(!exists('retest_data_path')){
+if(!exists('retest_data_path')|!('test_data_path')){
   retest_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018/'
   test_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Complete_03-29-2018/'
 }

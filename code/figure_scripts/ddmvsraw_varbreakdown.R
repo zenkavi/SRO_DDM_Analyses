@@ -57,7 +57,7 @@ rel_df %>%
         strip.text = element_text(size=16),
         axis.title.y = element_text(size=16))+
   scale_y_continuous(breaks=seq(0,100,25),
-                     limits = c(0,100))+
+                     limits = c(0,55))+
   guides(fill = guide_legend(nrow=2, byrow=T))
 
 ggsave(paste0('ddmvsraw_varsubs.', out_device), device = out_device, path = fig_path, width = 12, height = 4, units = "in")
