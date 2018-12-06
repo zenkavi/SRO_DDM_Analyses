@@ -21,7 +21,7 @@ fullfit_boot_df = process_boot_df(fullfit_boot_df)
 
 fullfit_boot_df = fullfit_boot_df[fullfit_boot_df$dv %in% measure_labels$dv,]
 
-refit_boot_df = read.csv(gzfile(paste0(retest_data_path,'refits_bootstrap_merged.csv.gz')), header=T)
+refit_boot_df = read.csv(gzfile(paste0('/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/','refits_bootstrap_merged.csv.gz')), header=T)
 
 refit_boot_df = process_boot_df(refit_boot_df)
 

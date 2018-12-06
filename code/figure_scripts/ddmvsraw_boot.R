@@ -4,6 +4,11 @@ if(!exists('fig_path')){
 
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
 
+if(!exists('sem')){
+  eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/sem.R', ssl.verifypeer = FALSE)))
+
+}
+
 if(!exists('boot_df')){
   source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ddm_boot_rel_data.R')
   
