@@ -17,19 +17,9 @@ ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analy
 
 eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
 
+t1_ez_fa_t1_demog = read.csv(paste0(input_path,'/prediction/pred_out_ez_t1_522_fa_3_condition_scores_demog_fa_scores_t1.csv'))
 
-t1_ez_fa_t1_demog = read.csv(paste0(input_path,'/prediction/pred_out_ez_t1_fa_3_scores_demog_fa_scores_t1.csv'))
-
-t1_ez_fa_t1_demog = t1_ez_fa_t1_demog %>%
-  mutate(RsquaredSE = RsquaredSD/sqrt(10),
-         iv=as.character(iv),
-         dv = as.character(dv),
-         iv_data = as.character(iv_data),
-         dv_data = as.character(dv_data)) %>%
-  select(dv, iv, Rsquared, RsquaredSE, iv_data, dv_data)
-
-
-t1_ez_mes_t1_demog = read.csv(paste0(input_path, 'prediction/pred_out_res_clean_test_data_ez_demog_fa_scores_t1.csv'))
+t1_ez_mes_t1_demog = read.csv(paste0(input_path, 'prediction/pred_fold_cors_res_clean_test_data_ez_522_demog_fa_scores_t1.csv'))
 
 t1_ez_mes_t1_demog = t1_ez_mes_t1_demog %>%
   mutate(par = ifelse(grepl("drift",iv), "drift_rate", ifelse(grepl("thresh", iv), "threshold", ifelse(grepl("non_decision", iv), "non_decision", NA)))) %>% 
@@ -63,7 +53,7 @@ t1_raw_t1_demog = t1_raw_t1_demog %>%
 p = t1_ez_fa_t1_demog %>%
   bind_rows(t1_ez_mes_t1_demog) %>%
   bind_rows(t1_raw_t1_demog) %>%
-  mutate(iv = factor(iv, levels = c("accuracy", "rt", "drift_rate", "threshold", "non_decision"), labels=c("accuracy", "rt", "drift rate", "threshold", "non-decision")),
+  mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision", "accuracy", "rt"), labels=c("Drift rate", "Threshold", "Non-decision", "Accuracy", "RT")),
          dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones'))) %>%
   ggplot(aes(iv, Rsquared, fill=iv, alpha=iv_data))+
   geom_bar(stat="identity", position = position_dodge())+
@@ -79,6 +69,7 @@ p = t1_ez_fa_t1_demog %>%
   xlab("")+
   ylab(expression(R^{2}))+
   scale_alpha_manual(values = c(0.5, 1, 1))+
-  guides(alpha=FALSE)
+  guides(alpha=FALSE,
+         fill=guide_legend(nrow=2, byrow=T))
 
 ggsave(paste0('t1_pred.', out_device), plot=p, device = out_device, path = fig_path, width = 20, height = 9, units = "in")
