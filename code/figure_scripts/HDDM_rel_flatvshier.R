@@ -1,6 +1,24 @@
+library(RCurl)
+library(tidyverse)
+library(gridExtra)
+
+fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
 
+if(!exists('rel_df')){
+  eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/ddm_point_rel_data.R', ssl.verifypeer = FALSE)))
+}
+
+
+if(!exists('make_rel_df')){
+  eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/make_rel_df.R', ssl.verifypeer = FALSE)))
+}
+
 if(!exists('rel_df_flat')){
+  
+  #Don't change until PR is merged
+  # retest_data_path = https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018
   
   retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
   

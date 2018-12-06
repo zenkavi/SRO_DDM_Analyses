@@ -1,3 +1,9 @@
+library(RCurl)
+library(tidyverse)
+library(gridExtra)
+
+fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
+
 source('/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
 
 if(!exists('t1_hierarchical_fitstats') | !exists('retest_hierarchical_fitstats') | !exists('t1_flat_fitstats') | !exists('retest_flat_fitstats')){
