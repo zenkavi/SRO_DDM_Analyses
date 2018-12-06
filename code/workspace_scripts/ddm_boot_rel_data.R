@@ -3,6 +3,16 @@ if(!exists('process_boot_df')){
   eval(parse(text = getURL(paste0(helper_func_path,'process_boot_df.R'), ssl.verifypeer = FALSE)))
 }
 
+if(!exists('retest_data_path')){
+  retest_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018/'
+  test_data_path = 'https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Complete_03-29-2018/'
+}
+
+if(!exists('measure_labels')){
+  ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
+}
+
 ### Read in bootstrapped rel data
 
 fullfit_boot_df <- read.csv(gzfile(paste0(retest_data_path,'bootstrap_merged.csv.gz')), header=T)
