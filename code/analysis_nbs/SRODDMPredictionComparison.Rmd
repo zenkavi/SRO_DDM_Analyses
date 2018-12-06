@@ -414,9 +414,12 @@ out %>%
          dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
          iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_condition_scores_t2subs", "ez_t1_522_fa_3_condition_scores_nont2subs", "ez_t1_522_fa_3_condition_scores"), labels = c("150","372","522"))) %>%
   ggplot(aes(iv, all_folds_r2))+
+  # ggplot(aes(iv, all_folds_rmse))+
   geom_bar(stat="identity", position=position_dodge(width=0.9), aes(alpha=iv_data, fill=iv))+
   geom_point(aes(iv, shuffle_mean_r2, col=iv, alpha=iv_data),col="black", position=position_dodge(width=0.9))+
+  # geom_point(aes(iv, shuffle_mean_rmse, col=iv, alpha=iv_data),col="black", position=position_dodge(width=0.9))+
   geom_errorbar(aes(ymin = shuffle_mean_r2-shuffle_sem_r2, ymax = shuffle_mean_r2+shuffle_sem_r2, col=iv, alpha=iv_data), col="black",position=position_dodge(width=0.9), width=0.1)+
+  # geom_errorbar(aes(ymin = shuffle_mean_rmse-shuffle_sem_rmse, ymax = shuffle_mean_rmse+shuffle_sem_rmse, col=iv, alpha=iv_data), col="black",position=position_dodge(width=0.9), width=0.1)+
   facet_grid(~dv,labeller = label_wrap_gen(width = 2, multi_line = TRUE))+
   xlab("")+
   ylab(expression(R^{2}))+
