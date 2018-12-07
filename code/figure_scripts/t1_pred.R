@@ -72,7 +72,6 @@ t1_ez_fa_t1_demog %>%
   mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision", "accuracy", "rt"), labels=c("Drift rate", "Threshold", "Non-decision", "Accuracy", "RT")),
          dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
          iv_data = factor(iv_data, levels = c("ez_t1_522_fa_3_condition_scores", 'res_clean_test_data_ez_522','res_clean_test_data_raw_522'), labels = c('DDM latent variables', 'DDM measures', 'Raw measures'))) %>%
-  
   ggplot(aes(iv, mean_all_folds_r2, fill=iv, alpha=iv_data))+
   
   geom_bar(stat="identity", position = position_dodge())+
@@ -87,27 +86,12 @@ t1_ez_fa_t1_demog %>%
         legend.text = element_text(size=16),
         strip.text = element_text(size=16),
         axis.title.y = element_text(size=16),
-        axis.text.y= element_text(size=14))+
+        axis.text.y= element_text(size=14),
+        panel.grid = element_blank())+
   xlab("")+
   ylab(expression(R^{2}))+
   scale_alpha_manual(values = c(0.5, 1, 1))+
   guides(alpha=FALSE,
          fill=guide_legend(nrow=2, byrow=T))
 
-ggsave(paste0('t1_pred.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
-
-tmp = t1_ez_fa_t1_demog %>%
-  bind_rows(t1_ez_mes_t1_demog) %>%
-  bind_rows(t1_raw_t1_demog)
-
-tmp %>%
-  group_by(iv_data, iv) %>%
-  summarise(mr = mean(mean_all_folds_r2),
-            semr = sem(mean_all_folds_r2),
-            sr = as.numeric(quantile(mean_shuffle_r2,probs = 0.95))) %>%
-            # sr = mean(mean_shuffle_r2)) %>%
-  ggplot(aes(iv, mr))+
-  geom_bar(stat = "identity", aes(fill=iv, alpha=iv_data), position = position_dodge())+
-  geom_bar(stat = "identity", aes(iv, sr, fill=iv, alpha=iv_data), fill=NA, color="black", linetype="dashed", position = position_dodge())+
-  # geom_errorbar(aes(ymin = mr-semr, ymax = mr+semr, color = iv, alpha = iv_data),position=position_dodge(width=0.9), width=0.1)+
-  scale_alpha_manual(values = c(0.5, 1, 1))
+ggsave(paste0('t1_pred.', out_device), device = out_device, path = fig_path, width = 20, height = 11, units = "in")
