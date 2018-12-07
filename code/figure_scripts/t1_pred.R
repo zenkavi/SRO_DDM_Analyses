@@ -20,8 +20,8 @@ eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), s
 t1_ez_fa_t1_demog = read.csv(paste0(input_path,'/prediction/pred_out_ez_t1_522_fa_3_condition_scores_demog_fa_scores_t1.csv'))
 
 t1_ez_fa_t1_demog = t1_ez_fa_t1_demog %>%
-  select(dv, iv, all_folds_r2, shuffle_mean_r2, iv_data, dv_data) %>%
-  rename(mean_all_folds_r2 = all_folds_r2, mean_shuffle_r2 = shuffle_mean_r2) %>%
+  select(dv, iv, all_folds_r2, shuffle_95p_r2, iv_data, dv_data) %>%
+  rename(mean_all_folds_r2 = all_folds_r2, mean_shuffle_r2 = shuffle_95p_r2) %>%
   mutate(dv = as.character(dv),
          sem_all_folds_r2 = NA,
          sem_shuffle_r2 = NA,
@@ -36,8 +36,8 @@ t1_ez_mes_t1_demog = t1_ez_mes_t1_demog %>%
   group_by(dv, par) %>%
   summarise(mean_all_folds_r2 = mean(all_folds_r2),
             sem_all_folds_r2 = sem(all_folds_r2), 
-            mean_shuffle_r2 = mean(shuffle_mean_r2),
-            sem_shuffle_r2 = sem(shuffle_mean_r2),
+            mean_shuffle_r2 = mean(shuffle_95p_r2),
+            sem_shuffle_r2 = sem(shuffle_95p_r2),
             iv_data = unique(iv_data),
             dv_data = unique(dv_data)) %>%
   rename(iv = par) %>%
@@ -56,8 +56,8 @@ t1_raw_t1_demog = t1_raw_t1_demog %>%
   group_by(dv, rt_acc) %>%
   summarise(mean_all_folds_r2 = mean(all_folds_r2),
             sem_all_folds_r2 = sem(all_folds_r2), 
-            mean_shuffle_r2 = mean(shuffle_mean_r2),
-            sem_shuffle_r2 = sem(shuffle_mean_r2),
+            mean_shuffle_r2 = mean(shuffle_95p_r2),
+            sem_shuffle_r2 = sem(shuffle_95p_r2),
             iv_data = unique(iv_data),
             dv_data = unique(dv_data)) %>%
   rename(iv = rt_acc) %>%
@@ -67,7 +67,7 @@ t1_raw_t1_demog = t1_raw_t1_demog %>%
          dv_data = as.character(dv_data))
 
 t1_ez_fa_t1_demog %>%
-  bind_rows(t1_ez_mes_t1_demog) %>%
+  # bind_rows(t1_ez_mes_t1_demog) %>%
   bind_rows(t1_raw_t1_demog) %>%
   mutate(iv = factor(iv, levels = c("drift_rate", "threshold", "non_decision", "accuracy", "rt"), labels=c("Drift rate", "Threshold", "Non-decision", "Accuracy", "RT")),
          dv = factor(dv, levels = c('Drug_Use','Mental_Health','Problem_Drinking','Daily_Smoking','Binge_Drinking','Obesity','Lifetime_Smoking','Unsafe_Drinking','Income_LifeMilestones'), labels = c('Drug Use','Mental Health','Problem Drinking','Daily Smoking','Binge Drinking','Obesity','Lifetime Smoking','Unsafe Drinking','Income/Life Milestones')),
@@ -78,7 +78,7 @@ t1_ez_fa_t1_demog %>%
   geom_bar(stat="identity", position = position_dodge())+
   geom_errorbar(aes(ymin=mean_all_folds_r2-sem_all_folds_r2, ymax=mean_all_folds_r2+sem_all_folds_r2, color=iv), position=position_dodge(width=0.9), width=0.1)+
   
-  geom_bar(stat="identity", position = position_dodge(),aes(iv, mean_shuffle_r2,fill=iv, alpha=iv_data), color="black", linetype="dashed")+
+  geom_bar(stat="identity", position = position_dodge(),aes(iv, mean_shuffle_r2,fill=iv, alpha=iv_data), fill=NA,color="black", linetype="dashed")+
   
   facet_wrap(~dv, scales='free_x')+
   theme(legend.title = element_blank(),
@@ -91,7 +91,7 @@ t1_ez_fa_t1_demog %>%
   xlab("")+
   ylab(expression(R^{2}))+
   scale_alpha_manual(values = c(0.5, 1, 1))+
-  guides(alpha=guide_legend(nrow=3, byrow=T),
+  guides(alpha=FALSE,
          fill=guide_legend(nrow=2, byrow=T))
 
 ggsave(paste0('t1_pred.', out_device), device = out_device, path = fig_path, width = 20, height = 9, units = "in")
