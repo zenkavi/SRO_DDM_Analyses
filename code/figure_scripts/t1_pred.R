@@ -83,10 +83,10 @@ t1_ez_fa_t1_demog %>%
   theme(legend.title = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        legend.text = element_text(size=16),
-        strip.text = element_text(size=16),
-        axis.title.y = element_text(size=16),
-        axis.text.y= element_text(size=14),
+        legend.text = element_text(size=22),
+        strip.text = element_text(size=22),
+        axis.title.y = element_text(size=22),
+        axis.text.y= element_text(size=22),
         panel.grid = element_blank())+
   xlab("")+
   ylab(expression(R^{2}))+
@@ -94,4 +94,4 @@ t1_ez_fa_t1_demog %>%
   guides(alpha=FALSE,
          fill=guide_legend(nrow=2, byrow=T))
 
-ggsave(paste0('t1_pred.', out_device), device = out_device, path = fig_path, width = 20, height = 11, units = "in")
+ggsave(paste0('t1_pred.', out_device), device = out_device, path = fig_path, width = 24, height = 13, units = "in", dpi=250)
