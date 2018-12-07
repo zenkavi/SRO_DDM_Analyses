@@ -80,7 +80,7 @@ t1_ez_fa_t1_demog %>%
   
   geom_bar(stat="identity", position = position_dodge(),aes(iv, mean_shuffle_r2,fill=iv, alpha=iv_data), color="black", linetype="dashed")+
   
-  # facet_wrap(~dv, scales='free_x')+
+  facet_wrap(~dv, scales='free_x')+
   theme(legend.title = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
