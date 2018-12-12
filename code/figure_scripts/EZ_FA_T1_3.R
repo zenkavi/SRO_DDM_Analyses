@@ -48,7 +48,7 @@ tmp%>%
   scale_fill_manual(values=cbbPalette)+
   scale_color_identity()+
   theme(legend.title=element_blank(),
-        axis.text.y = element_blank(), 
+        axis.text.y = element_blank(),
         panel.grid = element_blank(),
         axis.ticks.y = element_blank(),
         legend.text = element_text(size=16),
@@ -56,4 +56,4 @@ tmp%>%
         axis.text = element_text(size=16), 
         axis.title = element_text(size=16))
 
-ggsave(paste0('EZ_FA_Cond_T1_3.', out_device), device = out_device, path = fig_path, width = 10, height = 12, units = "in")
+ggsave(paste0('EZ_FA_Cond_T1_3.', out_device), device = out_device, path = fig_path, width = 20, height = 12, units = "in")
