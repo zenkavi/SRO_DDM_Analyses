@@ -1,4 +1,12 @@
-input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
+if(!exists('from_gh')){
+  from_gh=TRUE
+}
+
+if(from_gh){
+  input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
+}else{
+  input_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/input/'
+}
 
 measure_labels <- read.csv(paste0(input_path, 'measure_labels.csv'))
 
