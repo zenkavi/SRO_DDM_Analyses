@@ -4,6 +4,7 @@ library(MCMCglmm)
 library(rmarkdown)
 library(DT)
 library(RCurl)
+library(GPArotation)
 
 theme_set(theme_bw())
 
