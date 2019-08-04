@@ -1,4 +1,6 @@
 library(tidyverse)
+library(RCurl)
+from_gh=FALSE
 
 retest_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/workspace_scripts/'
 
