@@ -56,10 +56,10 @@ Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as wel
 Conclusion: Interactive model is best.
 
 ```{r}
-mer1 = lmer(icc ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer1a = lmer(icc ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer2 = lmer(icc ~ ddm_raw + overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer3 = lmer(icc ~ ddm_raw * overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1 = lmer(icc2.1 ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1a = lmer(icc2.1 ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer2 = lmer(icc2.1 ~ ddm_raw + overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer3 = lmer(icc2.1 ~ ddm_raw * overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
 anova(mer1, mer2, mer3)
 anova(mer1a, mer2, mer3)
 ```
@@ -83,7 +83,7 @@ Even though overall the ddm parameters are not significantly less reliable the m
 ```{r}
 rel_df %>%
   group_by(task_group) %>%
-  filter(icc == max(icc)) %>%
+  filter(icc2.1 == max(icc2.1)) %>%
   select(task_group, everything())
 ```
 
@@ -253,10 +253,10 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 Plotting the reliability estimates for flat parameters against the reliability of hierarchical estimates. Red lines are 45-degree lines. While there are some changes in reliability nothing appears very large (or consequential in pushing the reliability to any acceptable level depending on the estimation method) or systematic.
 
 ```{r}
-rel_df_flat = make_rel_df(t1_df = test_hddm_flat, t2_df = retest_hddm_flat, metrics = c('icc', 'pearson', 'var_breakdown'))
+rel_df_flat = make_rel_df(t1_df = test_hddm_flat, t2_df = retest_hddm_flat, metrics = c('icc2.1', 'pearson', 'var_breakdown'))
 
 rel_df_flat = rel_df_flat %>%
-  left_join(rel_df[,c("dv", "icc", "rt_acc", "overall_difference")], by = "dv") 
+  left_join(rel_df[,c("dv", "icc2.1", "rt_acc", "overall_difference")], by = "dv") 
 ```
 
 ```{r}
@@ -266,9 +266,9 @@ knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
 ```{r}
-with(rel_df_flat %>% filter(rt_acc == "drift rate"), t.test(icc.x, icc.y, paired=T))
-with(rel_df_flat %>% filter(rt_acc == "threshold"), t.test(icc.x, icc.y, paired=T))
-with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc.x, icc.y, paired=T))
+with(rel_df_flat %>% filter(rt_acc == "drift rate"), t.test(icc2.1.x, icc2.1.y, paired=T))
+with(rel_df_flat %>% filter(rt_acc == "threshold"), t.test(icc2.1.x, icc2.1.y, paired=T))
+with(rel_df_flat %>% filter(rt_acc == "non-decision"), t.test(icc2.1.x, icc2.1.y, paired=T))
 ```
 
 ```{r}

@@ -26,14 +26,14 @@ refit_boot_df = read.csv(gzfile(paste0('/Users/zeynepenkavi/Documents/PoldrackLa
 refit_boot_df = process_boot_df(refit_boot_df)
 
 fullfit_boot_df = fullfit_boot_df %>%
-  select(dv, icc, var_subs, var_ind, var_resid) %>%
+  select(dv, icc2.1, var_subs, var_ind, var_resid) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv") %>%
   mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
          var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
 
 refit_boot_df = refit_boot_df %>%
-  select(dv, icc, var_subs, var_ind, var_resid) %>%
+  select(dv, icc2.1, var_subs, var_ind, var_resid) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv") %>%
   mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,

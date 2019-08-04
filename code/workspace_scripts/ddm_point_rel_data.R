@@ -15,19 +15,19 @@ if(!exists('test_data_hddm_fullfit') | !exists('test_data_hddm_refit') | !exists
 
 ### Create reliability point estimates
 
-rel_df_fullfit = make_rel_df(t1_df = test_data_hddm_fullfit, t2_df = retest_data, metrics = c('icc', 'pearson', 'var_breakdown'))
+rel_df_fullfit = make_rel_df(t1_df = test_data_hddm_fullfit, t2_df = retest_data, metrics = c('icc2.1', 'pearson', 'var_breakdown'))
 
-rel_df_refit = make_rel_df(t1_df = test_data_hddm_refit, t2_df = retest_data, metrics = c('icc', 'pearson', 'var_breakdown'))
+rel_df_refit = make_rel_df(t1_df = test_data_hddm_refit, t2_df = retest_data, metrics = c('icc2.1', 'pearson', 'var_breakdown'))
 
 rel_df_fullfit = rel_df_fullfit %>%
-  select(dv, icc, var_subs, var_ind, var_resid) %>%
+  select(dv, icc2.1, var_subs, var_ind, var_resid) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv") %>%
   mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
          var_resid_pct = (var_resid/(var_subs+var_ind+var_resid))*100)
 
 rel_df_refit = rel_df_refit %>%
-  select(dv, icc, var_subs, var_ind, var_resid) %>%
+  select(dv, icc2.1, var_subs, var_ind, var_resid) %>%
   left_join(measure_labels[,c("dv", "task_group","overall_difference","raw_fit","rt_acc", "ddm_raw")], by = "dv") %>%
   mutate(var_subs_pct = (var_subs/(var_subs+var_ind+var_resid))*100,
          var_ind_pct  = (var_ind/(var_subs+var_ind+var_resid))*100,
