@@ -1,23 +1,37 @@
-library(tidyverse)
-library(RCurl)
+from_gh=FALSE
+if(from_gh){
+  library(RCurl)
+}
 
 if(!exists('fig_path')){
   fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
 }
 
-eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/figure_scripts/figure_res_wrapper.R', ssl.verifypeer = FALSE)))
+if(from_gh){
+  eval(parse(text = getURL('https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/figure_scripts/figure_res_wrapper.R', ssl.verifypeer = FALSE)))
+  
+  helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
+  
+  eval(parse(text = getURL(paste0(helper_func_path,'sem.R'), ssl.verifypeer = FALSE)))
+  
+  input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
+  
+  ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+  
+  eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
+  
+  t1_ez_fa_t1_demog = read.csv(paste0(input_path,'/ridge_prediction/ridge_fold_cors_ez_t1_522_fa_3_condition_scores_demog_fa_scores_t1.csv'))
+ 
+  t1_ez_mes_t1_demog = read.csv(paste0(input_path, '/ridge_prediction/pred_out_res_clean_test_data_ez_522_demog_fa_scores_t1.csv'))
+  
+  t1_raw_t1_demog = read.csv(paste0(input_path,'/ridge_prediction/pred_out_res_clean_test_data_raw_522_demog_fa_scores_t1.csv'))
+ 
+  
+  
+  ridge_fold_cors_res_clean_test_data_ez_demog_fa_scores_t1.csv
+  ridge_fold_cors_res_clean_test_data_raw_demog_fa_scores_t1.csv
+}
 
-helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
-
-eval(parse(text = getURL(paste0(helper_func_path,'sem.R'), ssl.verifypeer = FALSE)))
-
-input_path = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/input/'
-
-ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
-
-eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
-
-t1_ez_fa_t1_demog = read.csv(paste0(input_path,'/prediction/pred_out_ez_t1_522_fa_3_condition_scores_demog_fa_scores_t1.csv'))
 
 t1_ez_fa_t1_demog = t1_ez_fa_t1_demog %>%
   select(dv, iv, all_folds_r2, shuffle_95p_r2, iv_data, dv_data) %>%
@@ -29,7 +43,7 @@ t1_ez_fa_t1_demog = t1_ez_fa_t1_demog %>%
          dv_data = as.character(dv_data)) %>%
   select(dv, iv, mean_all_folds_r2, sem_all_folds_r2, mean_shuffle_r2, sem_shuffle_r2, iv_data, dv_data)
 
-t1_ez_mes_t1_demog = read.csv(paste0(input_path, '/prediction/pred_out_res_clean_test_data_ez_522_demog_fa_scores_t1.csv'))
+
 
 t1_ez_mes_t1_demog = t1_ez_mes_t1_demog %>%
   mutate(par = ifelse(grepl("drift",iv), "drift_rate", ifelse(grepl("thresh", iv), "threshold", ifelse(grepl("non_decision", iv), "non_decision", NA)))) %>% 
@@ -46,7 +60,6 @@ t1_ez_mes_t1_demog = t1_ez_mes_t1_demog %>%
          iv_data = as.character(iv_data),
          dv_data = as.character(dv_data))
 
-t1_raw_t1_demog = read.csv(paste0(input_path,'prediction/pred_out_res_clean_test_data_raw_522_demog_fa_scores_t1.csv'))
 
 t1_raw_t1_demog = t1_raw_t1_demog %>%
   mutate(iv=as.character(iv),

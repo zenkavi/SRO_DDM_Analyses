@@ -1,0 +1,3 @@
+Rscript --vanilla get_prediction.R res_clean_test_data_ez demog_fa_scores_t1 10 ridge /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/prediction/
+Rscript --vanilla get_prediction.R res_clean_test_data_raw demog_fa_scores_t1 10 ridge /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/prediction/
+Rscript --vanilla get_prediction.R ez_t1_522_fa_3_condition_scores demog_fa_scores_t1 10 ridge /oak/stanford/groups/russpold/users/zenkavi/SRO_DDM_Analyses/output/batch_output/prediction/
