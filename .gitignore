@@ -10,3 +10,4 @@ code/batch_files/.err
 output/batch_output
 *.out
 *.err
+output/figures/high_res/*

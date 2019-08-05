@@ -14,7 +14,7 @@ if(!exists('flat_difference')){
   
   #Don't change until PR is merged
   # retest_data_path = https://raw.githubusercontent.com/zenkavi/Self_Regulation_Ontology/master/Data/Retest_03-29-2018
-  retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_03-29-2018/'
+  retest_data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/Retest_12-19-2018/'
   
   retest_hddm_flat = read.csv(paste0(retest_data_path,'retest_hddm_flat.csv'))
   
@@ -52,6 +52,10 @@ if(!exists('flat_difference')){
   
   flat_difference = rbind(test_flat_difference, retest_flat_difference)
 
+}
+
+if(!exists(g_legend)){
+  source('~/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/g_legend.R')
 }
 
 p1 = flat_difference %>%
@@ -124,8 +128,34 @@ p3 = flat_difference %>%
                      limits = c(0, 1))
 
 
+p_legend = flat_difference %>%
+  mutate(time= factor(time, levels = c("test", "retest"),labels = c("Test", "Retest")),
+         par = factor(par, levels = c("drift", "thresh", "non_decision"), labels = c("Drift Rate", "Threshold", "Non-decision")))%>%
+  filter(par == "Non-decision") %>%
+  ggplot(aes(hierarchical, flat))+
+  geom_point(aes(col=time), alpha=0.6)+
+  geom_abline(aes(intercept=0, slope=1), color="black", linetype="dashed")+
+  facet_wrap(~ par)+
+  theme(legend.title=element_blank(),
+        strip.text = element_text(size=16),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_text(size=16),
+        aspect.ratio = 1,
+        legend.position="bottom",
+        panel.grid = element_blank())+
+  xlab("")+
+  ylab("")+
+  scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75,1),
+                     limits = c(0, 1))+
+  scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75,1),
+                     limits = c(0, 1))
+
+leg = g_legend(p_legend)
+
 ggsave(paste0('HDDM_par_flatvshier_dr.', out_device), plot = p1 ,device = out_device, path = fig_path, width = 4, height = 3, units = "in")
 ggsave(paste0('HDDM_par_flatvshier_th.', out_device), plot = p2 ,device = out_device, path = fig_path, width = 3, height = 5, units = "in")
 ggsave(paste0('HDDM_par_flatvshier_nd.', out_device), plot = p3 ,device = out_device, path = fig_path, width = 3, height = 3, units = "in")
 
-# ggsave(paste0('HDDM_par_flatvshier.', out_device), device = out_device, path = fig_path, width = 14, height = 3, units = "in")
+p_all = arrangeGrob(arrangeGrob(p1,p2,p3,nrow=1),leg, nrow=2,heights=c(10, 1))
+ggsave(paste0('HDDM_par_flatvshier.', out_device), p_all, device = out_device, path = fig_path, width = 8, height = 3, units = "in")
