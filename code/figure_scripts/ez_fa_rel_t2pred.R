@@ -30,7 +30,7 @@ ez_t1_522_fa_3_condition_scores = as.data.frame(ez_t1_522_fa_3_condition$scores)
 ez_t2_fa_3_condition_pred_scores = data.frame(ez_t2_fa_3_condition_pred) %>%
   mutate(sub_id = retest_data$sub_id)
 
-ez_fa_rel_df = make_rel_df(t1_df = ez_t1_522_fa_3_condition_scores, t2_df = ez_t2_fa_3_condition_pred_scores, metrics = "icc")
+ez_fa_rel_df = make_rel_df(t1_df = ez_t1_522_fa_3_condition_scores, t2_df = ez_t2_fa_3_condition_pred_scores, metrics = "icc2.1")
 
 ez_fa_rel_df = ez_fa_rel_df %>%
   mutate(rt_acc = ifelse(dv == "MR1", "Drift rate", ifelse(dv == "MR2", "Non-decision","Threshold")))

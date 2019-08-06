@@ -33,14 +33,6 @@ for(i in 1:length(to_remove)){
 
 ## DDM vs raw reliability overall
 
-Plot reliability point estimates comparing DDM measures to raw measures faceting for contrast measures.
-
-```{r}
-fig_name = 'ddmvsraw_point.jpeg'
-
-knitr::include_graphics(paste0(fig_path, fig_name))
-```
-
 Plot averaged bootstrapped reliability estimates per measure comparing DDM measures to raw measures faceting for contrast measures.
 
 ```{r}
@@ -49,29 +41,65 @@ fig_name = 'ddmvsraw_boot.jpeg'
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
 
+```{r warning=FALSE, message=FALSE}
+hddm_hack_nd = boot_df %>%
+  group_by(dv) %>%
+  summarise(mean_icc = mean(icc2.1),
+            rt_acc = unique(rt_acc),
+            overall_difference = unique(overall_difference),
+            raw_fit = unique(raw_fit)) %>%
+  mutate(rt_acc = as.character(rt_acc),
+         raw_fit = factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")),
+         rt_acc = factor(rt_acc, levels = c("drift rate", "threshold", "non-decision", "rt","accuracy"), labels=c("Drift Rate", "Threshold", "Non-decision", "Response Time", "Accuracy")),
+         overall_difference = factor(overall_difference, levels = c("non-contrast", "condition", "contrast"), labels=c("Non-contrast", "Condition", "Contrast"))) %>%
+  filter(raw_fit == "Hierarchical diffusion" & rt_acc == "Non-decision") %>%
+  group_by(overall_difference, raw_fit, rt_acc) %>%
+  summarise(sem_icc = sem(mean_icc),
+            mean_icc = mean(mean_icc)) %>%
+  ungroup()%>%
+  mutate(overall_difference = "Condition")
+
+boot_df %>%
+  group_by(dv) %>%
+  summarise(mean_icc = mean(icc2.1),
+            rt_acc = unique(rt_acc),
+            overall_difference = unique(overall_difference),
+            raw_fit = unique(raw_fit)) %>%
+  mutate(rt_acc = as.character(rt_acc),
+         raw_fit = factor(raw_fit, levels = c("raw", "EZ", "hddm"), labels=c("Raw", "EZ-diffusion", "Hierarchical diffusion")),
+         rt_acc = factor(rt_acc, levels = c("drift rate", "threshold", "non-decision", "rt","accuracy"), labels=c("Drift Rate", "Threshold", "Non-decision", "Response Time", "Accuracy")),
+         overall_difference = factor(overall_difference, levels = c("non-contrast", "condition", "contrast"), labels=c("Non-contrast", "Condition", "Contrast"))) %>%
+  filter(overall_difference != "Non-contrast") %>%
+  group_by(overall_difference, raw_fit, rt_acc) %>%
+  summarise(sem_icc = sem(mean_icc),
+            mean_icc = mean(mean_icc)) %>%
+  bind_rows(hddm_hack_nd) %>%
+  select(-sem_icc, sem_icc)
+```
+
 Model testing if the reliability of raw measures differs from that of ddm estimates and if contrast measures differ from non-contrast measures.
 
 Checking if both fixed effects of raw vs ddm and contrast vs non-contrast as well as their interaction is necessary.
 
-Conclusion: Interactive model is best.
+Conclusion: additive model is sufficient.
 
 ```{r}
-mer1 = lmer(icc2.1 ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer1a = lmer(icc2.1 ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer2 = lmer(icc2.1 ~ ddm_raw + overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
-mer3 = lmer(icc2.1 ~ ddm_raw * overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"))
+mer1 = lmer(icc2.1 ~ ddm_raw + (1|dv), boot_df %>% filter(rt_acc != "other" & overall_difference != "non-contrast"))
+mer1a = lmer(icc2.1 ~ overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other"  & overall_difference != "non-contrast"))
+mer2 = lmer(icc2.1 ~ ddm_raw + overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other" & overall_difference != "non-contrast"))
+mer3 = lmer(icc2.1 ~ ddm_raw * overall_difference + (1|dv), boot_df %>% filter(rt_acc != "other" & overall_difference != "non-contrast"))
 anova(mer1, mer2, mer3)
 anova(mer1a, mer2, mer3)
 ```
 
 ```{r}
-rm(mer1, mer2, mer1a)
+rm(mer1, mer1a, mer3)
 ```
 
 Raw measures do not significantly differ from ddm parameters in their reliability but non-contrast measures are significantly more reliable compared to contrast and condition measures.
 
 ```{r}
-summary(mer3)
+summary(mer2)
 ```
 
 ### Best measure for each task
@@ -415,6 +443,14 @@ Do raw or DDM measures (or factor scores) predict real world outcomes better?
 
 ```{r}
 fig_name = 't1_pred.jpeg'
+
+knitr::include_graphics(paste0(fig_path, fig_name))
+```
+
+What does the one model with above empirical baseline look like?
+
+```{r}
+fig_name = 'obesity_raw_ridge.jpeg'
 
 knitr::include_graphics(paste0(fig_path, fig_name))
 ```
