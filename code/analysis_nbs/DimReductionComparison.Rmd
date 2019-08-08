@@ -7,95 +7,22 @@ toc_float: yes
 ---
 
 ```{r}
-library(RCurl)
-require(tidyverse)
-theme_set(theme_bw())
-options(scipen = 1, digits = 4)
-
-helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
-eval(parse(text = getURL(paste0(helper_func_path,'get_numeric_cols.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'make_rel_df.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'remove_outliers.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'remove_correlated_task_variables.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'transform_remove_skew.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'get_demographics.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'residualize_baseline.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'find_optimal_components.R'), ssl.verifypeer = FALSE)))
-
-ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
-eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_subject_data.R'), ssl.verifypeer = FALSE)))
-rm(test_data_hddm_fullfit, test_data_hddm_refit)
-
+source('~/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/ez_fa_data.R')
 fig_path = '/Users/zeynepenkavi/Dropbox/PoldrackLab/SRO_DDM_Analyses/output/figures/'
-
-cbbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-theme_set(theme_bw())
-ggplot <- function(...) ggplot2::ggplot(...) + scale_fill_manual(values=cbbPalette) + scale_color_manual(values=cbbPalette)
+source('~/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/figure_scripts/figure_res_wrapper.R')
+source('~/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/make_rel_df.R')
 ```
 
 To reduce the number of variables in a data-driven way (instead of just selecting the variables that went in to the ontology paper)  I'll apply the cleaning methods from the ontology pipeline:
-- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) and
 - dropping variables with r>0.85.
-
-Extract EZ variables
-
-```{r}
-test_data_ez = test_data %>%
-  select(grep('EZ', names(test_data), value=T))
-```
-
-Remove variables that are correlated >0.85
+- Remove outliers (>2.5 SD away)
+- transformation of non-normal variables (should be particularly useful for a set of variables with many response times) 
+- Residualize Age and Sex effects
 
 ```{r}
-clean_test_data_ez = remove_correlated_task_variables(test_data_ez)
-```
-
-Remove outliers (>2.5 SD away)
-
-```{r}
-clean_test_data_ez = as.data.frame(apply(clean_test_data_ez, 2, remove_outliers))
-```
-
-Transform skewed variables
-
-```{r}
-#Nothing to transform
-numeric_cols = get_numeric_cols()
-numeric_cols = numeric_cols[numeric_cols %in% names(clean_test_data_ez) == T]
-clean_test_data_ez = transform_remove_skew(clean_test_data_ez, numeric_cols)
-```
-
-Drop subject identifier column, mean impute and drop cols with no variance
-
-```{r}
-clean_test_data_ez_std = clean_test_data_ez %>% mutate_if(is.numeric, scale)
-
-#mean imputation
-clean_test_data_ez_std[is.na(clean_test_data_ez_std)]=0
-
-#drop cols with no variance
-clean_test_data_ez_std = clean_test_data_ez_std %>%
-  select_if(function(col) sd(col) != 0)
-```
-
-Residualize Age and Sex effects
-
-```{r}
-data_path = '/Users/zeynepenkavi/Documents/PoldrackLabLocal/Self_Regulation_Ontology/Data/'
-release = 'Complete_03-29-2018/'
-dataset = 'demographic_health.csv'
-
-demographics = get_demographics(dataset = paste0(data_path, release, dataset))
-
-demographics = demographics %>%
-  filter(X %in% test_data$sub_id)
-```
-
-```{r warning=FALSE, message=FALSE}
-clean_test_data_ez_std = cbind(clean_test_data_ez_std, demographics[,c("Age", "Sex")])
-
-res_clean_test_data_ez = residualize_baseline(clean_test_data_ez_std)
+res_clean_test_data_ez_522_condition = res_clean_test_data_ez_522 %>%
+  select((measure_labels %>% 
+            filter(raw_fit == "EZ" & overall_difference == "condition"))$dv)
 ```
 
 ## PCA on EZ variables of test data
@@ -143,7 +70,7 @@ But to confirm that the resulting factors are not problematic I will run an SVD 
 Eigenvalue decomposition on correlation matrix.
 
 ```{r}
-ez_t1_pca_3 = principal(res_clean_test_data_ez, nfactors=3, rotate="oblimin")
+ez_t1_pca_3 = principal(res_clean_test_data_ez_522_condition, nfactors=3, rotate="oblimin")
 ```
 
 Scree plot of first 10 components
@@ -193,9 +120,10 @@ tmp = ez_t1_pca_3_loadings %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
   mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
-         var_type = ifelse(grepl("drift", dv), "drif rate",
-                  ifelse(grepl("thresh", dv), "threshold",
-                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+         var_type = ifelse(grepl("drift", dv), "Drift rate",
+                  ifelse(grepl("thresh", dv), "Threshold",
+                         ifelse(grepl("non_dec", dv), "Non-decision", NA))),
+         var_type = factor(var_type, levels=c("Drift rate", "Threshold", "Non-decision")))
 
 p = tmp%>%
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
@@ -219,9 +147,9 @@ p
 Double checking the above factor solution using a singular value decomposition and oblimin rotation.
 
 ```{r}
-ez_svd <- svd(res_clean_test_data_ez)
+ez_svd <- svd(res_clean_test_data_ez_522_condition)
 ncomp = 3
-df <- nrow(res_clean_test_data_ez) - 1
+df <- nrow(res_clean_test_data_ez_522_condition) - 1
 ez_t1_svd_rawLoadings = ez_svd$v[,1:ncomp] %*% diag(ez_svd$d/sqrt(df), ncomp, ncomp)
 ez_t1_svd_rotatedLoadings <- GPArotation::oblimin(ez_t1_svd_rawLoadings)$loadings
 ```
@@ -230,7 +158,7 @@ ez_t1_svd_rotatedLoadings <- GPArotation::oblimin(ez_t1_svd_rawLoadings)$loading
 ez_t1_svd_rotatedLoadings[abs(ez_t1_svd_rotatedLoadings)<0.3]=NA
 
 tmp = data.frame(ez_t1_svd_rotatedLoadings) %>%
-  mutate(dv = names(res_clean_test_data_ez),
+  mutate(dv = names(res_clean_test_data_ez_522_condition),
          X1 = -1*X1,
          X3= -1*X3) %>%
   select(dv, X1, X2, X3)%>%
@@ -244,9 +172,10 @@ tmp = data.frame(ez_t1_svd_rotatedLoadings) %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
   mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
-         var_type = ifelse(grepl("drift", dv), "drif rate",
-                  ifelse(grepl("thresh", dv), "threshold",
-                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+         var_type = ifelse(grepl("drift", dv), "Drift rate",
+                           ifelse(grepl("thresh", dv), "Threshold",
+                                  ifelse(grepl("non_dec", dv), "Non-decision", NA))),
+                           var_type = factor(var_type, levels=c("Drift rate", "Threshold", "Non-decision")))
 
 p = tmp%>%
   ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
@@ -270,10 +199,10 @@ p
 How many factors should be extracted from the EFA? To answer this we run models extracting 2 to 50 components and rank them by BIC.
 
 ```{r warning=FALSE, message=FALSE}
-efa_ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez, fm = "minres", minc=2)
+efa_ez_t1_comp_metrics = find_optimal_components(res_clean_test_data_ez_522_condition, fm = "minres", minc=2)
 ```
 
-This suggests that a 16 component solution would be the best fitting model.
+This suggests that a 13 component solution would be the best fitting model.
 
 ```{r}
 efa_ez_t1_comp_metrics
@@ -282,13 +211,13 @@ efa_ez_t1_comp_metrics
 Fit the model suggested by the BIC comparison.
 
 ```{r}
-ez_t1_fa_16 = fa(res_clean_test_data_ez, efa_ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
+ez_t1_fa_13 = fa(res_clean_test_data_ez_522_condition, efa_ez_t1_comp_metrics$comp[1], rotate='oblimin', fm='minres', scores='tenBerge')
 ```
 
 Fit the 3 factor model that is of theoretical interest.
 
 ```{r}
-ez_t1_fa_3 = fa(res_clean_test_data_ez, 3, rotate='oblimin', fm='minres', scores='tenBerge')
+ez_t1_fa_3 = fa(res_clean_test_data_ez_522_condition, 3, rotate='oblimin', fm='minres', scores='tenBerge')
 ```
 
 Differences in BIC's are difficult to interpret.
@@ -296,7 +225,7 @@ Differences in BIC's are difficult to interpret.
 I tried to run a more formal model comparison between the 3 factor solution that we have theoretical reasons for and the 16 factor model that is selected based on BIC. Below is the result. I'm not quiet sure how to interpreted but it seems to suggest that the more complicated model is not significantly better.
 
 ```{r}
-anova(ez_t1_fa_3, ez_t1_fa_16)
+anova(ez_t1_fa_3, ez_t1_fa_13)
 ```
 
 So what would the 3 factor solution look like? Not surprisingly, very similar to the PC's.
@@ -319,9 +248,10 @@ tmp = ez_t1_fa_3_loadings %>%
   gather(Factor, Loading, -dv) %>%
   na.exclude() %>%
   mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
-         var_type = ifelse(grepl("drift", dv), "drif rate",
-                  ifelse(grepl("thresh", dv), "threshold",
-                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
+         var_type = ifelse(grepl("drift", dv), "Drift rate",
+                  ifelse(grepl("thresh", dv), "Threshold",
+                         ifelse(grepl("non_dec", dv), "Non-decision", NA))),
+                           var_type = factor(var_type, levels=c("Drift rate", "Threshold", "Non-decision")))
 
 
 p = tmp%>%
@@ -355,47 +285,66 @@ ggsave('EZ_FA_T1_3.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, h
 p
 ```
 
-Are there notable differences in the 16 factor solution? (Looking at the first half of the model) The three parameter types seem to load on two factors each instead of one. These tend to reflect separations between tasks (e.g. one non-decision factor is just for the shape matching task while the other contains all the remaining ones). Since these differences are of less theoretical interest for this exercise I think choosing the three factor solution would be appropriate.
 
-```{r message=FALSE}
-ez_t1_fa_16_loadings = as.data.frame(ez_t1_fa_16$loadings[])
+### PCs vs Factors
 
-ez_t1_fa_16_loadings[abs(ez_t1_fa_16_loadings)<0.3]=NA
+Variance acconted for by PCA and EFA
 
-tmp = ez_t1_fa_16_loadings %>%
-  mutate(dv = row.names(.)) %>%
-  select(dv, MR1, MR2, MR3, MR4, MR5, MR6, MR7, MR8) %>%
-  mutate(num_loading = 8-(is.na(MR1)+is.na(MR2)+is.na(MR3)+is.na(MR4)+is.na(MR5)+is.na(MR6)+is.na(MR7)+is.na(MR8) ) ) %>%
-  filter(num_loading!=0) %>%
-  select(-num_loading) %>%
-  arrange(-MR1, -MR2, -MR3,-MR1, -MR5, -MR6,-MR7, -MR8) %>%
-  mutate(order_num = 1:n(),
-         dv = reorder(dv, -order_num)) %>%
-  select(-order_num) %>%
-  gather(Factor, Loading, -dv) %>%
-  na.exclude() %>%
-  mutate(neg_load = factor(ifelse(Loading>0,"NA","#000000")),
-         var_type = ifelse(grepl("drift", dv), "drif rate",
-                  ifelse(grepl("thresh", dv), "threshold",
-                         ifelse(grepl("non_dec", dv), "non-decision", NA))))
-p = tmp%>%
-  ggplot(aes(dv, abs(Loading), fill=var_type, col = neg_load))+
-  geom_bar(stat = "identity", alpha=0.5)+
-  facet_wrap(~Factor, nrow=1)+
-  coord_flip()+
-  xlab("")+
-  ylab("Absolute Loading")+
-  scale_fill_manual(values=cbbPalette)+
-  scale_color_identity()+
-  theme(legend.position = "bottom",
-        legend.title=element_blank())
-        #axis.text.y = element_blank())
-
-ggsave('EZ_FA_T1_8.jpeg',plot=p, device = 'jpeg', path = fig_path, width = 10, height = 12, units = "in")
+```{r}
+ez_t1_pca_3$Vaccounted
 ```
 
 ```{r}
-knitr::include_graphics(paste0(fig_path, 'EZ_FA_T1_8.jpeg'))
+ez_t1_fa_3$Vaccounted
+```
+
+Comparison of loadings
+
+```{r warning=FALSE, message=FALSE}
+ez_t1_pca_3_loadings %>%
+  mutate(dv = row.names(.)) %>%
+  left_join(ez_t1_fa_3_loadings %>%
+              mutate(dv = row.names(.)), by="dv") %>%
+  gather(key, value, -dv) %>%
+  mutate(factor_num = ifelse(grepl("1", key), 1, ifelse(grepl("2", key), 2, ifelse(grepl("3", key), 3, NA))),
+         key = ifelse(grepl("TC", key), "PCA", ifelse(grepl("MR", key), "EFA", NA))) %>% spread(key, value) %>%
+  ggplot(aes(PCA, EFA, col=factor(factor_num)))+
+  geom_point()+
+  geom_abline(aes(intercept=0, slope = 1), linetype=2)+
+  facet_wrap(~factor_num)+
+  theme(legend.position = "none",
+        panel.grid = element_blank())
+```
+
+
+### Artifical PCA
+
+```{r}
+art_pca_scores = res_clean_test_data_ez_522_condition %>%
+  mutate(sub_id = test_data_522$sub_id) %>%
+  gather(dv, value, -sub_id) %>%
+  left_join(measure_labels %>% select(dv, rt_acc), by="dv") %>%
+  group_by(sub_id, rt_acc) %>%
+  summarise(mean_val = mean(value)) %>%
+  mutate(rt_acc = ifelse(rt_acc == "drift rate", "MR1", ifelse(rt_acc == "non-decision", "MR2", "MR3")))
+
+art_pca_scores
+```
+
+
+```{r}
+data.frame(ez_t1_fa_3$scores) %>%
+   mutate(sub_id = test_data_522$sub_id) %>%
+  gather(rt_acc, factor_score, -sub_id)%>%
+  left_join(art_pca_scores, by=c("sub_id", "rt_acc")) %>%
+  ggplot(aes(mean_val,factor_score, col=rt_acc))+
+  geom_point()+
+  geom_abline(aes(intercept=0, slope=1), linetype=2)+
+  facet_wrap(~rt_acc, scales="free")+
+  theme(legend.position = "none",
+        panel.grid = element_blank())+
+  xlab("Mean value of individual measures")+
+  ylab("EFA")
 ```
 
 **Based on these results I ran 3 factor EFA's on the remaining data.**
@@ -631,9 +580,9 @@ predict_t2_fa_scores = function(t1_df = res_clean_test_data_ez, t2_df = res_clea
 
 get_icc_for_score_type = function(scores){
   p = predict_t2_fa_scores(scores=scores)
-  r_df = make_rel_df(p$t1_fa_scores, p$t2_pred_scores, metrics = c("icc"))
+  r_df = make_rel_df(p$t1_fa_scores, p$t2_pred_scores, metrics = c("icc2.1"))
   r_df = r_df %>%
-    spread(dv,icc) %>%
+    spread(dv,icc2.1) %>%
     mutate(scores = scores)
   return(r_df)
 }
@@ -682,8 +631,8 @@ score_type_iccs
 
 ```{r}
 score_type_iccs %>%
-  gather(factor, icc, -scores) %>%
-  ggplot(aes(scores, icc, col=factor))+
+  gather(factor, icc2.1, -scores) %>%
+  ggplot(aes(scores, icc2.1, col=factor))+
   geom_point(size=2.5)+
   xlab('')+
   theme(legend.title=element_blank())
@@ -829,7 +778,7 @@ ez_t2_fa_3_scores = data.frame(ez_t2_fa_3$scores)
 ez_t2_fa_3_scores$sub_id = retest_data$sub_id
 
 data.frame(ez_t1_fa_3$scores) %>%
-  mutate(sub_id = test_data$sub_id) %>%
+  mutate(sub_id = test_data_522$sub_id) %>%
   left_join(ez_t2_fa_3_scores, by = "sub_id") %>%
   gather(key, value, -sub_id) %>%
   separate(key, c("par", "model"), sep = "\\.") %>%

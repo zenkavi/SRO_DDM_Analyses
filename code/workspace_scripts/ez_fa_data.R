@@ -1,22 +1,37 @@
-library(RCurl)
+from_gh = FALSE
+if(from_gh){
+  library(RCurl)
+}
 require(tidyverse)
 theme_set(theme_bw())
 options(scipen = 1, digits = 4)
 
-helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
-eval(parse(text = getURL(paste0(helper_func_path,'get_numeric_cols.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'remove_outliers.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'remove_correlated_task_variables.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'transform_remove_skew.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'get_demographics.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'residualize_baseline.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(helper_func_path,'find_optimal_components.R'), ssl.verifypeer = FALSE)))
+helper_func_path_imports = c('get_numeric_cols.R', 'remove_outliers.R', 'remove_correlated_task_variables.R', 'transform_remove_skew.R', 'get_demographics.R', 'residualize_baseline.R', 'find_optimal_components.R')
+ddm_workspace_scripts_imports = c("ddm_measure_labels.R", "ddm_subject_data.R")
 
-ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
-eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_measure_labels.R'), ssl.verifypeer = FALSE)))
-eval(parse(text = getURL(paste0(ddm_workspace_scripts,'ddm_subject_data.R'), ssl.verifypeer = FALSE)))
+if(from_gh){
+  helper_func_path = 'https://raw.githubusercontent.com/zenkavi/SRO_Retest_Analyses/master/code/helper_functions/'
+  for(i in helper_func_path_imports) {
+    eval(parse(text = getURL(paste0(helper_func_path,i), ssl.verifypeer = FALSE)))
+  }
+  ddm_workspace_scripts = 'https://raw.githubusercontent.com/zenkavi/SRO_DDM_Analyses/master/code/workspace_scripts/'
+  for(i in ddm_workspace_scripts_imports) {
+    eval(parse(text = getURL(paste0(ddm_workspace_scripts,i), ssl.verifypeer = FALSE)))
+  }
+  
+} else{
+  helper_func_path = '~/Dropbox/PoldrackLab/SRO_Retest_Analyses/code/helper_functions/' 
+  for(i in helper_func_path_imports) {
+    source(paste0(helper_func_path, i))
+  }
+  ddm_workspace_scripts = '~/Dropbox/PoldrackLab/SRO_DDM_Analyses/code/workspace_scripts/'
+  for(i in ddm_workspace_scripts_imports) {
+    source(paste0(ddm_workspace_scripts, i))
+  }
+}
+
+
 rm(test_data_hddm_fullfit, test_data_hddm_refit)
-
 test_data_ez = test_data %>%
 select(grep('EZ', names(test_data), value=T))
 
