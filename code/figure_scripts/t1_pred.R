@@ -45,21 +45,22 @@ t1_ez_fa_t1_demog %>%
   rbind(t1_ez_mes_t1_demog) %>%
   rbind(t1_raw_t1_demog) %>%
   group_by(dv, iv) %>%
-  summarise(mean_pred_cor = mean(pred_cor),
-            sem_pred_cor = sem(pred_cor),
-            mean_shuffle = mean(shuffle_95)) %>%
+  summarise(mean_pred_cor = mean(r2),
+            sem_pred_cor = sem(r2),
+            mean_shuffle = mean(shuffle_mean)) %>%
   ungroup()%>%
   mutate(iv = factor(iv, levels = c("res_clean_test_data_raw_522", "res_clean_test_data_ez_522","ez_t1_522_fa_3_condition_scores"), labels = c("Raw RT and Acc", "EZ DVs", "EZ factor scores")),
          dv = gsub("_", " ", dv)) %>%
   ggplot(aes(x=dv))+
-  geom_point(aes( y=mean_pred_cor, col=iv), position=position_dodge(width=.9))+
+  geom_bar(stat="identity",aes( y=mean_pred_cor, fill=iv), position=position_dodge(width=.9))+
   geom_errorbar(aes(ymin=mean_pred_cor-sem_pred_cor, ymax=mean_pred_cor+sem_pred_cor, color=iv),position = position_dodge(width=0.9))+
-   geom_point(aes( y=mean_shuffle, group=iv), fill=NA, position=position_dodge(width =.9), color="black", shape=8)+
+   geom_bar(stat = "identity",aes( y=mean_shuffle, group=iv), fill=NA, position=position_dodge(width =.9), color="black", linetype=2)+
   geom_hline(aes(yintercept=0), linetype="dashed")+
   theme(panel.grid = element_blank(),
         legend.title = element_blank())+
   xlab("")+
-  ylab("Actual vs. predicted correlations across CV folds")
+  # ylab("Actual vs. predicted R across CV folds")+
+  ylab(expression(paste("Actual vs. predicted ", R^{2},' across CV folds')))
 
 ggsave(paste0('t1_pred.', out_device), device = out_device, path = fig_path, width = 11, height = 5, units = "in", dpi=img_dpi)
 
